@@ -1,0 +1,184 @@
+﻿using System;
+using System.Collections.Generic;
+using Gribble;
+using Gribble.Mapping;
+using NUnit.Framework;
+using Should;
+
+namespace Tests
+{
+    [TestFixture]
+    public class EntityAdapterTests
+    {
+        public class Entity
+        {
+            public enum SomeState
+            {
+                Unknown,
+                On,
+                Off
+            }
+
+            public Guid Id { get; set; }
+            public string Name { get; set; }
+            public DateTime Birthdate { get; set; }
+            public DateTime? Created { get; set; }
+            public int Age { get; set; }
+            public float Price { get; set; }
+            public double Distance { get; set; }
+            public byte Flag { get; set; }
+            public bool Active { get; set; }
+            public decimal Length { get; set; }
+            public long Miles { get; set; }
+            public SomeState State { get; set; }
+            public SomeState? NullableState { get; set; }
+            public SomeState? NullableState2 { get; set; }
+            public Dictionary<string, object> Values { get; set; }
+        }
+
+        private static readonly Guid Key = Guid.NewGuid();
+
+        private static readonly Dictionary<string, object> EntityValues = new Dictionary<string, object>
+                                                                    {
+                                                                        {"col_active", false},
+                                                                        {"col_age", 44},
+                                                                        {"col_birthdate", DateTime.MaxValue},
+                                                                        {"col_created", DateTime.MinValue},
+                                                                        {"col_distance", 22.3},
+                                                                        {"col_flag", (byte)23},
+                                                                        {"col_id", Key},
+                                                                        {"col_length", 22.3m},
+                                                                        {"col_miles", 10L},
+                                                                        {"col_name", "oh hai"},
+                                                                        {"col_price", 45.67F},
+                                                                        {"col_companyname", "Some company"},
+                                                                        {"col_optout", true},
+                                                                        {"col_optoutdate", DateTime.MinValue},
+                                                                        {"col_state", 2},
+                                                                        {"col_state_null", 1},
+                                                                        {"col_state_null2", null}
+                                                                    };
+
+        public class EntityMap : ClassMap<Entity>
+        {
+            public EntityMap()
+            {
+                Id(x => x.Id).Column("col_id");
+                Map(x => x.Name).Column("col_name");
+                Map(x => x.Birthdate).Column("col_birthdate");
+                Map(x => x.Age).Column("col_age");
+                Map(x => x.Price).Column("col_price");
+                Map(x => x.Distance).Column("col_distance");
+                Map(x => x.Flag).Column("col_flag");
+                Map(x => x.Active).Column("col_active");
+                Map(x => x.Length).Column("col_length");
+                Map(x => x.Miles).Column("col_miles");
+                Map(x => x.Created).Column("col_created");
+                Map(x => x.State).Column("col_state");
+                Map(x => x.NullableState).Column("col_state_null");
+                Map(x => x.NullableState2).Column("col_state_null2");
+                Map(x => x.Values).Dynamic();
+            }
+        }
+
+        private static readonly EntityMapping Map = new EntityMapping(new EntityMap(), new[] {
+                                                                        new ColumnMapping("col_companyname", "CompanyName"),
+                                                                        new ColumnMapping("col_optout", "OptOut"),
+                                                                        new ColumnMapping("col_optoutdate", "OptOutDate")
+                                                                    });
+
+        private readonly Func<Entity> _createEntity = 
+            () => new Entity {
+                                  Active = false,
+                                  Age = 44,
+                                  Birthdate = DateTime.MaxValue,
+                                  Created = DateTime.MinValue,
+                                  Distance = 22.3,
+                                  Flag = 23,
+                                  Id = Key,
+                                  Length = 22.3m,
+                                  Miles = 10,
+                                  Name = "oh hai",
+                                  Price = 45.67F,
+                                  Values = new Dictionary<string,object>
+                                            {
+                                                {"CompanyName", "Some company"},
+                                                {"OptOut", true},
+                                                {"OptOutDate", DateTime.MinValue}
+                                            }
+
+            };
+
+        [Test]
+        public void Get_Entity_Fields_Test()
+        {
+            var entity = _createEntity();
+            var adapter = new EntityAdapter<Entity>(entity, Map);
+            var values = adapter.GetValues();
+            values.Count.ShouldEqual(EntityValues.Count);
+
+            values["col_active"].ShouldEqual(entity.Active);
+            values["col_age"].ShouldEqual(entity.Age);
+            values["col_birthdate"].ShouldEqual(entity.Birthdate);
+            values["col_created"].ShouldEqual(entity.Created);
+            values["col_distance"].ShouldEqual(entity.Distance);
+            values["col_flag"].ShouldEqual(entity.Flag);
+            values["col_id"].ShouldEqual(entity.Id);
+            values["col_length"].ShouldEqual(entity.Length);
+            values["col_miles"].ShouldEqual(entity.Miles);
+            values["col_name"].ShouldEqual(entity.Name);
+            values["col_price"].ShouldEqual(entity.Price);
+            values["col_state"].ShouldEqual(entity.State);
+            values["col_state_null"].ShouldEqual(entity.NullableState);
+            values["col_state_null2"].ShouldEqual(entity.NullableState2);
+            values["col_companyname"].ShouldEqual(entity.Values["CompanyName"]);
+            values["col_optout"].ShouldEqual(entity.Values["OptOut"]);
+            values["col_optoutdate"].ShouldEqual(entity.Values["OptOutDate"]);
+        }
+
+        [Test]
+        public void Set_Entity_Fields_Test()
+        {
+            var entity = new Entity();
+            var adapter = new EntityAdapter<Entity>(entity, Map);
+            adapter.SetValues(EntityValues);
+
+            entity.Active.ShouldEqual(EntityValues["col_active"]);
+            entity.Age.ShouldEqual(EntityValues["col_age"]);
+            entity.Birthdate.ShouldEqual(EntityValues["col_birthdate"]);
+            entity.Created.ShouldEqual(EntityValues["col_created"]);
+            entity.Distance.ShouldEqual(EntityValues["col_distance"]);
+            entity.Flag.ShouldEqual(EntityValues["col_flag"]);
+            entity.Id.ShouldEqual(EntityValues["col_id"]);
+            entity.Length.ShouldEqual(EntityValues["col_length"]);
+            entity.Miles.ShouldEqual(EntityValues["col_miles"]);
+            entity.Name.ShouldEqual(EntityValues["col_name"]);
+            entity.Price.ShouldEqual(EntityValues["col_price"]);
+            ((int)entity.State).ShouldEqual(EntityValues["col_state"]);
+            ((int?)entity.NullableState).ShouldEqual(EntityValues["col_state_null"]);
+            ((int?)entity.NullableState2).ShouldEqual(EntityValues["col_state_null2"]);
+            entity.Values.Count.ShouldEqual(3);
+            entity.Values["CompanyName"].ShouldEqual(EntityValues["col_companyname"]);
+            entity.Values["OptOut"].ShouldEqual(EntityValues["col_optout"]);
+            entity.Values["OptOutDate"].ShouldEqual(EntityValues["col_optoutdate"]);
+        }
+
+        [Test]
+        public void Get_Entity_Key_Test()
+        {
+            var entity = _createEntity();
+            var adapter = new EntityAdapter<Entity>(entity, Map);
+            var key = adapter.Key;
+            key.ShouldEqual(Key);
+        }
+
+        [Test]
+        public void Set_Entity_Key_Test()
+        {
+            var entity = new Entity();
+            var adapter = new EntityAdapter<Entity>(entity, Map);
+            adapter.Key = Key;
+            entity.Id.ShouldEqual(Key);
+        }
+    }
+}
