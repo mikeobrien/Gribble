@@ -18,7 +18,7 @@ assemblyinfo :assemblyInfo => :initBuild do |asm|
 end
 
 desc "Builds the library."
-msbuild :buildLibrary => :setAssemblyVersion do |msb|
+msbuild :buildLibrary => :assemblyInfo do |msb|
     msb.properties :configuration => :Release
     msb.targets :Clean, :Build
     msb.solution = "src/Gribble/Gribble.csproj"
