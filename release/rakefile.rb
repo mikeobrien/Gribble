@@ -1,9 +1,11 @@
 require "albacore"
+require "release/common"
 
 task :default => [:unitTests]
 
 desc "Inits the build"
 task :initBuild do
+	Common.EnsurePath("reports")
 end
 
 desc "Generate assembly info."
@@ -38,3 +40,13 @@ nunit :unitTests => :buildTestProject do |nunit|
 	nunit.options "/xml=reports/TestResult.xml"
 end
 
+desc "Push the package to the Nuget server"
+task :pushPackage => :unitTests do
+	
+end
+
+desc "Tag the current release"
+task :tagRelease do
+	result = system("git", "tag", "-a", "v#{ENV['GO_PIPELINE_LABEL']}", "-m", "release-v#{ENV['GO_PIPELINE_LABEL']}")
+	result = system("git", "push", "--tags")
+end
