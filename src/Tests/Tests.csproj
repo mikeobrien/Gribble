@@ -59,7 +59,7 @@
     <Compile Include="DatabaseTests.cs" />
     <Compile Include="EntityAdapterTests.cs" />
     <Compile Include="EntityMapTests.cs" />
-    <Compile Include="EnumerableTests.cs" />
+    <Compile Include="QueryableTests.cs" />
     <Compile Include="Expressions\ExpressionExtensionsTests.cs" />
     <Compile Include="Expressions\ProjectionVisitorTests.cs" />
     <Compile Include="Expressions\SelectVisitorTests.cs" />

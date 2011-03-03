@@ -8,7 +8,7 @@ using Should;
 namespace Tests
 {
     [TestFixture]
-    public class EnumerableTests
+    public class QueryableTests
     {
         public class Entity
         {
@@ -26,16 +26,14 @@ namespace Tests
             public Dictionary<string, object> Values { get; set; }
         }
 
-        private static readonly IEnumerable<string> Items = CreateItemsList();
+        private static readonly IQueryable<string> Items = CreateItemsList();
 
-        private static IEnumerable<string> CreateItemsList()
+        private static IQueryable<string> CreateItemsList()
         {
-            return new List<string> { "One", "Two", "Three", "Four", "Five", "One", "Two", "Three", "Four", "Five" };
+            return new List<string> { "One", "Two", "Three", "Four", "Five", "One", "Two", "Three", "Four", "Five" }.AsQueryable();
         }
 
-        private static readonly IEnumerable<Entity> Entities = CreateEntitiesList();
-
-        private static IEnumerable<Entity> CreateEntitiesList()
+        private static IQueryable<Entity> CreateEntitiesList()
         {
             return new List<Entity> 
             { 
@@ -48,7 +46,7 @@ namespace Tests
                 new Entity { Id = Guid.NewGuid(), Name = "Dick", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 44, Price = 88.99F, Distance = 34.5, Flag = 6, Active = true },
                 new Entity { Id = Guid.NewGuid(), Name = "Harry", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 55, Price = 88.99F, Distance = 34.5, Flag = 9, Active = true },
                 new Entity { Id = Guid.NewGuid(), Name = "Harry", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 55, Price = 88.99F, Distance = 34.5, Flag = 9, Active = true }
-            };
+            }.AsQueryable();
         }
 
         [Test]
@@ -65,11 +63,20 @@ namespace Tests
         }
 
         [Test]
-        public void SelectInto_Test()
+        public void Copy_To_Test()
         {
-            var items = (IList<string>)CreateItemsList();
+            var items = CreateItemsList();
             Items.Take(6).CopyTo(items).Count().ShouldEqual(16);
+            items.ShouldNotBeSameAs(Items);
             items.Count().ShouldEqual(16);
+        }
+
+        [Test]
+        public void Copy_To_New_Test()
+        {
+            var items = Items.Take(6).CopyTo(string.Empty);
+            items.ShouldNotBeSameAs(Items);
+            items.Count().ShouldEqual(6);
         }
 
         [Test]

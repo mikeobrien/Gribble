@@ -92,14 +92,14 @@ namespace Gribble
             return source.Take(Convert.ToInt32((percent / 100.0) * source.Count()));
         }
 
-        public static IEnumerable<TSource> CopyTo<TSource>(this IEnumerable<TSource> source, string target)
+        public static IQueryable<TSource> CopyTo<TSource>(this IEnumerable<TSource> source, string target)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (target == null) throw new ArgumentNullException("target");
-            return new List<TSource>(source);
+            return new List<TSource>(source).AsQueryable();
         }
 
-        public static IEnumerable<TSource> CopyTo<TSource>(this IEnumerable<TSource> source, IEnumerable<TSource> target)
+        public static IQueryable<TSource> CopyTo<TSource>(this IEnumerable<TSource> source, IEnumerable<TSource> target)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (target == null) throw new ArgumentNullException("target");
@@ -107,9 +107,9 @@ namespace Gribble
             {
                 var collection = (ICollection<TSource>)target;
                 foreach (var item in source) collection.Add(item);
-                return collection;
+                return collection.AsQueryable();
             }
-            return target.Concat(source);
+            return target.Concat(source).AsQueryable();
         }
 
         public static IEnumerable<TSource> Distinct<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> selector)
