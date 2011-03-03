@@ -33,7 +33,7 @@ end
 
 desc "NUnit Test Runner"
 nunit :unitTests => :buildTestProject do |nunit|
-	nunit.path_to_command = "src/packages/NUnit.2.5.9.10348/Tools/nunit-console.exe"
+	nunit.command = "src/packages/NUnit.2.5.9.10348/Tools/nunit-console.exe"
 	nunit.assemblies "src/Tests/bin/Release/Tests.dll"
 	nunit.options "/xml=reports/TestResult.xml"
 end
