@@ -5,8 +5,7 @@ class NugetPush
 
     def run()
 		@apiKey = YAML::load(File.open(ENV["USERPROFILE"] + "/.nuget/credentials"))["api_key"] unless !@apiKey.nil?
-		puts @apiKey
-		system("nuget", "push", "-source", @package, @apiKey)
+		system("nuget", "push", @package, @apiKey)
     end
 end
 
