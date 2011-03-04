@@ -66,10 +66,9 @@ end
 
 desc "Create the nuget package"
 nugetpack :createPackage => :prepPackage do |nugetpack|
-   nugetpack.nuspec = "gribble.nuspec"
+   nugetpack.nuspec = "deploy/package/gribble.nuspec"
    nugetpack.base_folder = "deploy/package"
-   nugetpack.output = "deploy/gribble.nupkg"
-   nugetpack.log_level = :verbose
+   nugetpack.output = "deploy"
 end
 
 desc "Push the package to the Nuget server"
