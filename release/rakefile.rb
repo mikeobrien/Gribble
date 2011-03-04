@@ -1,6 +1,6 @@
 require "albacore"
 require "release/filesystem"
-require "yaml"
+require "release/nuget"
 
 task :default => [:unitTests]
 
@@ -70,14 +70,11 @@ nugetpack :createPackage => :prepPackage do |nugetpack|
    nugetpack.nuspec = "deploy/package/gribble.nuspec"
    nugetpack.base_folder = "deploy/package"
    nugetpack.output = "deploy"
-   nugetpack.log_level = :verbose
 end
 
-desc "Push the package to the Nuget server"
-task :pushPackage => :createPackage do
-	apiKey = YAML::load(File.open(ENV["USERPROFILE"] + "/.nuget/credentials"))["api_key"]
-	puts apiKey	
-	#result = system("nuget", "push", "-source", "deploy/gribble.#{ENV['GO_PIPELINE_LABEL']}.nupkg", apiKey)
+desc "Push the nuget package"
+nugetpush :pushPackage => :createPackage do |nugetpush|
+   nugetpush.package = "deploy/gribble.#{ENV['GO_PIPELINE_LABEL']}.nupkg"
 end
 
 desc "Tag the current release"
