@@ -40,13 +40,30 @@ nunit :unitTests => :buildTestProject do |nunit|
 	nunit.options "/xml=reports/TestResult.xml"
 end
 
+desc "Create the Nuget Package"
+nuspec :createPackage => :unitTests do |nuspec|
+   nuspec.id="gribble"
+   nuspec.version = "1.0.0"
+   nuspec.authors = "Mike O'Brien"
+   nuspec.description = "Gribble is a simple, Linq enabled ORM designed to work with dynamically created tables."
+   nuspec.title = "Gribble ORM"
+   nuspec.language = "en-US"
+   nuspec.licenseUrl = "https://github.com/mikeobrien/Gribble/blob/master/LICENSE"
+   nuspec.projectUrl = "https://github.com/mikeobrien/Gribble"
+   nuspec.working_directory = "Build/Deploy"
+   nuspec.output_file = "gribble.nuspec"
+   nuspec.tags = "orm sql"
+   nuspec.file("src/Gribble/bin/Release/Gribble.dll", "lib")
+   nuspec.file("src/Gribble/bin/Release/Gribble.pdb", "lib")
+end
+
 desc "Push the package to the Nuget server"
-task :pushPackage => :unitTests do
+task :pushPackage => :createPackage do
 	
 end
 
 desc "Tag the current release"
 task :tagRelease do
-	result = system("git", "tag", "-a", "v#{ENV['GO_PIPELINE_LABEL']}", "-m", "release-v#{ENV['GO_PIPELINE_LABEL']}")
-	result = system("git", "push", "--tags")
+	#result = system("git", "tag", "-a", "v#{ENV['GO_PIPELINE_LABEL']}", "-m", "release-v#{ENV['GO_PIPELINE_LABEL']}")
+	#result = system("git", "push", "--tags")
 end
