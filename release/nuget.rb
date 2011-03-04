@@ -4,7 +4,7 @@ class NugetPush
     attr_accessor :apiKey, :package
 
     def run()
-		if (@apiKey.nil?) @apiKey = YAML::load(File.open(ENV["USERPROFILE"] + "\.nuget\credentials"))["api_key"]
+		@apiKey = YAML::load(File.open(ENV["USERPROFILE"] + "\.nuget\credentials"))["api_key"] unless !@apiKey.nil?
 		puts @apiKey
 		#system("nuget", "push", "-source", @package, @apiKey)
     end
