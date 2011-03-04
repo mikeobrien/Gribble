@@ -10,7 +10,7 @@ end
 
 desc "Generate assembly info."
 assemblyinfo :assemblyInfo => :initBuild do |asm|
-    asm.version = ENV["GO_PIPELINE_LABEL"]
+    asm.version = ENV["GO_PIPELINE_LABEL"] + ".0"
     asm.company_name = "Ultraviolet Catastrophe"
     asm.product_name = "Gribble"
     asm.title = "Gribble"
@@ -43,14 +43,14 @@ end
 desc "Create the Nuget Package"
 nuspec :createPackage => :unitTests do |nuspec|
    nuspec.id="gribble"
-   nuspec.version = "1.0.0"
+   nuspec.version = ENV["GO_PIPELINE_LABEL"]
    nuspec.authors = "Mike O'Brien"
+   nuspec.owners = "Mike O'Brien"
    nuspec.description = "Gribble is a simple, Linq enabled ORM designed to work with dynamically created tables."
-   nuspec.title = "Gribble ORM"
    nuspec.language = "en-US"
    nuspec.licenseUrl = "https://github.com/mikeobrien/Gribble/blob/master/LICENSE"
    nuspec.projectUrl = "https://github.com/mikeobrien/Gribble"
-   nuspec.working_directory = "Build/Deploy"
+   nuspec.working_directory = "release"
    nuspec.output_file = "gribble.nuspec"
    nuspec.tags = "orm sql"
    nuspec.file("src/Gribble/bin/Release/Gribble.dll", "lib")
