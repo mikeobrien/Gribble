@@ -1,12 +1,13 @@
 require "albacore"
-require "release/common"
+require "release/filesystem"
 
 task :default => [:unitTests]
 
 desc "Inits the build"
 task :initBuild do
-	Common.EnsurePath("reports")
-	Common.EnsurePath("deploy/lib")
+	FileSystem.EnsurePath("reports")
+	FileSystem.DeleteDirectory("deploy")
+	FileSystem.EnsurePath("deploy/package/lib")
 end
 
 desc "Generate assembly info."
@@ -41,15 +42,9 @@ nunit :unitTests => :buildTestProject do |nunit|
 	nunit.options "/xml=reports/TestResult.xml"
 end
 
-desc "Push the package to the Nuget server"
-task :prepPackage => :unitTests do
-	Common.CopyFiles("src/Gribble/bin/Release/Gribble.dll", "deploy/lib")
-	Common.CopyFiles("src/Gribble/bin/Release/Gribble.pdb", "deploy/lib")
-end
-
 desc "Create the nuspec"
-nuspec :createSpec => :prepPackage do |nuspec|
-   nuspec.id="gribble"
+nuspec :createSpec => :unitTests do |nuspec|
+   nuspec.id = "gribble"
    nuspec.version = ENV["GO_PIPELINE_LABEL"]
    nuspec.authors = "Mike O'Brien"
    nuspec.owners = "Mike O'Brien"
@@ -58,13 +53,26 @@ nuspec :createSpec => :prepPackage do |nuspec|
    nuspec.language = "en-US"
    nuspec.licenseUrl = "https://github.com/mikeobrien/Gribble/blob/master/LICENSE"
    nuspec.projectUrl = "https://github.com/mikeobrien/Gribble"
-   nuspec.working_directory = "deploy"
+   nuspec.working_directory = "deploy/package"
    nuspec.output_file = "gribble.nuspec"
    nuspec.tags = "orm sql"
 end
 
 desc "Push the package to the Nuget server"
-task :pushPackage => :createSpec do
+task :prepPackage => :createSpec do
+	FileSystem.CopyFiles("src/Gribble/bin/Release/Gribble.dll", "deploy/package/lib")
+	FileSystem.CopyFiles("src/Gribble/bin/Release/Gribble.pdb", "deploy/package/lib")
+end
+
+desc "Create the nuget package"
+nugetpack :createPackage => :prepPackage do |nugetpack|
+   nugetpack.nuspec = "gribble.nuspec"
+   nugetpack.base_folder = "deploy/package"
+   nugetpack.output = "deploy/gribble.nupkg"
+end
+
+desc "Push the package to the Nuget server"
+task :pushPackage => :createPackage do
 	
 end
 
