@@ -6,6 +6,7 @@ task :default => [:unitTests]
 desc "Inits the build"
 task :initBuild do
 	Common.EnsurePath("reports")
+	Common.EnsurePath("deploy/lib")
 end
 
 desc "Generate assembly info."
@@ -40,25 +41,30 @@ nunit :unitTests => :buildTestProject do |nunit|
 	nunit.options "/xml=reports/TestResult.xml"
 end
 
-desc "Create the Nuget Package"
-nuspec :createPackage => :unitTests do |nuspec|
+desc "Push the package to the Nuget server"
+task :prepPackage => :unitTests do
+	Common.CopyFiles("src/Gribble/bin/Release/Gribble.dll", "deploy/lib")
+	Common.CopyFiles("src/Gribble/bin/Release/Gribble.pdb", "deploy/lib")
+end
+
+desc "Create the nuspec"
+nuspec :createSpec => :prepPackage do |nuspec|
    nuspec.id="gribble"
    nuspec.version = ENV["GO_PIPELINE_LABEL"]
    nuspec.authors = "Mike O'Brien"
    nuspec.owners = "Mike O'Brien"
    nuspec.description = "Gribble is a simple, Linq enabled ORM designed to work with dynamically created tables."
+   nuspec.summary = "Gribble is a simple, Linq enabled ORM designed to work with dynamically created tables."
    nuspec.language = "en-US"
    nuspec.licenseUrl = "https://github.com/mikeobrien/Gribble/blob/master/LICENSE"
    nuspec.projectUrl = "https://github.com/mikeobrien/Gribble"
-   nuspec.working_directory = "release"
+   nuspec.working_directory = "deploy"
    nuspec.output_file = "gribble.nuspec"
    nuspec.tags = "orm sql"
-   nuspec.file("src/Gribble/bin/Release/Gribble.dll", "lib")
-   nuspec.file("src/Gribble/bin/Release/Gribble.pdb", "lib")
 end
 
 desc "Push the package to the Nuget server"
-task :pushPackage => :createPackage do
+task :pushPackage => :createSpec do
 	
 end
 
