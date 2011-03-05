@@ -43,8 +43,14 @@ nunit :unitTests => :buildTestProject do |nunit|
 	nunit.options "/xml=reports/TestResult.xml"
 end
 
+desc "Push the package to the Nuget server"
+task :prepPackage => :unitTests do
+	FileSystem.CopyFiles("src/Gribble/bin/Release/Gribble.dll", "deploy/package/lib")
+	FileSystem.CopyFiles("src/Gribble/bin/Release/Gribble.pdb", "deploy/package/lib")
+end
+
 desc "Create the nuspec"
-nuspec :createSpec => :unitTests do |nuspec|
+nuspec :createSpec => :prepPackage do |nuspec|
    nuspec.id = "gribble"
    nuspec.version = ENV["GO_PIPELINE_LABEL"]
    nuspec.authors = "Mike O'Brien"
@@ -59,14 +65,8 @@ nuspec :createSpec => :unitTests do |nuspec|
    nuspec.tags = "orm sql"
 end
 
-desc "Push the package to the Nuget server"
-task :prepPackage => :createSpec do
-	FileSystem.CopyFiles("src/Gribble/bin/Release/Gribble.dll", "deploy/package/lib")
-	FileSystem.CopyFiles("src/Gribble/bin/Release/Gribble.pdb", "deploy/package/lib")
-end
-
 desc "Create the nuget package"
-nugetpack :createPackage => :prepPackage do |nugetpack|
+nugetpack :createPackage => :createSpec do |nugetpack|
    nugetpack.nuspec = "deploy/package/gribble.nuspec"
    nugetpack.base_folder = "deploy/package"
    nugetpack.output = "deploy"
