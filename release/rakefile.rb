@@ -79,6 +79,6 @@ end
 
 desc "Tag the current release"
 task :tagRelease do
-	#result = system("git", "tag", "-a", "v#{ENV['GO_PIPELINE_LABEL']}", "-m", "release-v#{ENV['GO_PIPELINE_LABEL']}")
-	#result = system("git", "push", "--tags")
+	result = system("git", "tag", "-a", "v#{ENV['GO_PIPELINE_LABEL']}", "-m", "release-v#{ENV['GO_PIPELINE_LABEL']}")
+	result = system("git", "push", "--tags")
 end
