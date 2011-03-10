@@ -87,6 +87,18 @@ namespace Tests
         public void TestSetup() { Database.CreateTables(); }
 
         [Test]
+        public void Get_Test()
+        {
+            var result = _identityTable1.Get(7);
+            result.ShouldNotBeNull();
+            result.Name.Length.ShouldBeGreaterThan(3);
+            result.Id.ShouldEqual(7);
+            result.Values.Count.ShouldBeGreaterThan(2);
+            ((bool)result.Values["hide"]).ShouldEqual(false);
+            ((DateTime)result.Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+        }
+
+        [Test]
         public void Select_Test()
         {
             var results = _identityTable1.ToList();
@@ -107,6 +119,16 @@ namespace Tests
             results.All(x => x.Id > 0).ShouldEqual(true);
             results.First().Values.Count.ShouldBeGreaterThan(0);
             ((bool)results.First().Values["hide"]).ShouldEqual(false);
+        }
+
+        [Test]
+        public void Delete_By_Id_Test()
+        {
+            var count = _identityTable1.Count();
+            _identityTable1.Where(x => x.Id == 4).Count().ShouldEqual(1);
+            _identityTable1.Delete(4);
+            _identityTable1.Where(x => x.Id == 4).Count().ShouldEqual(0);
+            _identityTable1.Count().ShouldEqual(count - 1);
         }
 
         [Test]

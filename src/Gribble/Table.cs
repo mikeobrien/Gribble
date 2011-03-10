@@ -74,18 +74,32 @@ namespace Gribble
             else adapter.Key = command.ExecuteScalar(_connectionManager);
         }
 
+        public TEntity Get<T>(T id)
+        {
+            var select = new Select {
+                Top = 1,
+                Source = { Type = Data.DataType.Table, Table = new Table { Name = _table } },
+                Where = CreateKeyFilter(id) };
+            return ExecuteQuery<IEnumerable<TEntity>>(select).FirstOrDefault();
+        }
+
         public void Update(TEntity entity)
         {
             var adapter = new EntityAdapter<TEntity>(entity, _map);
             var keyColumnName = _map.Key.GetColumnName();
             var values = adapter.GetValues().Where(x => x.Key != keyColumnName);
-            Command.Create(UpdateWriter<TEntity>.CreateStatement(new Update(values, _table, GetKeyFilter(entity, adapter)), _map), _profiler).
+            Command.Create(UpdateWriter<TEntity>.CreateStatement(new Update(values, _table, CreateEntityKeyFilter(entity, adapter)), _map), _profiler).
                     ExecuteNonQuery(_connectionManager);
+        }
+
+        public void Delete<T>(T id)
+        {
+            Delete(CreateKeyFilter(id), false);
         }
 
         public void Delete(TEntity entity)
         {
-            Delete(GetKeyFilter(entity), false);
+            Delete(CreateEntityKeyFilter(entity), false);
         }
 
         public void Delete(Expression<Func<TEntity, bool>> filter)
@@ -104,7 +118,13 @@ namespace Gribble
                     ExecuteNonQuery(_connectionManager);
         }
 
-        private Operator GetKeyFilter(TEntity entity, EntityAdapter<TEntity> adapter = null)
+        private Operator CreateKeyFilter<T>(T id)
+        {
+            var field = _map.Key.GetPropertyName();
+            return Operator.Create.FieldEqualsConstant(field, id);
+        }
+
+        private Operator CreateEntityKeyFilter(TEntity entity, EntityAdapter<TEntity> adapter = null)
         {
             var id = (adapter ?? new EntityAdapter<TEntity>(entity, _map)).Key;
             var field = _map.Key.GetPropertyName();

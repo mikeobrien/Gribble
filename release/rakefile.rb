@@ -7,8 +7,6 @@ task :default => [:unitTests]
 desc "Inits the build"
 task :initBuild do
 	FileSystem.EnsurePath("reports")
-	FileSystem.DeleteDirectory("deploy")
-	FileSystem.EnsurePath("deploy/package/lib")
 end
 
 desc "Generate assembly info."
@@ -43,8 +41,10 @@ nunit :unitTests => :buildTestProject do |nunit|
 	nunit.options "/xml=reports/TestResult.xml"
 end
 
-desc "Push the package to the Nuget server"
+desc "Prep the package folder"
 task :prepPackage => :unitTests do
+	FileSystem.DeleteDirectory("deploy")
+	FileSystem.EnsurePath("deploy/package/lib")
 	FileSystem.CopyFiles("src/Gribble/bin/Release/Gribble.dll", "deploy/package/lib")
 	FileSystem.CopyFiles("src/Gribble/bin/Release/Gribble.pdb", "deploy/package/lib")
 end
