@@ -47,11 +47,11 @@ namespace Gribble
         {
             values.Where(x => _map.Column.HasStaticPropertyMapping(x.Key)).
                    Join(_properties, x => _map.Column.GetStaticPropertyName(x.Key), x => x.Name, (v, p) => new { v.Value, Property = p }).
-                   Run(x => x.Property.SetValue(Entity, ConvertValue(x.Property.PropertyType, x.Value), null));
+                   ToList().ForEach(x => x.Property.SetValue(Entity, ConvertValue(x.Property.PropertyType, x.Value), null));
 
             if (_hasDynamicProperty) values.Where(x => _map.Column.HasDynamicPropertyMapping(x.Key)).
                                             Select(x => new { Name = _map.Column.GetDynamicPropertyName(x.Key), x.Value }).
-                                            Run(x =>
+                                            ToList().ForEach(x =>
                                                     {
                                                         if (_dynamicValues.ContainsKey(x.Name)) _dynamicValues[x.Name] = x.Value;
                                                         else _dynamicValues.Add(x.Name, x.Value);
@@ -62,7 +62,7 @@ namespace Gribble
         {
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
-                if (value == null) return value;
+                if (value == null) return null;
                 var arguments = type.GetGenericArguments();
                 if (arguments.Any(x => x.IsEnum)) return Enum.ToObject(arguments.First(x => x.IsEnum), value);
             }

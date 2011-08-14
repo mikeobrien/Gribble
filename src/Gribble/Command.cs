@@ -91,7 +91,7 @@ namespace Gribble
             var command = connectionManager.CreateCommand();
             command.CommandText = Statement.Text;
             command.CommandType = Statement.Type == Statement.StatementType.Text ? CommandType.Text : CommandType.StoredProcedure;
-            Statement.Parameters.Select(x => new SqlParameter(x.Key, x.Value)).Run(y => command.Parameters.Add(y));
+            Statement.Parameters.Select(x => new SqlParameter(x.Key, x.Value)).ToList().ForEach(y => command.Parameters.Add(y));
             return command;
         }
 
@@ -108,15 +108,15 @@ namespace Gribble
 
         private T Execute<T>(Func<T> command)
         {
-            //try
-            //{
+            try
+            {
                 if (_profiler != null) ProfileCommand(Statement, _profiler);
                 return command();
-            //}
-            //catch (Exception exception)
-            //{
-            //    throw new SqlException(exception, Statement);
-           // }
+            }
+            catch (Exception exception)
+            {
+                throw new SqlException(exception, Statement);
+            }
         }
 
         private static void ProfileCommand(Statement statement, IProfiler profiler)

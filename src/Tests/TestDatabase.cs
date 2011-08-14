@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Linq;
 using Gribble;
 
 namespace Tests
@@ -86,7 +87,7 @@ namespace Tests
 
         public void CreateTables()
         {
-            _tables.Run(x => x.CreateTable());
+            _tables.ToList().ForEach(x => x.CreateTable());
         }
     }
 }

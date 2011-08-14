@@ -133,7 +133,7 @@ namespace Gribble
             if (source == null) throw new ArgumentNullException("source");
             if (compare == null) throw new ArgumentNullException("compare");
             if (selectors == null) throw new ArgumentNullException("selectors");
-            if (selectors.Length == 0) Enumerable.Except(source, compare);
+            if (selectors.Length == 0) return Enumerable.Except(source, compare);
             return Enumerable.Except(source, source.Intersect(compare, selectors));
         }
 
