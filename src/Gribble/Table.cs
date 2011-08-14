@@ -5,7 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using Gribble.Expressions;
 using Gribble.Mapping;
-using Gribble.Statements;
+using Gribble.Model;
 using Gribble.TransactSql;
 
 namespace Gribble
@@ -18,7 +18,7 @@ namespace Gribble
 
     public class Table<TEntity> : QueryableBase<TEntity>, ITable<TEntity>
     {
-        private readonly ConnectionManager _connectionManager;
+        private readonly IConnectionManager _connectionManager;
         private readonly string _table;
         private readonly IEntityMapping _map;
         private readonly IProfiler _profiler;
@@ -32,13 +32,13 @@ namespace Gribble
         public Table(SqlConnection connection, TimeSpan commandTimeout, string table, IEntityMapping mapping, IProfiler profiler) :
             this(new ConnectionManager(connection, commandTimeout), table, mapping, profiler) { }
 
-        public Table(ConnectionManager connectionManagerManager, string table, IEntityMapping mapping) :
+        public Table(IConnectionManager connectionManagerManager, string table, IEntityMapping mapping) :
             this(connectionManagerManager, table, mapping, null) { }
 
-        public Table(ConnectionManager connectionManagerManager, string table, IEntityMapping mapping, bool profile) :
+        public Table(IConnectionManager connectionManagerManager, string table, IEntityMapping mapping, bool profile) :
             this(connectionManagerManager, table, mapping, profile ? new ConsoleProfiler() : null) { }
 
-        public Table(ConnectionManager connectionManagerManager, string table, IEntityMapping mapping, IProfiler profiler)
+        public Table(IConnectionManager connectionManagerManager, string table, IEntityMapping mapping, IProfiler profiler)
         {
             _connectionManager = connectionManagerManager;
             _table = table;

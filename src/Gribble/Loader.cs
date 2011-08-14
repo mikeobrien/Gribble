@@ -18,7 +18,7 @@ namespace Gribble
             _map = map;
         }
 
-        public object Execute(ConnectionManager connectionManager)
+        public object Execute(IConnectionManager connectionManager)
         {
             switch (_command.Statement.Result)
             {
@@ -30,14 +30,14 @@ namespace Gribble
             }
         }
 
-        private static IEnumerable<TEntity> LoadMultipleResults(ConnectionManager connectionManager, Command command, IEntityMapping map)
+        private static IEnumerable<TEntity> LoadMultipleResults(IConnectionManager connectionManager, Command command, IEntityMapping map)
         {
             using (var reader = command.ExecuteReader(connectionManager)) 
                 while (reader.Read()) 
                     yield return LoadEntity(reader, map);
         }
 
-        private static TEntity LoadSingleResult(ConnectionManager connectionManager, Command command, IEntityMapping map, bool failOnNoResults)
+        private static TEntity LoadSingleResult(IConnectionManager connectionManager, Command command, IEntityMapping map, bool failOnNoResults)
         {
             using (var reader = command.ExecuteReader(connectionManager))
             {

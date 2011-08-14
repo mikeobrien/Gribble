@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using Gribble.Expressions;
-using Gribble.Statements;
+using Gribble.Model;
 using NUnit.Framework;
 using Should;
 

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Gribble.Mapping;
-using Gribble.Statements;
+using Gribble.Model;
 
 namespace Gribble.TransactSql
 {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Gribble.Statements
+namespace Gribble.Model
 {
     public class Data
     {

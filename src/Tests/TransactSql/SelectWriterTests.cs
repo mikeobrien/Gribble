@@ -4,7 +4,7 @@ using System.Linq;
 using Gribble;
 using Gribble.Expressions;
 using Gribble.Mapping;
-using Gribble.Statements;
+using Gribble.Model;
 using Gribble.TransactSql;
 using NUnit.Framework;
 using Should;

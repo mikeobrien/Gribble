@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
-using Gribble.Statements;
+using Gribble.Model;
 
 namespace Gribble.Expressions
 {

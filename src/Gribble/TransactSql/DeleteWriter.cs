@@ -1,5 +1,5 @@
 ﻿using Gribble.Mapping;
-using Gribble.Statements;
+using Gribble.Model;
 
 namespace Gribble.TransactSql
 {

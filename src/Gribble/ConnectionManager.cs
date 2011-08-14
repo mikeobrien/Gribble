@@ -4,7 +4,7 @@ using System.Data.SqlClient;
 
 namespace Gribble
 {
-    public class ConnectionManager : IDisposable
+    public class ConnectionManager : IConnectionManager
     {
         private readonly Lazy<SqlConnection> _connection;
         private readonly TimeSpan _commandTimeout;

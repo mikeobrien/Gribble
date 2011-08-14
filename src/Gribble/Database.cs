@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using Gribble.Mapping;
-using Gribble.Statements;
+using Gribble.Model;
 using Gribble.TransactSql;
 
 namespace Gribble
 {
     public class Database : IDatabase
     {
-        private readonly ConnectionManager _connectionManager;
+        private readonly IConnectionManager _connectionManager;
         private readonly IProfiler _profiler;
         private readonly EntityMappingCollection _mappingCollection;
 
@@ -19,10 +19,10 @@ namespace Gribble
         public Database(SqlConnection connection, TimeSpan commandTimeout, EntityMappingCollection mappingCollection, IProfiler profiler) :
             this(new ConnectionManager(connection, commandTimeout), mappingCollection, profiler) { }
 
-        public Database(ConnectionManager connectionManager, EntityMappingCollection mappingCollection) :
+        public Database(IConnectionManager connectionManager, EntityMappingCollection mappingCollection) :
             this(connectionManager, mappingCollection, null) { }
 
-        public Database(ConnectionManager connectionManager, EntityMappingCollection mappingCollection, IProfiler profiler)
+        public Database(IConnectionManager connectionManager, EntityMappingCollection mappingCollection, IProfiler profiler)
         {
             _connectionManager = connectionManager;
             _profiler = profiler;

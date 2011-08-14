@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Gribble.Statements
+namespace Gribble.Model
 {
     public class Constant
     {

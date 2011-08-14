@@ -1,4 +1,4 @@
-﻿namespace Gribble.Statements
+﻿namespace Gribble.Model
 {
     public class Projection
     {
