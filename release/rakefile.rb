@@ -63,6 +63,7 @@ end
 
 nugetApiKey = YAML::load(File.open(ENV["USERPROFILE"] + "/.nuget/credentials"))["api_key"]
 deployPath = "deploy"
+logoPath = "misc/gribble.png"
 
 corePackagePath = File.join(deployPath, "corepackage")
 coreNuspec = "gribble.nuspec"
@@ -74,7 +75,8 @@ task :prepCorePackage => :unitTests do
 	FileSystem.DeleteDirectory(deployPath)
 	FileSystem.EnsurePath(corePackageLibPath)
 	FileSystem.CopyFiles(File.join(coreBinPath, "Gribble.dll"), corePackageLibPath)
-	FileSystem.CopyFiles(File.join(coreBinPath, "Gribble.pdb"), corePackageLibPath)
+	FileSystem.CopyFiles(File.join(coreBinPath, "Gribble.dll"), corePackageLibPath)
+	FileSystem.CopyFiles(logoPath, corePackageLibPath)
 end
 
 desc "Create the core nuspec"
@@ -119,6 +121,7 @@ task :prepNHibernatePackage => :unitTests do
 	FileSystem.EnsurePath(nhibernatePackageLibPath)
 	FileSystem.CopyFiles(File.join(nhibernateBinPath, "Gribble.NHibernate.dll"), nhibernatePackageLibPath)
 	FileSystem.CopyFiles(File.join(nhibernateBinPath, "Gribble.NHibernate.pdb"), nhibernatePackageLibPath)
+	FileSystem.CopyFiles(logoPath, corePackageLibPath)
 end
 
 desc "Create the NHibernate nuspec"
