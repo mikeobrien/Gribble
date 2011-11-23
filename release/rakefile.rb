@@ -1,6 +1,5 @@
 require "albacore"
 require "release/filesystem"
-require "release/nuget"
 
 reportsPath = "reports"
 
@@ -62,6 +61,7 @@ nunit :unitTests => [:buildTestProject, :unitTestInit] do |nunit|
 	nunit.options "/xml=#{reportsPath}/TestResult.xml"
 end
 
+nugetApiKey = YAML::load(File.open(ENV["USERPROFILE"] + "/.nuget/credentials"))["api_key"]
 deployPath = "deploy"
 
 corePackagePath = File.join(deployPath, "corepackage")
@@ -90,7 +90,7 @@ nuspec :createCoreSpec => :prepCorePackage do |nuspec|
    nuspec.projectUrl = "https://github.com/mikeobrien/Gribble"
    nuspec.working_directory = corePackagePath
    nuspec.output_file = coreNuspec
-   nuspec.tags = "orm sql"
+   nuspec.tags = "orm dal sql"
 end
 
 desc "Create the core nuget package"
@@ -101,8 +101,9 @@ nugetpack :createCorePackage => :createCoreSpec do |nugetpack|
 end
 
 desc "Push the core nuget package"
-nugetpush :pushCorePackage => :createCorePackage do |nugetpush|
-   nugetpush.package = File.join(deployPath, "gribble.#{ENV['GO_PIPELINE_LABEL']}.nupkg")
+nugetpush :pushCorePackage => :createCorePackage do |nuget|
+    nuget.apikey = nugetApiKey
+    nuget.package = File.join(deployPath, "gribble.#{ENV['GO_PIPELINE_LABEL']}.nupkg")
 end
 
 nhibernatePackagePath = File.join(deployPath, "nhpackage")
@@ -131,7 +132,8 @@ nuspec :createNHibernateSpec => :prepNHibernatePackage do |nuspec|
    nuspec.projectUrl = "https://github.com/mikeobrien/Gribble"
    nuspec.working_directory = nhibernatePackagePath
    nuspec.output_file = nhibernateNuspec
-   nuspec.tags = "orm sql nhibernate"
+   nuspec.tags = "orm dal sql nhibernate"
+   nuspec.dependency "NHibernate.Castle", "3.1.0.4000"
 end
 
 desc "Create the NHibernate nuget package"
@@ -142,8 +144,9 @@ nugetpack :createNHibernatePackage => :createNHibernateSpec do |nugetpack|
 end
 
 desc "Push the nhibernate nuget package"
-nugetpush :pushNHibernatePackage => :createNHibernatePackage do |nugetpush|
-   nugetpush.package = File.join(deployPath, "gribble.nhibernate.#{ENV['GO_PIPELINE_LABEL']}.nupkg")
+nugetpush :pushNHibernatePackage => :createNHibernatePackage do |nuget|
+    nuget.apikey = nugetApiKey
+    nuget.package = File.join(deployPath, "gribble.nhibernate.#{ENV['GO_PIPELINE_LABEL']}.nupkg")
 end
 
 desc "Tag the current release"
