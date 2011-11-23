@@ -76,7 +76,7 @@ task :prepCorePackage => :unitTests do
 	FileSystem.EnsurePath(corePackageLibPath)
 	FileSystem.CopyFiles(File.join(coreBinPath, "Gribble.dll"), corePackageLibPath)
 	FileSystem.CopyFiles(File.join(coreBinPath, "Gribble.dll"), corePackageLibPath)
-	FileSystem.CopyFiles(logoPath, corePackageLibPath)
+	FileSystem.CopyFiles(logoPath, corePackagePath)
 end
 
 desc "Create the core nuspec"
@@ -121,7 +121,7 @@ task :prepNHibernatePackage => :unitTests do
 	FileSystem.EnsurePath(nhibernatePackageLibPath)
 	FileSystem.CopyFiles(File.join(nhibernateBinPath, "Gribble.NHibernate.dll"), nhibernatePackageLibPath)
 	FileSystem.CopyFiles(File.join(nhibernateBinPath, "Gribble.NHibernate.pdb"), nhibernatePackageLibPath)
-	FileSystem.CopyFiles(logoPath, corePackageLibPath)
+	FileSystem.CopyFiles(logoPath, corePackagePath)
 end
 
 desc "Create the NHibernate nuspec"
