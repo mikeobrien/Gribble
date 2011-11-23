@@ -8,7 +8,7 @@ task :pushPackages => [:pushCorePackage, :pushNHibernatePackage]
 
 desc "Generate core assembly info."
 assemblyinfo :coreAssemblyInfo do |asm|
-    asm.version = ENV["GO_PIPELINE_LABEL"] + ".0"
+    asm.version = ENV["GO_PIPELINE_LABEL"]
     asm.company_name = "Ultraviolet Catastrophe"
     asm.product_name = "Gribble"
     asm.title = "Gribble"
@@ -26,7 +26,7 @@ end
 
 desc "Generate nhibernate integration assembly info."
 assemblyinfo :nhibernateAssemblyInfo do |asm|
-    asm.version = ENV["GO_PIPELINE_LABEL"] + ".0"
+    asm.version = ENV["GO_PIPELINE_LABEL"]
     asm.company_name = "Ultraviolet Catastrophe"
     asm.product_name = "Gribble NHibernate Integration"
     asm.title = "Gribble NHibernate Integration"
