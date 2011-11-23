@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Data.SqlClient;
 using System.Linq;
-using Gribble;
 
 namespace Tests
 {
     public class TestTable
     {
         private readonly TestDatabase _database;
-        private readonly string _name = "TBL_" + Guid.NewGuid().ToString("N");
+        private readonly string _name = GenerateName();
         private readonly string _tableColumnSchema;
         private readonly int _recordCount;
         private readonly string _tableDataColumns;
@@ -30,6 +29,11 @@ namespace Tests
         }
 
         public string Name { get { return _name; } }
+
+        public static string GenerateName()
+        {
+            return "TBL_" + Guid.NewGuid().ToString("N");
+        }
 
         public void CreateTable()
         {

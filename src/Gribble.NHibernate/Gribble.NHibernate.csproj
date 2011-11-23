@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{FD8392BC-2701-4CF9-B1B9-B3DCFD897881}</ProjectGuid>
+    <ProjectGuid>{B21C4B1E-DC2B-48A9-BDF6-D0A30E26E001}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Tests</RootNamespace>
-    <AssemblyName>Tests</AssemblyName>
+    <RootNamespace>Gribble.NHibernate</RootNamespace>
+    <AssemblyName>Gribble.NHibernate</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -37,29 +37,15 @@
     <Reference Include="FluentNHibernate">
       <HintPath>..\packages\FluentNHibernate.1.2.0.712\lib\FluentNHibernate.dll</HintPath>
     </Reference>
-    <Reference Include="Iesi.Collections">
+    <Reference Include="Iesi.Collections, Version=1.0.1.0, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
       <HintPath>..\packages\Iesi.Collections.3.1.0.4000\lib\Net35\Iesi.Collections.dll</HintPath>
     </Reference>
-    <Reference Include="NHibernate">
+    <Reference Include="NHibernate, Version=3.1.0.4000, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NHibernate.3.1.0.4000\lib\Net35\NHibernate.dll</HintPath>
     </Reference>
     <Reference Include="NHibernate.ByteCode.Castle">
       <HintPath>..\packages\NHibernate.Castle.3.1.0.4000\lib\Net35\NHibernate.ByteCode.Castle.dll</HintPath>
-    </Reference>
-    <Reference Include="nunit.framework">
-      <HintPath>..\packages\NUnit.2.5.9.10348\lib\nunit.framework.dll</HintPath>
-    </Reference>
-    <Reference Include="nunit.mocks">
-      <HintPath>..\packages\NUnit.2.5.9.10348\lib\nunit.mocks.dll</HintPath>
-    </Reference>
-    <Reference Include="pnunit.framework">
-      <HintPath>..\packages\NUnit.2.5.9.10348\lib\pnunit.framework.dll</HintPath>
-    </Reference>
-    <Reference Include="Rhino.Mocks">
-      <HintPath>..\packages\RhinoMocks.3.6\lib\Rhino.Mocks.dll</HintPath>
-    </Reference>
-    <Reference Include="Should">
-      <HintPath>..\packages\Should.1.1.12.0\lib\Should.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -70,44 +56,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ClassMapTests.cs" />
-    <Compile Include="DatabaseTests.cs" />
-    <Compile Include="EntityAdapterTests.cs" />
-    <Compile Include="EntityMapTests.cs" />
-    <Compile Include="NHibernate\ConnectionManagerTests.cs" />
-    <Compile Include="NHibernate\Extensions.cs" />
-    <Compile Include="QueryableTests.cs" />
-    <Compile Include="Expressions\ExpressionExtensionsTests.cs" />
-    <Compile Include="Expressions\ProjectionVisitorTests.cs" />
-    <Compile Include="Expressions\SelectVisitorTests.cs" />
-    <Compile Include="Expressions\WhereVisitorTests.cs" />
-    <Compile Include="LoaderTests.cs" />
-    <Compile Include="MockQueryable.cs" />
+    <Compile Include="ConnectionManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TableTests.cs" />
-    <Compile Include="TestDatabase.cs" />
-    <Compile Include="TestTable.cs" />
-    <Compile Include="TransactSql\DeleteWriterTests.cs" />
-    <Compile Include="TransactSql\DictionaryExtensionTests.cs" />
-    <Compile Include="TransactSql\InsertWriterTests.cs" />
-    <Compile Include="TransactSql\ProjectionWriterTests.cs" />
-    <Compile Include="TransactSql\SchemaWriterTests.cs" />
-    <Compile Include="TransactSql\SelectWriterTests.cs" />
-    <Compile Include="TransactSql\UpdateWriterTests.cs" />
-    <Compile Include="TransactSql\WhereWriterTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Gribble.NHibernate\Gribble.NHibernate.csproj">
-      <Project>{B21C4B1E-DC2B-48A9-BDF6-D0A30E26E001}</Project>
-      <Name>Gribble.NHibernate</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Gribble\Gribble.csproj">
       <Project>{8A9D3349-E67B-4299-8D91-A4E54413845D}</Project>
       <Name>Gribble</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
