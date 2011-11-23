@@ -83,6 +83,7 @@ nuspec :createCoreSpec => :prepCorePackage do |nuspec|
    nuspec.version = ENV["GO_PIPELINE_LABEL"]
    nuspec.authors = "Mike O'Brien"
    nuspec.owners = "Mike O'Brien"
+   nuspec.title = "Gribble ORM"
    nuspec.description = "Gribble is a simple, Linq enabled ORM designed to work with dynamically created tables."
    nuspec.summary = "Gribble is a simple, Linq enabled ORM designed to work with dynamically created tables."
    nuspec.language = "en-US"
@@ -115,8 +116,8 @@ desc "Prep the NHibernate package folder"
 task :prepNHibernatePackage => :unitTests do
 	FileSystem.DeleteDirectory(deployPath)
 	FileSystem.EnsurePath(nhibernatePackageLibPath)
-	FileSystem.CopyFiles(File.join(nhibernateBinPath, "Gribble.NHiberate.dll"), nhibernatePackageLibPath)
-	FileSystem.CopyFiles(File.join(nhibernateBinPath, "Gribble.NHiberate.pdb"), nhibernatePackageLibPath)
+	FileSystem.CopyFiles(File.join(nhibernateBinPath, "Gribble.NHibernate.dll"), nhibernatePackageLibPath)
+	FileSystem.CopyFiles(File.join(nhibernateBinPath, "Gribble.NHibernate.pdb"), nhibernatePackageLibPath)
 end
 
 desc "Create the NHibernate nuspec"
@@ -125,6 +126,7 @@ nuspec :createNHibernateSpec => :prepNHibernatePackage do |nuspec|
    nuspec.version = ENV["GO_PIPELINE_LABEL"]
    nuspec.authors = "Mike O'Brien"
    nuspec.owners = "Mike O'Brien"
+   nuspec.title = "Gribble ORM NHibernate Integration"
    nuspec.description = "Gribble NHibernate integration."
    nuspec.summary = "Gribble NHibernate integration."
    nuspec.language = "en-US"
