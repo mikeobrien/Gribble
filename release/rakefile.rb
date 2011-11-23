@@ -133,6 +133,7 @@ nuspec :createNHibernateSpec => :prepNHibernatePackage do |nuspec|
    nuspec.working_directory = nhibernatePackagePath
    nuspec.output_file = nhibernateNuspec
    nuspec.tags = "orm dal sql nhibernate"
+   nuspec.dependency "gribble", ENV["GO_PIPELINE_LABEL"]
    nuspec.dependency "NHibernate", "3.1.0.4000"
 end
 
