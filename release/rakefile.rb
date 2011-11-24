@@ -151,9 +151,3 @@ nugetpush :pushNHibernatePackage => :createNHibernatePackage do |nuget|
     nuget.apikey = nugetApiKey
     nuget.package = File.join(deployPath, "gribble.nhibernate.#{version}.nupkg")
 end
-
-desc "Tag the current release"
-task :tagRelease do
-	result = system("git", "tag", "-a", "v#{version}", "-m", "release-v#{version}")
-	result = system("git", "push", "--tags")
-end
