@@ -63,7 +63,6 @@ end
 
 nugetApiKey = YAML::load(File.open(ENV["USERPROFILE"] + "/.nuget/credentials"))["api_key"]
 deployPath = "deploy"
-logoPath = "misc/gribble.png"
 
 corePackagePath = File.join(deployPath, "corepackage")
 coreNuspec = "gribble.nuspec"
@@ -76,7 +75,6 @@ task :prepCorePackage => :unitTests do
 	FileSystem.EnsurePath(corePackageLibPath)
 	FileSystem.CopyFiles(File.join(coreBinPath, "Gribble.dll"), corePackageLibPath)
 	FileSystem.CopyFiles(File.join(coreBinPath, "Gribble.dll"), corePackageLibPath)
-	FileSystem.CopyFiles(logoPath, corePackagePath)
 end
 
 desc "Create the core nuspec"
@@ -91,7 +89,7 @@ nuspec :createCoreSpec => :prepCorePackage do |nuspec|
    nuspec.language = "en-US"
    nuspec.licenseUrl = "https://github.com/mikeobrien/Gribble/blob/master/LICENSE"
    nuspec.projectUrl = "https://github.com/mikeobrien/Gribble"
-   nuspec.iconUrl = "http://nuget.org/Media/Default/Packages/gribble.nhibernate/#{ENV["GO_PIPELINE_LABEL"]}/gribble.png"
+   nuspec.iconUrl = "https://github.com/mikeobrien/Gribble/raw/master/misc/gribble.png"
    nuspec.working_directory = corePackagePath
    nuspec.output_file = coreNuspec
    nuspec.tags = "orm dal sql"
@@ -121,7 +119,6 @@ task :prepNHibernatePackage => :unitTests do
 	FileSystem.EnsurePath(nhibernatePackageLibPath)
 	FileSystem.CopyFiles(File.join(nhibernateBinPath, "Gribble.NHibernate.dll"), nhibernatePackageLibPath)
 	FileSystem.CopyFiles(File.join(nhibernateBinPath, "Gribble.NHibernate.pdb"), nhibernatePackageLibPath)
-	FileSystem.CopyFiles(logoPath, corePackagePath)
 end
 
 desc "Create the NHibernate nuspec"
@@ -136,7 +133,7 @@ nuspec :createNHibernateSpec => :prepNHibernatePackage do |nuspec|
    nuspec.language = "en-US"
    nuspec.licenseUrl = "https://github.com/mikeobrien/Gribble/blob/master/LICENSE"
    nuspec.projectUrl = "https://github.com/mikeobrien/Gribble"
-   nuspec.iconUrl = "http://nuget.org/Media/Default/Packages/gribble.nhibernate/#{ENV["GO_PIPELINE_LABEL"]}/gribble.png"
+   nuspec.iconUrl = "https://github.com/mikeobrien/Gribble/raw/master/misc/gribble.png"
    nuspec.working_directory = nhibernatePackagePath
    nuspec.output_file = nhibernateNuspec
    nuspec.tags = "orm dal sql nhibernate"
