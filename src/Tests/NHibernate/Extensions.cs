@@ -18,5 +18,11 @@ namespace Tests.NHibernate
             if (showSql) persistenceConfigurer.ShowSql().FormatSql();
             return configuration.Database(persistenceConfigurer);
         }
+
+        public static global::NHibernate.Cfg.Configuration CommandTimeout(this global::NHibernate.Cfg.Configuration configuration, int seconds)
+        {
+            configuration.SetProperty("command_timeout", seconds.ToString());
+            return configuration;
+        }
     }
 }

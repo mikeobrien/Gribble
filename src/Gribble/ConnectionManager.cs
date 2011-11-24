@@ -30,11 +30,9 @@ namespace Gribble
 
         public IDbCommand CreateCommand()
         {
-            return new SqlCommand
-                       {
-                           Connection = _connection.Value,
-                           CommandTimeout = (int)_commandTimeout.TotalSeconds
-                       };
+            var command = _connection.Value.CreateCommand();
+            command.CommandTimeout = (int) _commandTimeout.TotalSeconds;
+            return command;
         }
 
         public void Dispose()

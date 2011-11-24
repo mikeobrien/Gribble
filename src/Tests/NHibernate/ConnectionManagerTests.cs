@@ -8,6 +8,7 @@ using Gribble.Mapping;
 using Gribble.Model;
 using NHibernate.Cfg;
 using NUnit.Framework;
+using Should;
 using ConnectionManager = Gribble.NHibernate.ConnectionManager;
 
 namespace Tests.NHibernate
@@ -17,11 +18,12 @@ namespace Tests.NHibernate
     {
         private readonly static string TableName = TestTable.GenerateName();
         private TestDatabase _database;
+        private const int CommandTimeout = 1200;
 
         private readonly static Func<TestDatabase, Configuration> CreateConfiguration = database => Fluently.Configure().
                 Sql2008Database(database.Connection.ConnectionString, IsolationLevel.ReadCommitted, true).
                 Mappings(map => map.FluentMappings.Add<EntityMap>().Conventions.Add(AutoImport.Never())).
-                ExposeConfiguration(config => config.AutoQuote()).
+                ExposeConfiguration(config => config.AutoQuote().CommandTimeout(CommandTimeout)).
                 BuildConfiguration();
 
         public class Entity
@@ -46,15 +48,26 @@ namespace Tests.NHibernate
             }
         }
 
-        [TestFixtureSetUp]
+        [SetUp]
         public void Setup()
         {
             _database = new TestDatabase();
             _database.SetUp();
         }
 
-        [TestFixtureTearDown]
+        [TearDown]
         public void TearDown() { _database.TearDown(); }
+
+        [Test]
+        public void Gribble_Commands_Should_Pick_Up_NHibernate_Command_Timeout()
+        {
+            using (var factory = CreateConfiguration(_database).BuildSessionFactory())
+            using (var session = factory.OpenSession())
+            {
+                var connectionManager = new ConnectionManager(session);
+                connectionManager.CreateCommand().CommandTimeout.ShouldEqual(CommandTimeout);
+            }
+        }
 
         [Test]
         public void Gribble_Should_Share_Transaction_With_Nhibernate()
@@ -63,7 +76,7 @@ namespace Tests.NHibernate
             using (var session = factory.OpenSession())
             using (var transaction = session.BeginTransaction())
             {
-                var connectionManager = new ConnectionManager(session, TimeSpan.FromMinutes(1));
+                var connectionManager = new ConnectionManager(session);
                 var database = new Database(connectionManager, new EntityMappingCollection(Enumerable.Empty<IClassMap>()));
                 database.CreateTable(TableName, 
                     new Column { Name = "id", IsPrimaryKey = true, IsIdentity = true, Type = typeof(int) },
@@ -72,6 +85,23 @@ namespace Tests.NHibernate
                 var entity = new Entity {Name = "Dirac"};
                 session.Save(entity);
                 transaction.Commit();
+            }
+        }
+
+        [Test]
+        public void Gribble_Should_Work_Without_A_Transaction_With_Nhibernate()
+        {
+            using (var factory = CreateConfiguration(_database).BuildSessionFactory())
+            using (var session = factory.OpenSession())
+            {
+                var connectionManager = new ConnectionManager(session);
+                var database = new Database(connectionManager, new EntityMappingCollection(Enumerable.Empty<IClassMap>()));
+                database.CreateTable(TableName,
+                    new Column { Name = "id", IsPrimaryKey = true, IsIdentity = true, Type = typeof(int) },
+                    new Column { Name = "name", Type = typeof(string), Length = 500 });
+
+                var entity = new Entity { Name = "Dirac" };
+                session.Save(entity);
             }
         }
     }
