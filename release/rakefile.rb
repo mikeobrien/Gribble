@@ -2,13 +2,14 @@ require "albacore"
 require "release/filesystem"
 
 reportsPath = "reports"
+version = ENV["TEAMCITY_VERSION "]
 
 task :build => :unitTests
 task :pushPackages => [:pushCorePackage, :pushNHibernatePackage]
 
 desc "Generate core assembly info."
 assemblyinfo :coreAssemblyInfo do |asm|
-    asm.version = ENV["GO_PIPELINE_LABEL"]
+    asm.version = version
     asm.company_name = "Ultraviolet Catastrophe"
     asm.product_name = "Gribble"
     asm.title = "Gribble"
@@ -26,7 +27,7 @@ end
 
 desc "Generate nhibernate integration assembly info."
 assemblyinfo :nhibernateAssemblyInfo do |asm|
-    asm.version = ENV["GO_PIPELINE_LABEL"]
+    asm.version = version
     asm.company_name = "Ultraviolet Catastrophe"
     asm.product_name = "Gribble NHibernate Integration"
     asm.title = "Gribble NHibernate Integration"
@@ -61,7 +62,7 @@ nunit :unitTests => [:buildTestProject, :unitTestInit] do |nunit|
 	nunit.options "/xml=#{reportsPath}/TestResult.xml"
 end
 
-nugetApiKey = YAML::load(File.open(ENV["USERPROFILE"] + "/.nuget/credentials"))["api_key"]
+nugetApiKey = ENV["NUGET_API_KEY"]
 deployPath = "deploy"
 
 corePackagePath = File.join(deployPath, "corepackage")
@@ -80,7 +81,7 @@ end
 desc "Create the core nuspec"
 nuspec :createCoreSpec => :prepCorePackage do |nuspec|
    nuspec.id = "gribble"
-   nuspec.version = ENV["GO_PIPELINE_LABEL"]
+   nuspec.version = version
    nuspec.authors = "Mike O'Brien"
    nuspec.owners = "Mike O'Brien"
    nuspec.title = "Gribble ORM"
@@ -105,7 +106,7 @@ end
 desc "Push the core nuget package"
 nugetpush :pushCorePackage => :createCorePackage do |nuget|
     nuget.apikey = nugetApiKey
-    nuget.package = File.join(deployPath, "gribble.#{ENV['GO_PIPELINE_LABEL']}.nupkg")
+    nuget.package = File.join(deployPath, "gribble.#{version}.nupkg")
 end
 
 nhibernatePackagePath = File.join(deployPath, "nhpackage")
@@ -124,7 +125,7 @@ end
 desc "Create the NHibernate nuspec"
 nuspec :createNHibernateSpec => :prepNHibernatePackage do |nuspec|
    nuspec.id = "gribble.nhibernate"
-   nuspec.version = ENV["GO_PIPELINE_LABEL"]
+   nuspec.version = version
    nuspec.authors = "Mike O'Brien"
    nuspec.owners = "Mike O'Brien"
    nuspec.title = "Gribble ORM NHibernate Integration"
@@ -137,7 +138,7 @@ nuspec :createNHibernateSpec => :prepNHibernatePackage do |nuspec|
    nuspec.working_directory = nhibernatePackagePath
    nuspec.output_file = nhibernateNuspec
    nuspec.tags = "orm dal sql nhibernate"
-   nuspec.dependency "gribble", ENV["GO_PIPELINE_LABEL"]
+   nuspec.dependency "gribble", version
    nuspec.dependency "NHibernate", "3.1.0.4000"
 end
 
@@ -151,11 +152,11 @@ end
 desc "Push the nhibernate nuget package"
 nugetpush :pushNHibernatePackage => :createNHibernatePackage do |nuget|
     nuget.apikey = nugetApiKey
-    nuget.package = File.join(deployPath, "gribble.nhibernate.#{ENV['GO_PIPELINE_LABEL']}.nupkg")
+    nuget.package = File.join(deployPath, "gribble.nhibernate.#{version}.nupkg")
 end
 
 desc "Tag the current release"
 task :tagRelease do
-	result = system("git", "tag", "-a", "v#{ENV['GO_PIPELINE_LABEL']}", "-m", "release-v#{ENV['GO_PIPELINE_LABEL']}")
+	result = system("git", "tag", "-a", "v#{version}", "-m", "release-v#{version}")
 	result = system("git", "push", "--tags")
 end
