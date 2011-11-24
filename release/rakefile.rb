@@ -4,7 +4,7 @@ require "release/filesystem"
 reportsPath = "reports"
 version = ENV["BUILD_NUMBER"]
 
-task :build => :unitTests
+task :build => [:createCorePackage, :createNHibernatePackage]
 task :pushPackages => [:pushCorePackage, :pushNHibernatePackage]
 
 desc "Generate core assembly info."
@@ -70,16 +70,26 @@ coreNuspec = "gribble.nuspec"
 corePackageLibPath = File.join(corePackagePath, "lib")
 coreBinPath = "src/Gribble/bin/Release"
 
-desc "Prep the core package folder"
-task :prepCorePackage => :unitTests do
+nhibernatePackagePath = File.join(deployPath, "nhpackage")
+nhibernateNuspec = "gribble.nhibernate.nuspec"
+nhibernatePackageLibPath = File.join(nhibernatePackagePath, "lib")
+nhibernateBinPath = "src/Gribble.NHibernate/bin/Release"
+
+desc "Prep the packages"
+task :prepPackages => :unitTests do
 	FileSystem.DeleteDirectory(deployPath)
+	
 	FileSystem.EnsurePath(corePackageLibPath)
 	FileSystem.CopyFiles(File.join(coreBinPath, "Gribble.dll"), corePackageLibPath)
 	FileSystem.CopyFiles(File.join(coreBinPath, "Gribble.dll"), corePackageLibPath)
+	
+	FileSystem.EnsurePath(nhibernatePackageLibPath)
+	FileSystem.CopyFiles(File.join(nhibernateBinPath, "Gribble.NHibernate.dll"), nhibernatePackageLibPath)
+	FileSystem.CopyFiles(File.join(nhibernateBinPath, "Gribble.NHibernate.pdb"), nhibernatePackageLibPath)
 end
 
 desc "Create the core nuspec"
-nuspec :createCoreSpec => :prepCorePackage do |nuspec|
+nuspec :createCoreSpec => :prepPackages do |nuspec|
    nuspec.id = "gribble"
    nuspec.version = version
    nuspec.authors = "Mike O'Brien"
@@ -109,21 +119,8 @@ nugetpush :pushCorePackage => :createCorePackage do |nuget|
     nuget.package = File.join(deployPath, "gribble.#{version}.nupkg")
 end
 
-nhibernatePackagePath = File.join(deployPath, "nhpackage")
-nhibernateNuspec = "gribble.nhibernate.nuspec"
-nhibernatePackageLibPath = File.join(nhibernatePackagePath, "lib")
-nhibernateBinPath = "src/Gribble.NHibernate/bin/Release"
-
-desc "Prep the NHibernate package folder"
-task :prepNHibernatePackage => :unitTests do
-	FileSystem.DeleteDirectory(deployPath)
-	FileSystem.EnsurePath(nhibernatePackageLibPath)
-	FileSystem.CopyFiles(File.join(nhibernateBinPath, "Gribble.NHibernate.dll"), nhibernatePackageLibPath)
-	FileSystem.CopyFiles(File.join(nhibernateBinPath, "Gribble.NHibernate.pdb"), nhibernatePackageLibPath)
-end
-
 desc "Create the NHibernate nuspec"
-nuspec :createNHibernateSpec => :prepNHibernatePackage do |nuspec|
+nuspec :createNHibernateSpec => :prepPackages do |nuspec|
    nuspec.id = "gribble.nhibernate"
    nuspec.version = version
    nuspec.authors = "Mike O'Brien"
