@@ -2,7 +2,7 @@ require "albacore"
 require "release/filesystem"
 
 reportsPath = "reports"
-version = ENV["TEAMCITY_VERSION "]
+version = ENV["BUILD_NUMBER"]
 
 task :build => :unitTests
 task :pushPackages => [:pushCorePackage, :pushNHibernatePackage]
