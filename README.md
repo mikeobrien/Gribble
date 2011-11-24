@@ -6,7 +6,7 @@ Gribble is a simple, Linq enabled ORM designed to work with dynamically created 
 Distribution
 ------------
 
-http://nuget.org/List/Packages/gribble
+http://nuget.org/List/Packages/gribble  
 http://nuget.org/List/Packages/gribble.nhibernate
 	
 Props
