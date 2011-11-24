@@ -81,7 +81,7 @@ task :prepPackages => :unitTests do
 	
 	FileSystem.EnsurePath(corePackageLibPath)
 	FileSystem.CopyFiles(File.join(coreBinPath, "Gribble.dll"), corePackageLibPath)
-	FileSystem.CopyFiles(File.join(coreBinPath, "Gribble.dll"), corePackageLibPath)
+	FileSystem.CopyFiles(File.join(coreBinPath, "Gribble.pdb"), corePackageLibPath)
 	
 	FileSystem.EnsurePath(nhibernatePackageLibPath)
 	FileSystem.CopyFiles(File.join(nhibernateBinPath, "Gribble.NHibernate.dll"), nhibernatePackageLibPath)
