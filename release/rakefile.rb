@@ -8,7 +8,6 @@ version = ENV["BUILD_NUMBER"]
 task :build => [:createCorePackage, :createNHibernatePackage]
 task :pushPackages => [:pushCorePackage, :pushNHibernatePackage]
 
-desc "Generate core assembly info."
 assemblyinfo :coreAssemblyInfo do |asm|
     asm.version = version
     asm.company_name = "Ultraviolet Catastrophe"
@@ -19,14 +18,12 @@ assemblyinfo :coreAssemblyInfo do |asm|
     asm.output_file = "src/Gribble/Properties/AssemblyInfo.cs"
 end
 
-desc "Builds the core assembly."
 msbuild :buildCore => :coreAssemblyInfo do |msb|
     msb.properties :configuration => :Release
     msb.targets :Clean, :Build
     msb.solution = "src/Gribble/Gribble.csproj"
 end
 
-desc "Generate nhibernate integration assembly info."
 assemblyinfo :nhibernateAssemblyInfo do |asm|
     asm.version = version
     asm.company_name = "Ultraviolet Catastrophe"
@@ -37,21 +34,18 @@ assemblyinfo :nhibernateAssemblyInfo do |asm|
     asm.output_file = "src/Gribble.NHibernate/Properties/AssemblyInfo.cs"
 end
 
-desc "Builds the nhibernate integration library."
 msbuild :buildNHibernate => [:buildCore, :nhibernateAssemblyInfo] do |msb|
     msb.properties :configuration => :Release
     msb.targets :Clean, :Build
     msb.solution = "src/Gribble/Gribble.csproj"
 end
 
-desc "Builds the test project."
 msbuild :buildTestProject => [:buildCore, :buildNHibernate] do |msb|
     msb.properties :configuration => :Release
     msb.targets :Clean, :Build
     msb.solution = "src/Tests/Tests.csproj"
 end
 
-desc "Inits the unit test environment"
 task :unitTestInit do
 	FileSystem.EnsurePath(reportsPath)
 end
@@ -91,7 +85,6 @@ task :prepPackages => :unitTests do
 	FileSystem.CopyFiles(File.join(nhibernateBinPath, "Gribble.NHibernate.pdb"), nhibernatePackageLibPath)
 end
 
-desc "Create the core nuspec"
 nuspec :createCoreSpec => :prepPackages do |nuspec|
    nuspec.id = "gribble"
    nuspec.version = version
@@ -109,20 +102,17 @@ nuspec :createCoreSpec => :prepPackages do |nuspec|
    nuspec.tags = "orm dal sql"
 end
 
-desc "Create the core nuget package"
 nugetpack :createCorePackage => :createCoreSpec do |nugetpack|
    nugetpack.nuspec = File.join(corePackagePath, coreNuspec)
    nugetpack.base_folder = corePackagePath
    nugetpack.output = deployPath
 end
 
-desc "Push the core nuget package"
 nugetpush :pushCorePackage => :createCorePackage do |nuget|
     nuget.apikey = nugetApiKey
     nuget.package = File.join(deployPath, "gribble.#{version}.nupkg")
 end
 
-desc "Create the NHibernate nuspec"
 nuspec :createNHibernateSpec => :prepPackages do |nuspec|
    nuspec.id = "gribble.nhibernate"
    nuspec.version = version
@@ -142,14 +132,12 @@ nuspec :createNHibernateSpec => :prepPackages do |nuspec|
    nuspec.dependency "NHibernate", "3.1.0.4000"
 end
 
-desc "Create the NHibernate nuget package"
 nugetpack :createNHibernatePackage => :createNHibernateSpec do |nugetpack|
    nugetpack.nuspec = File.join(nhibernatePackagePath, nhibernateNuspec)
    nugetpack.base_folder = nhibernatePackagePath
    nugetpack.output = deployPath
 end
 
-desc "Push the nhibernate nuget package"
 nugetpush :pushNHibernatePackage => :createNHibernatePackage do |nuget|
     nuget.apikey = nugetApiKey
     nuget.package = File.join(deployPath, "gribble.nhibernate.#{version}.nupkg")
