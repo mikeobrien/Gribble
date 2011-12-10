@@ -1,5 +1,6 @@
 require "albacore"
 require "release/filesystem"
+require_relative "tasks/gallio-task"
 
 reportsPath = "reports"
 version = ENV["BUILD_NUMBER"]
@@ -55,11 +56,13 @@ task :unitTestInit do
 	FileSystem.EnsurePath(reportsPath)
 end
 
-desc "NUnit Test Runner"
-nunit :unitTests => [:buildTestProject, :unitTestInit] do |nunit|
-	nunit.command = "src/packages/NUnit.2.5.9.10348/Tools/nunit-console.exe"
-	nunit.assemblies "src/Tests/bin/Release/Tests.dll"
-	nunit.options "/xml=#{reportsPath}/TestResult.xml"
+gallio :unitTests => [:buildTestProject, :unitTestInit] do |runner|
+	runner.echo_command_line = true
+	runner.add_test_assembly("src/Tests/bin/Release/Tests.dll")
+	runner.verbosity = 'Normal'
+	runner.report_directory = reportsPath
+	runner.report_name_format = 'tests'
+	runner.add_report_type('Html')
 end
 
 nugetApiKey = ENV["NUGET_API_KEY"]
