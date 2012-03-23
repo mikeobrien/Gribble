@@ -78,7 +78,7 @@ namespace Gribble.TransactSql
             { return Write("BETWEEN").Value(start).And.Value(end); }
         public SqlWriter In { get { return Write("IN"); } }
         public SqlWriter Exists { get { return Write("EXISTS"); } }
-        public SqlWriter Like { get { return Write("LIKE"); } }
+        public SqlWriter Like(bool condition) { return Do(!condition, x => x.Not.Flush()).Write("LIKE"); }
         public SqlWriter InsertInto { get { return Write("INSERT INTO"); } }
         public SqlWriter Update { get { return Write("UPDATE"); } }
         public SqlWriter Values { get { return Write("VALUES"); } }
@@ -227,12 +227,12 @@ namespace Gribble.TransactSql
         public SqlWriter Hash(Action<SqlWriter> expression, HashAlgorithm algorithm)
             { return WriteFunction("HASHBYTES", x => x.QuotedString(algorithm.ToString()), expression); }
 
-        public SqlWriter StartsWith(Action<SqlWriter> text, Action<SqlWriter> searchText) 
-            { return Do(text).Like.Do(searchText).Plus.QuotedString("%"); }
-        public SqlWriter EndsWith(Action<SqlWriter> text, Action<SqlWriter> searchText) 
-            { return Do(text).Like.QuotedString("%").Plus.Do(searchText); }
-        public SqlWriter Contains(Action<SqlWriter> text, Action<SqlWriter> searchText) 
-            { return Do(text).Like.QuotedString("%").Plus.Do(searchText).Plus.QuotedString("%"); }
+        public SqlWriter StartsWith(bool condition, Action<SqlWriter> text, Action<SqlWriter> searchText) 
+            { return Do(text).Like(condition).Do(searchText).Plus.QuotedString("%"); }
+        public SqlWriter EndsWith(bool condition, Action<SqlWriter> text, Action<SqlWriter> searchText)
+            { return Do(text).Like(condition).QuotedString("%").Plus.Do(searchText); }
+        public SqlWriter Contains(bool condition, Action<SqlWriter> text, Action<SqlWriter> searchText)
+            { return Do(text).Like(condition).QuotedString("%").Plus.Do(searchText).Plus.QuotedString("%"); }
 
         public SqlWriter Max(Action<SqlWriter> value) { return WriteFunction("MAX", value); }
         public SqlWriter Min(Action<SqlWriter> value) { return WriteFunction("MIN", value); }

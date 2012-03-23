@@ -304,5 +304,115 @@ namespace Tests.TransactSql
             statement.Parameters.Skip(1).First().Value.ShouldEqual(55);
             statement.Text.ShouldEqual(string.Format("(([age] % @{0}) = @{1})", statement.Parameters.First().Key, statement.Parameters.Skip(1).First().Key));
         }
+
+        [Test]
+        public void should_generate_sql_for_starts_with()
+        {
+            Expression<Func<Entity, bool>> expression = x => x.Name.StartsWith("ed");
+            var statement = WhereWriter<Entity>.CreateStatement(WhereVisitor<Entity>.CreateModel(expression.Body), Map);
+
+            statement.Parameters.Count().ShouldEqual(1);
+            statement.Parameters.First().Value.ShouldEqual("ed");
+            statement.Text.ShouldEqual(string.Format("([name] LIKE @{0} + '%')", statement.Parameters.First().Key));
+        }
+
+        [Test]
+        public void should_generate_sql_for_not_starts_with()
+        {
+            Expression<Func<Entity, bool>> expression = x => !x.Name.StartsWith("ed");
+            var statement = WhereWriter<Entity>.CreateStatement(WhereVisitor<Entity>.CreateModel(expression.Body), Map);
+
+            statement.Parameters.Count().ShouldEqual(1);
+            statement.Parameters.First().Value.ShouldEqual("ed");
+            statement.Text.ShouldEqual(string.Format("([name] NOT LIKE @{0} + '%')", statement.Parameters.First().Key));
+        }
+
+        [Test]
+        public void should_generate_sql_for_starts_with_equals_false()
+        {
+            Expression<Func<Entity, bool>> expression = x => x.Name.StartsWith("ed") == false;
+            var statement = WhereWriter<Entity>.CreateStatement(WhereVisitor<Entity>.CreateModel(expression.Body), Map);
+
+            statement.Parameters.Count().ShouldEqual(1);
+            statement.Parameters.First().Value.ShouldEqual("ed");
+            statement.Text.ShouldEqual(string.Format("([name] NOT LIKE @{0} + '%')", statement.Parameters.First().Key));
+        }
+
+        [Test]
+        public void should_generate_sql_for_contains()
+        {
+            Expression<Func<Entity, bool>> expression = x => x.Name.Contains("ed");
+            var statement = WhereWriter<Entity>.CreateStatement(WhereVisitor<Entity>.CreateModel(expression.Body), Map);
+
+            statement.Parameters.Count().ShouldEqual(1);
+            statement.Parameters.First().Value.ShouldEqual("ed");
+            statement.Text.ShouldEqual(string.Format("([name] LIKE '%' + @{0} + '%')", statement.Parameters.First().Key));
+        }
+
+        [Test]
+        public void should_generate_sql_for_not_contains()
+        {
+            Expression<Func<Entity, bool>> expression = x => !x.Name.Contains("ed");
+            var statement = WhereWriter<Entity>.CreateStatement(WhereVisitor<Entity>.CreateModel(expression.Body), Map);
+
+            statement.Parameters.Count().ShouldEqual(1);
+            statement.Parameters.First().Value.ShouldEqual("ed");
+            statement.Text.ShouldEqual(string.Format("([name] NOT LIKE '%' + @{0} + '%')", statement.Parameters.First().Key));
+        }
+
+        [Test]
+        public void should_generate_sql_for_contains_equals_false()
+        {
+            Expression<Func<Entity, bool>> expression = x => x.Name.Contains("ed") == false;
+            var statement = WhereWriter<Entity>.CreateStatement(WhereVisitor<Entity>.CreateModel(expression.Body), Map);
+
+            statement.Parameters.Count().ShouldEqual(1);
+            statement.Parameters.First().Value.ShouldEqual("ed");
+            statement.Text.ShouldEqual(string.Format("([name] NOT LIKE '%' + @{0} + '%')", statement.Parameters.First().Key));
+        }
+
+        [Test]
+        public void should_generate_sql_for_ends_with()
+        {
+            Expression<Func<Entity, bool>> expression = x => x.Name.EndsWith("ed");
+            var statement = WhereWriter<Entity>.CreateStatement(WhereVisitor<Entity>.CreateModel(expression.Body), Map);
+
+            statement.Parameters.Count().ShouldEqual(1);
+            statement.Parameters.First().Value.ShouldEqual("ed");
+            statement.Text.ShouldEqual(string.Format("([name] LIKE '%' + @{0})", statement.Parameters.First().Key));
+        }
+
+        [Test]
+        public void should_generate_sql_for_not_ends_with()
+        {
+            Expression<Func<Entity, bool>> expression = x => !x.Name.EndsWith("ed");
+            var statement = WhereWriter<Entity>.CreateStatement(WhereVisitor<Entity>.CreateModel(expression.Body), Map);
+
+            statement.Parameters.Count().ShouldEqual(1);
+            statement.Parameters.First().Value.ShouldEqual("ed");
+            statement.Text.ShouldEqual(string.Format("([name] NOT LIKE '%' + @{0})", statement.Parameters.First().Key));
+        }
+
+        [Test]
+        public void should_generate_sql_for_ends_with_equals_false()
+        {
+            Expression<Func<Entity, bool>> expression = x => x.Name.EndsWith("ed") == false;
+            var statement = WhereWriter<Entity>.CreateStatement(WhereVisitor<Entity>.CreateModel(expression.Body), Map);
+
+            statement.Parameters.Count().ShouldEqual(1);
+            statement.Parameters.First().Value.ShouldEqual("ed");
+            statement.Text.ShouldEqual(string.Format("([name] NOT LIKE '%' + @{0})", statement.Parameters.First().Key));
+        }
+
+        [Test]
+        public void should_generate_sql_for_trim()
+        {
+            Expression<Func<Entity, bool>> expression = x => x.Name.Trim() == "ed";
+            var statement = WhereWriter<Entity>.CreateStatement(WhereVisitor<Entity>.CreateModel(expression.Body), Map);
+
+            statement.Parameters.Count().ShouldEqual(1);
+            statement.Parameters.First().Value.ShouldEqual("ed");
+            statement.Text.ShouldEqual(string.Format("(LTRIM(RTRIM([name])) = @{0})", statement.Parameters.First().Key));
+        }
     }
 }

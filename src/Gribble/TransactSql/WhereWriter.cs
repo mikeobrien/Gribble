@@ -32,7 +32,12 @@ namespace Gribble.TransactSql
         private void VisitOperator(Operator @operator, Operator parent)
         {
             EnsureConstantIsOnRight(@operator);
+            if (IsLikeExpression(@operator.LeftOperand)) VisitLikeExpression(@operator);
+            else VisitExpression(@operator, parent);
+        }
 
+        private void VisitExpression(Operator @operator, Operator parent)
+        {
             if (IsComparisonOperator(parent) && !IsMathOperator(@operator)) _sql.Case.When.Flush();
 
             _sql.OpenBlock.Trim();
@@ -58,20 +63,47 @@ namespace Gribble.TransactSql
 
             if (IsComparisonOperator(parent) && !IsMathOperator(@operator)) _sql.Then.True.Else.False.End.Flush();
         }
+        
+        private void VisitLikeExpression(Operator @operator)
+        {
+            _sql.OpenBlock.Trim();
+            var function = @operator.LeftOperand.Projection.Function;
+            var condition = (bool) @operator.RightOperand.Projection.Constant.Value;
+            switch (function.Type)
+            {
+                case Function.FunctionType.StartsWith: 
+                    _sql.StartsWith(condition,
+                        x => VisitProjection(function.StartsWith.Text),
+                        x => VisitProjection(function.StartsWith.Value));
+                    break;
+                case Function.FunctionType.Contains:
+                    _sql.Contains(condition,
+                        x => VisitProjection(function.Contains.Text),
+                        x => VisitProjection(function.Contains.Value));
+                    break;
+                case Function.FunctionType.EndsWith:
+                    _sql.EndsWith(condition,
+                        x => VisitProjection(function.EndsWith.Text),
+                        x => VisitProjection(function.EndsWith.Value));
+                    break;
+            }
+            _sql.Trim().CloseBlock.Flush();
+        }
 
         private void VisitOperand(Operand operand, Operator parent)
         {
             switch (operand.Type)
             {
                 case Operand.OperandType.Operator: VisitOperator(operand.Operator, parent); break;
-                case Operand.OperandType.Projection:
-                    {
-                        var statement = ProjectionWriter<TEntity>.CreateStatement(operand.Projection, _mapping);
-                        _sql.Write(statement.Text);
-                        _parameters.AddRange(statement.Parameters);
-                        break;
-                    }
+                case Operand.OperandType.Projection: VisitProjection(operand.Projection); break;
             }
+        }
+
+        private void VisitProjection(Projection projection)
+        {
+            var statement = ProjectionWriter<TEntity>.CreateStatement(projection, _mapping);
+            _sql.Write(statement.Text);
+            _parameters.AddRange(statement.Parameters);
         }
 
         private static void EnsureConstantIsOnRight(Operator @operator)
@@ -81,6 +113,15 @@ namespace Gribble.TransactSql
             var rightOperand = @operator.RightOperand;
             @operator.RightOperand = @operator.LeftOperand;
             @operator.LeftOperand = rightOperand;
+        }
+
+        private static bool IsLikeExpression(Operand operand)
+        {
+            return operand.Type == Operand.OperandType.Projection &&
+                   operand.Projection.Type == Projection.ProjectionType.Function &&
+                   (operand.Projection.Function.Type == Function.FunctionType.StartsWith ||
+                    operand.Projection.Function.Type == Function.FunctionType.Contains ||
+                    operand.Projection.Function.Type == Function.FunctionType.EndsWith);
         }
 
         private static bool IsRightOperandNullConstant(Operator @operator)

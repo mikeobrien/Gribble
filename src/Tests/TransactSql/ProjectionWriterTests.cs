@@ -227,39 +227,6 @@ namespace Tests.TransactSql
         }
 
         [Test]
-        public void Starts_With_Test()
-        {
-            Expression<Func<Entity, bool>> expression = x => x.Name.StartsWith("somevalue");
-            var statement = ProjectionWriter<Entity>.CreateStatement(ProjectionVisitor<Entity>.CreateModel(expression.Body), Map);
-            
-            statement.Parameters.Count().ShouldEqual(1);
-            statement.Parameters.First().Value.ShouldEqual("somevalue");
-            statement.Text.ShouldEqual(string.Format("[name] LIKE @{0} + '%'", statement.Parameters.First().Key));
-        }
-
-        [Test]
-        public void Ends_With_Test()
-        {
-            Expression<Func<Entity, bool>> expression = x => x.Name.EndsWith("somevalue");
-            var statement = ProjectionWriter<Entity>.CreateStatement(ProjectionVisitor<Entity>.CreateModel(expression.Body), Map);
-            
-            statement.Parameters.Count().ShouldEqual(1);
-            statement.Parameters.First().Value.ShouldEqual("somevalue");
-            statement.Text.ShouldEqual(string.Format("[name] LIKE '%' + @{0}", statement.Parameters.First().Key));
-        }
-
-        [Test]
-        public void Contians_Test()
-        {
-            Expression<Func<Entity, bool>> expression = x => x.Name.Contains("somevalue");
-            var statement = ProjectionWriter<Entity>.CreateStatement(ProjectionVisitor<Entity>.CreateModel(expression.Body), Map);
-            
-            statement.Parameters.Count().ShouldEqual(1);
-            statement.Parameters.First().Value.ShouldEqual("somevalue");
-            statement.Text.ShouldEqual(string.Format("[name] LIKE '%' + @{0} + '%'", statement.Parameters.First().Key));
-        }
-
-        [Test]
         public void ToUpper_Test()
         {
             Expression<Func<Entity, string>> expression = x => x.Name.ToUpper();

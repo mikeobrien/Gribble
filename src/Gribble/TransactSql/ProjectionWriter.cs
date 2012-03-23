@@ -47,16 +47,8 @@ namespace Gribble.TransactSql
                     _sql.Coalesce(x => VisitProjection(function.Coalesce.First),
                                   x => VisitProjection(function.Coalesce.Second));
                     break;
-                case Function.FunctionType.Contains:
-                    _sql.Contains(x => VisitProjection(function.Contains.Text),
-                                  x => VisitProjection(function.Contains.Value));
-                    break;
                 case Function.FunctionType.Convert:
                     _sql.Cast(x => VisitProjection(function.Convert.Value), function.Convert.Type);
-                    break;
-                case Function.FunctionType.EndsWith:
-                    _sql.EndsWith(x => VisitProjection(function.EndsWith.Text),
-                                  x => VisitProjection(function.EndsWith.Value));
                     break;
                 case Function.FunctionType.IndexOf:
                     _sql.IndexOf(x => VisitProjection(function.IndexOf.Text),
@@ -79,10 +71,6 @@ namespace Gribble.TransactSql
                     _sql.Replace(x => VisitProjection(function.Replace.Text),
                                  x => VisitProjection(function.Replace.SearchValue),
                                  x => VisitProjection(function.Replace.ReplaceValue));
-                    break;
-                case Function.FunctionType.StartsWith:
-                    _sql.StartsWith(x => VisitProjection(function.StartsWith.Text),
-                                    x => VisitProjection(function.StartsWith.Value));
                     break;
                 case Function.FunctionType.Substring:
                     _sql.Substring(x => VisitProjection(function.Substring.Text),
