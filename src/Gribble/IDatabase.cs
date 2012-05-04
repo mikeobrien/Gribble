@@ -18,10 +18,12 @@ namespace Gribble
 
         void CreateTable(string tableName, params Column[] columns);
         void DeleteTable(string tableName);
+
         IEnumerable<Column> GetColumns(string tableName);
         void AddColumn(string tableName, Column column);
         void RemoveColumn(string tableName, string columnName);
 
+        IEnumerable<Index> GetIndexes(string tableName);
         void AddNonClusteredIndex(string tableName, params string[] columnNames);
         void RemoveNonClusteredIndex(string tableName, string indexName);
     }

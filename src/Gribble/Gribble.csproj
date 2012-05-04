@@ -72,6 +72,7 @@
     <Compile Include="Mapping\IClassMap.cs" />
     <Compile Include="Mapping\IEntityMapping.cs" />
     <Compile Include="Mapping\PrimaryKeyType.cs" />
+    <Compile Include="Model\Index.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Queryable.cs" />
     <Compile Include="QueryableBase.cs" />

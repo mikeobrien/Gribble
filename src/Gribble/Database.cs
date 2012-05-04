@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Linq;
 using Gribble.Mapping;
 using Gribble.Model;
 using Gribble.TransactSql;
@@ -12,6 +13,9 @@ namespace Gribble
         private readonly IConnectionManager _connectionManager;
         private readonly IProfiler _profiler;
         private readonly EntityMappingCollection _mappingCollection;
+
+        public Database(SqlConnection connection, TimeSpan commandTimeout) :
+            this(new ConnectionManager(connection, commandTimeout), new EntityMappingCollection(Enumerable.Empty<IClassMap>()), null) { }
 
         public Database(SqlConnection connection, TimeSpan commandTimeout, EntityMappingCollection mappingCollection) :
             this(new ConnectionManager(connection, commandTimeout), mappingCollection, null) { }
@@ -68,13 +72,21 @@ namespace Gribble
         public void DeleteTable(string tableName)
         { Command.Create(SchemaWriter.CreateDeleteTableStatement(tableName), _profiler).ExecuteNonQuery(_connectionManager); }
 
-        public IEnumerable<Column> GetColumns(string tableName) { throw new NotImplementedException(); }
+        public IEnumerable<Column> GetColumns(string tableName)
+        {
+            throw new NotImplementedException();
+        }
 
         public void AddColumn(string tableName, Column column)
         { Command.Create(SchemaWriter.CreateAddColumnStatement(tableName, column), _profiler).ExecuteNonQuery(_connectionManager); }
 
         public void RemoveColumn(string tableName, string columnName)
         { Command.Create(SchemaWriter.CreateRemoveColumnStatement(tableName, columnName), _profiler).ExecuteNonQuery(_connectionManager); }
+
+        public IEnumerable<Index> GetIndexes(string tableName)
+        {
+            throw new NotImplementedException();
+        }
 
         public void AddNonClusteredIndex(string tableName, params string[] columnNames)
         { Command.Create(SchemaWriter.CreateAddNonClusteredIndexStatement(tableName, columnNames), _profiler).ExecuteNonQuery(_connectionManager); }
