@@ -23,6 +23,9 @@ namespace Gribble
         public Database(SqlConnection connection, TimeSpan commandTimeout, EntityMappingCollection mappingCollection, IProfiler profiler) :
             this(new ConnectionManager(connection, commandTimeout), mappingCollection, profiler) { }
 
+        public Database(IConnectionManager connectionManager) :
+            this(connectionManager, new EntityMappingCollection(Enumerable.Empty<IClassMap>()), null) { }
+
         public Database(IConnectionManager connectionManager, EntityMappingCollection mappingCollection) :
             this(connectionManager, mappingCollection, null) { }
 
