@@ -20,7 +20,8 @@ namespace Gribble
         void DeleteTable(string tableName);
         void AddColumn(string tableName, Column column);
         void RemoveColumn(string tableName, string columnName);
-        void AddNonClusteredIndex(string tableName, string indexName, params string[] columnNames);
+
+        void AddNonClusteredIndex(string tableName, params string[] columnNames);
         void RemoveNonClusteredIndex(string tableName, string indexName);
     }
 }

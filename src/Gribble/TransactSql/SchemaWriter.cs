@@ -159,8 +159,9 @@ namespace Gribble.TransactSql
             return new Statement(writer.ToString(), Statement.StatementType.Text, Statement.ResultType.None);
         }
 
-        public static Statement CreateAddNonClusteredIndexStatement(string tableName, string indexName, params string[] columnNames)
+        public static Statement CreateAddNonClusteredIndexStatement(string tableName, params string[] columnNames)
         {
+            var indexName = string.Format("IX_{0}_{1}", tableName, string.Join("_", columnNames));
             var writer = SqlWriter.CreateWriter().Create.NonClustered.Index.QuotedName(indexName).On.QuotedName(tableName).OpenBlock.Trim();
             var first = true;
             foreach (var columnName in columnNames)

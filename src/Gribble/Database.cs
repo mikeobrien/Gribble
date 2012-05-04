@@ -74,8 +74,8 @@ namespace Gribble
         public void RemoveColumn(string tableName, string columnName)
         { Command.Create(SchemaWriter.CreateRemoveColumnStatement(tableName, columnName), _profiler).ExecuteNonQuery(_connectionManager); }
 
-        public void AddNonClusteredIndex(string tableName, string indexName, params string[] columnNames)
-        { Command.Create(SchemaWriter.CreateAddNonClusteredIndexStatement(tableName, indexName, columnNames), _profiler).ExecuteNonQuery(_connectionManager); }
+        public void AddNonClusteredIndex(string tableName, params string[] columnNames)
+        { Command.Create(SchemaWriter.CreateAddNonClusteredIndexStatement(tableName, columnNames), _profiler).ExecuteNonQuery(_connectionManager); }
 
         public void RemoveNonClusteredIndex(string tableName, string indexName)
         { Command.Create(SchemaWriter.CreateRemoveNonClusteredIndexStatement(tableName, indexName), _profiler).ExecuteNonQuery(_connectionManager); }
