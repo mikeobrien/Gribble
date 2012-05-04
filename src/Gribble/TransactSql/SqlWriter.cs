@@ -184,7 +184,7 @@ namespace Gribble.TransactSql
         public SqlWriter DataType(Type type, int length) { return Write(DataTypes.GetSqlType(type, length)); }
         public SqlWriter DataTypeId(DataTypes.SqlTypeId typeId) { return Write((int)typeId); }
 
-        public SqlWriter Value(object value) { return Write(GetSqlConstant(value)); }
+        public SqlWriter Value(object value) { return Write(ToSqlLiteral(value)); }
         
         public SqlWriter NewId() { return WriteFunction("NEWID"); }
         public SqlWriter NewIdColumnDefault { get { return QuotedString(x => x.OpenBlock.Trim().NewId().Trim().CloseBlock.Flush(), false); } }
@@ -361,7 +361,7 @@ namespace Gribble.TransactSql
             return this;
         }
 
-        private static string GetSqlConstant(object value)
+        private static string ToSqlLiteral(object value)
         {
             if (value is string) return QuoteString((string)value);
             if (value is int || value is int?) return value.ToString();
