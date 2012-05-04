@@ -68,6 +68,8 @@ namespace Gribble
         public void DeleteTable(string tableName)
         { Command.Create(SchemaWriter.CreateDeleteTableStatement(tableName), _profiler).ExecuteNonQuery(_connectionManager); }
 
+        public IEnumerable<Column> GetColumns(string tableName) { throw new NotImplementedException(); }
+
         public void AddColumn(string tableName, Column column)
         { Command.Create(SchemaWriter.CreateAddColumnStatement(tableName, column), _profiler).ExecuteNonQuery(_connectionManager); }
 
