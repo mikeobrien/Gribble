@@ -248,10 +248,11 @@ namespace Gribble.TransactSql
         public SqlWriter NotNullable { get { return Write("NOT NULL"); } }
         public SqlWriter Default { get { return Write("DEFAULT"); } }
         public SqlWriter Constraint { get { return Write("CONSTRAINT"); } }
-        public SqlWriter PrimaryKey { get { return Write("PRIMARY KEY"); } }
+        public SqlWriter PrimaryKey(bool clustered) { return Write("PRIMARY KEY").Do(clustered, x => x.Clustered.Flush()); }
         public SqlWriter Add { get { return Write("ADD"); } }
         public SqlWriter Column { get { return Write("COLUMN"); } }
         public SqlWriter Index { get { return Write("INDEX"); } }
+        public SqlWriter Clustered { get { return Write("CLUSTERED"); } }
         public SqlWriter NonClustered { get { return Write("NONCLUSTERED"); } }
 
         public SqlWriter SystemTables { get { return QuotedName("sys", "tables"); } }
@@ -289,9 +290,9 @@ namespace Gribble.TransactSql
         public SqlWriter SystemIndexes_ObjectId { get { return JoinName(y => y.SystemIndexes.Flush(), y => y.SystemObjectIdColumn.Flush()); } }
         public SqlWriter SystemIndexes_IndexId { get { return JoinName(y => y.SystemIndexes.Flush(), y => y.SystemIndexIdColumn.Flush()); } }
 
-        public SqlWriter PrimaryKeyConstraint(string tableName, string columnName) 
+        public SqlWriter PrimaryKeyConstraint(string tableName, string columnName, bool clustered) 
         {
-            return Constraint.QuotedName(string.Format("PK_{0}_{1}", tableName, columnName)).PrimaryKey.
+            return Constraint.QuotedName(string.Format("PK_{0}_{1}", tableName, columnName)).PrimaryKey(clustered).
                     OpenBlock.Trim().QuotedName(columnName).Ascending.Trim().CloseBlock;
         }
 
