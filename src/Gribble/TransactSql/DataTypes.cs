@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 
 namespace Gribble.TransactSql
 {
@@ -90,7 +91,6 @@ namespace Gribble.TransactSql
             if (type == typeof(Decimal?) || type == typeof(Decimal)) return SqlDecimal;
             if (type == typeof(Single?) || type == typeof(Single)) return SqlReal;
             if (type == typeof(Double?) || type == typeof(Double)) return SqlFloat;
-            if (type == typeof(Char)) return SqlNChar;
             if (type == typeof(String)) return SqlNVarChar;
             if (type == typeof(Object)) return SqlVariant;
             if (type == typeof(Guid?) || type == typeof(Guid)) return SqlUniqueidentifier;
@@ -111,7 +111,7 @@ namespace Gribble.TransactSql
                 case SqlTypeId.BigInt: return nullable ? typeof (Int64?) : typeof (Int64);
                 case SqlTypeId.Binary: return typeof (Byte[]);
                 case SqlTypeId.Bit: return nullable ? typeof (Boolean?) : typeof (Boolean);
-                case SqlTypeId.Char: return typeof (Char);
+                case SqlTypeId.Char: return typeof (String);
                 case SqlTypeId.Date: return nullable ? typeof (DateTime?) : typeof (DateTime);
                 case SqlTypeId.DateTime: return nullable ? typeof (DateTime?) : typeof (DateTime);
                 case SqlTypeId.DateTime2: return nullable ? typeof (DateTime?) : typeof (DateTime);
@@ -133,6 +133,41 @@ namespace Gribble.TransactSql
                 case SqlTypeId.TinyInt: return nullable ? typeof (Byte?) : typeof (Byte);
                 case SqlTypeId.Uniqueidentifier: return nullable ? typeof (Guid?) : typeof (Guid);
                 case SqlTypeId.VarBinary: return typeof (Byte[]);
+                default: throw new Exception(string.Format("No CLR data type found to match SQL data type'{0}'.", sqlType));
+            }
+        }
+
+        public static Type GetClrType(SqlDbType sqlType, bool nullable)
+        {
+            switch (sqlType)
+            {
+                case SqlDbType.BigInt: return nullable ? typeof(Int64?) : typeof(Int64);
+                case SqlDbType.Binary: return typeof(Byte[]);
+                case SqlDbType.Bit: return nullable ? typeof(Boolean?) : typeof(Boolean);
+                case SqlDbType.Char: return typeof(String);
+                case SqlDbType.Date: return nullable ? typeof(DateTime?) : typeof(DateTime);
+                case SqlDbType.DateTime: return nullable ? typeof(DateTime?) : typeof(DateTime);
+                case SqlDbType.DateTime2: return nullable ? typeof(DateTime?) : typeof(DateTime);
+                case SqlDbType.SmallDateTime: return nullable ? typeof(DateTime?) : typeof(DateTime);
+                case SqlDbType.DateTimeOffset: return nullable ? typeof(DateTimeOffset?) : typeof(DateTimeOffset);
+                case SqlDbType.Decimal: return nullable ? typeof(Decimal?) : typeof(Decimal);
+                case SqlDbType.Float: return nullable ? typeof(Double?) : typeof(Double);
+                case SqlDbType.Int: return nullable ? typeof(Int32?) : typeof(Int32);
+                case SqlDbType.Money: return nullable ? typeof(Decimal?) : typeof(Decimal);
+                case SqlDbType.NChar: return typeof(String);
+                case SqlDbType.NText: return typeof(String);
+                case SqlDbType.VarChar: return typeof(String);
+                case SqlDbType.NVarChar: return typeof(String);
+                case SqlDbType.Real: return nullable ? typeof(Single?) : typeof(Single);
+                case SqlDbType.SmallInt: return nullable ? typeof(Int16?) : typeof(Int16);
+                case SqlDbType.SmallMoney: return nullable ? typeof(Decimal?) : typeof(Decimal);
+                case SqlDbType.Variant: return typeof(Object);
+                case SqlDbType.Text: return typeof(String);
+                case SqlDbType.Time: return nullable ? typeof(TimeSpan?) : typeof(TimeSpan);
+                case SqlDbType.Timestamp: return typeof(DateTime);
+                case SqlDbType.TinyInt: return nullable ? typeof(Byte?) : typeof(Byte);
+                case SqlDbType.UniqueIdentifier: return nullable ? typeof(Guid?) : typeof(Guid);
+                case SqlDbType.VarBinary: return typeof(Byte[]);
                 default: throw new Exception(string.Format("No CLR data type found to match SQL data type'{0}'.", sqlType));
             }
         }
