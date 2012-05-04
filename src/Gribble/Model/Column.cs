@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 
 namespace Gribble.Model
 {
@@ -6,7 +7,8 @@ namespace Gribble.Model
     {
         public Column(
             string name, 
-            Type type, 
+            Type type = null,
+            SqlDbType sqlType = SqlDbType.NVarChar,
             int length = 0, 
             bool isNullable = false, 
             bool isIdentity = false, 
@@ -17,6 +19,7 @@ namespace Gribble.Model
         {
             Name = name;
             Type = type;
+            SqlType = sqlType;
             Length = length;
             IsIdentity = isIdentity;
             IsPrimaryKey = isPrimaryKey;
@@ -41,9 +44,14 @@ namespace Gribble.Model
             public static implicit operator Column(OptionBuilder builder) { return builder._column; }
         }
 
-        public static OptionBuilder Create<T>(string name, T defaultValue)
+        public static OptionBuilder Create(string name, SqlDbType type)
         {
-            return new OptionBuilder(new Column(name, typeof (T), defaultValue: defaultValue));
+            return new OptionBuilder(new Column(name, sqlType: type));
+        }
+
+        public static OptionBuilder Create(string name, SqlDbType type, object defaultValue)
+        {
+            return new OptionBuilder(new Column(name, sqlType: type, defaultValue: defaultValue));
         }
 
         public static OptionBuilder Create<T>(string name)
@@ -51,8 +59,24 @@ namespace Gribble.Model
             return new OptionBuilder(new Column(name, typeof(T)));
         }
 
+        public static OptionBuilder Create<T>(string name, T defaultValue)
+        {
+            return new OptionBuilder(new Column(name, typeof (T), defaultValue: defaultValue));
+        }
+
+        public static OptionBuilder Create(string name, Type type)
+        {
+            return new OptionBuilder(new Column(name, type));
+        }
+
+        public static OptionBuilder Create(string name, Type type, object defaultValue)
+        {
+            return new OptionBuilder(new Column(name, type, defaultValue: defaultValue));
+        }
+
         public string Name { get; private set; }
         public Type Type { get; private set; }
+        public SqlDbType SqlType { get; private set; }
         public int Length { get; private set; }
         public bool IsNullable { get; private set; }
         public bool IsIdentity { get; private set; }

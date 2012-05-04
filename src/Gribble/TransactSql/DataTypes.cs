@@ -20,12 +20,15 @@ namespace Gribble.TransactSql
         public const string SqlNChar = "nchar";
         public const string SqlNumeric = "numeric";
         public const string SqlNVarChar = "nvarchar";
+        public const string SqlNText = "ntext";
         public const string SqlReal = "real";
         public const string SqlRowVersion = "rowversion";
         public const string SqlSmallDateTime = "smalldatetime";
         public const string SqlSmallInt = "smallint";
         public const string SqlSmallMoney = "smallmoney";
+        public const string SqlText = "text";
         public const string SqlTime = "time";
+        public const string SqlTimestamp = "timestamp";
         public const string SqlTinyInt = "tinyint";
         public const string SqlUniqueidentifier = "uniqueidentifier";
         public const string SqlVarBinary = "varbinary";
@@ -70,14 +73,34 @@ namespace Gribble.TransactSql
             SysName = 231
         }
 
-        public static string GetSqlType(Type type, int length)
+        public static SqlDbType GetSqlType(Type type)
+        {
+            if (type == typeof(DateTime?) || type == typeof(DateTime)) return SqlDbType.DateTime;
+            if (type == typeof(DateTimeOffset?) || type == typeof(DateTimeOffset)) return SqlDbType.DateTimeOffset;
+            if (type == typeof(TimeSpan?) || type == typeof(TimeSpan)) return SqlDbType.Time;
+            if (type == typeof(Boolean?) || type == typeof(Boolean)) return SqlDbType.Bit;
+            if (type == typeof(Byte[])) return SqlDbType.VarBinary;
+            if (type == typeof(Byte?) || type == typeof(Byte)) return SqlDbType.TinyInt;
+            if (type == typeof(Int16?) || type == typeof(Int16)) return SqlDbType.SmallInt;
+            if (type == typeof(Int32?) || type == typeof(Int32)) return SqlDbType.Int;
+            if (type == typeof(Int64?) || type == typeof(Int64)) return SqlDbType.BigInt;
+            if (type == typeof(Decimal?) || type == typeof(Decimal)) return SqlDbType.Decimal;
+            if (type == typeof(Single?) || type == typeof(Single)) return SqlDbType.Real;
+            if (type == typeof(Double?) || type == typeof(Double)) return SqlDbType.Float;
+            if (type == typeof(String)) return SqlDbType.NVarChar;
+            if (type == typeof(Object)) return SqlDbType.Variant;
+            if (type == typeof(Guid?) || type == typeof(Guid)) return SqlDbType.UniqueIdentifier;
+            throw new Exception(string.Format("No SQL data type found to match CLR data type'{0}'.", type.Name));
+        }
+
+        public static string GetSqlTypeString(Type type, int length)
         {
             if (type == typeof(string) && length <= 0) return SqlNVarChar + " (MAX)";
             if (type == typeof(string) && length > 0) return string.Format(SqlNVarChar + " ({0}) ", length);
-            return GetSqlType(type);
+            return GetSqlTypeString(type);
         }
 
-        public static string GetSqlType(Type type)
+        public static string GetSqlTypeString(Type type)
         {
             if (type == typeof(DateTime?) || type == typeof(DateTime)) return SqlDateTime;
             if (type == typeof(DateTimeOffset?) || type == typeof(DateTimeOffset)) return SqlDateTimeOffset;
@@ -95,6 +118,42 @@ namespace Gribble.TransactSql
             if (type == typeof(Object)) return SqlVariant;
             if (type == typeof(Guid?) || type == typeof(Guid)) return SqlUniqueidentifier;
             throw new Exception(string.Format("No SQL data type found to match CLR data type'{0}'.", type.Name));
+        }
+
+        public static string GetSqlTypeString(SqlDbType type, int? length = null)
+        {
+            var lengthSuffix = length == null || length <= 0 ? " (MAX)" : string.Format(" ({0}) ", length);
+            switch (type)
+            {
+                case SqlDbType.BigInt: return SqlBigInt;
+                case SqlDbType.Binary: return SqlBinary + lengthSuffix;
+                case SqlDbType.Bit: return SqlBit;
+                case SqlDbType.Char: return SqlChar + lengthSuffix;
+                case SqlDbType.Date: return SqlDate;
+                case SqlDbType.DateTime: return SqlDateTime;
+                case SqlDbType.DateTime2: return SqlDateTime2;
+                case SqlDbType.SmallDateTime: return SqlSmallDateTime;
+                case SqlDbType.DateTimeOffset: return SqlDateTimeOffset;
+                case SqlDbType.Decimal: return SqlDecimal;
+                case SqlDbType.Float: return SqlFloat;
+                case SqlDbType.Int: return SqlInt;
+                case SqlDbType.Money: return SqlMoney;
+                case SqlDbType.NChar: return SqlNChar + lengthSuffix;
+                case SqlDbType.NText: return SqlNText;
+                case SqlDbType.VarChar: return SqlVarChar + lengthSuffix;
+                case SqlDbType.NVarChar: return SqlNVarChar + lengthSuffix;
+                case SqlDbType.Real: return SqlReal;
+                case SqlDbType.SmallInt: return SqlSmallInt;
+                case SqlDbType.SmallMoney: return SqlSmallMoney;
+                case SqlDbType.Variant: return SqlVariant;
+                case SqlDbType.Text: return SqlText;
+                case SqlDbType.Time: return SqlTime;
+                case SqlDbType.Timestamp: return SqlTimestamp;
+                case SqlDbType.TinyInt: return SqlTinyInt;
+                case SqlDbType.UniqueIdentifier: return SqlUniqueidentifier;
+                case SqlDbType.VarBinary: return SqlVarBinary + lengthSuffix;
+                default: throw new Exception(string.Format("No data type found to match '{0}'.", type));
+            }
         }
 
         public static Type GetClrType(int sqlType) { return GetClrType(sqlType, false); }

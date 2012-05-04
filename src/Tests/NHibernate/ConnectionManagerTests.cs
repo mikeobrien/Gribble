@@ -80,7 +80,7 @@ namespace Tests.NHibernate
                 var database = new Database(connectionManager, new EntityMappingCollection(Enumerable.Empty<IClassMap>()));
                 database.CreateTable(TableName, 
                     new Column("id", typeof(int), isPrimaryKey: true, isIdentity: true),
-                    new Column("name", typeof(string), 500));
+                    new Column("name", typeof(string), length: 500));
 
                 var entity = new Entity {Name = "Dirac"};
                 session.Save(entity);
@@ -98,7 +98,7 @@ namespace Tests.NHibernate
                 var database = new Database(connectionManager, new EntityMappingCollection(Enumerable.Empty<IClassMap>()));
                 database.CreateTable(TableName,
                     new Column("id", typeof(int), isPrimaryKey: true, isIdentity: true),
-                    new Column("name", typeof(string), 500));
+                    new Column("name", typeof(string), length: 500));
 
                 var entity = new Entity { Name = "Dirac" };
                 session.Save(entity);
