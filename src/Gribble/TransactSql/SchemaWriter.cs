@@ -109,6 +109,26 @@ namespace Gribble.TransactSql
             return new Statement(sql.ToString(), Statement.StatementType.Text, Statement.ResultType.Multiple);
         }
 
+        public static Statement CreateGetColumnsStatement(string table)
+        {
+            var sql = new SqlWriter();
+
+            sql.Select.SystemNameColumn.Trim().Comma.
+                Case.SystemTypeColumn.When.DataTypeId(DataTypes.SqlTypeId.VarChar).Then.DataTypeId(DataTypes.SqlTypeId.NVarChar).
+                                        When.DataTypeId(DataTypes.SqlTypeId.Char).Then.DataTypeId(DataTypes.SqlTypeId.NChar).
+                                        When.DataTypeId(DataTypes.SqlTypeId.Text).Then.DataTypeId(DataTypes.SqlTypeId.NText).
+                                        Else.SystemTypeColumn.End.As.SystemTypeColumn.Trim().Comma.
+                Case.SystemUserTypeColumn.When.DataTypeId(DataTypes.SqlTypeId.VarChar).Then.DataTypeId(DataTypes.SqlTypeId.NVarChar).
+                                            When.DataTypeId(DataTypes.SqlTypeId.Char).Then.DataTypeId(DataTypes.SqlTypeId.NChar).
+                                            When.DataTypeId(DataTypes.SqlTypeId.Text).Then.DataTypeId(DataTypes.SqlTypeId.NText).
+                                            Else.SystemUserTypeColumn.End.As.SystemUserTypeColumn.Comma.
+
+                From.SystemColumns.
+                Where.SystemObjectIdColumn.Equal.ObjectId(table);
+
+            return new Statement(sql.ToString(), Statement.StatementType.Text, Statement.ResultType.Multiple);
+        }
+
         private static IEnumerable<Select> GetUnionTables(Select select)
         {
             var tables = new List<Select>();

@@ -10,18 +10,14 @@ namespace Gribble
 {
     public class Database : IDatabase
     {
+        private class ColumnMap : ClassMap<Column>
+        {
+            
+        }
+
         private readonly IConnectionManager _connectionManager;
         private readonly IProfiler _profiler;
         private readonly EntityMappingCollection _mappingCollection;
-
-        public Database(SqlConnection connection, TimeSpan commandTimeout) :
-            this(new ConnectionManager(connection, commandTimeout), new EntityMappingCollection(Enumerable.Empty<IClassMap>()), null) { }
-
-        public Database(SqlConnection connection, TimeSpan commandTimeout, EntityMappingCollection mappingCollection) :
-            this(new ConnectionManager(connection, commandTimeout), mappingCollection, null) { }
-
-        public Database(SqlConnection connection, TimeSpan commandTimeout, EntityMappingCollection mappingCollection, IProfiler profiler) :
-            this(new ConnectionManager(connection, commandTimeout), mappingCollection, profiler) { }
 
         public Database(IConnectionManager connectionManager) :
             this(connectionManager, new EntityMappingCollection(Enumerable.Empty<IClassMap>()), null) { }
@@ -29,11 +25,31 @@ namespace Gribble
         public Database(IConnectionManager connectionManager, EntityMappingCollection mappingCollection) :
             this(connectionManager, mappingCollection, null) { }
 
-        public Database(IConnectionManager connectionManager, EntityMappingCollection mappingCollection, IProfiler profiler)
+        private Database(IConnectionManager connectionManager, EntityMappingCollection mappingCollection, IProfiler profiler)
         {
             _connectionManager = connectionManager;
             _profiler = profiler;
             _mappingCollection = mappingCollection;
+        }
+
+        public static IDatabase Create(SqlConnection connection, TimeSpan commandTimeout)
+        {
+            return new Database(new ConnectionManager(connection, commandTimeout), new EntityMappingCollection(Enumerable.Empty<IClassMap>()), null);
+        }
+
+        public static IDatabase Create(SqlConnection connection, TimeSpan commandTimeout, EntityMappingCollection mappingCollection)
+        {
+            return new Database(new ConnectionManager(connection, commandTimeout), mappingCollection, null);
+        }
+
+        public static IDatabase Create(SqlConnection connection, TimeSpan commandTimeout, EntityMappingCollection mappingCollection, IProfiler profiler)
+        {
+            return new Database(new ConnectionManager(connection, commandTimeout), mappingCollection, profiler);
+        }
+        
+        public static IDatabase Create(IConnectionManager connectionManager, EntityMappingCollection mappingCollection, IProfiler profiler)
+        {
+            return new Database(connectionManager, mappingCollection, profiler);
         }
 
         public void CallProcedure(string name)
@@ -76,9 +92,7 @@ namespace Gribble
         { Command.Create(SchemaWriter.CreateDeleteTableStatement(tableName), _profiler).ExecuteNonQuery(_connectionManager); }
 
         public IEnumerable<Column> GetColumns(string tableName)
-        {
-            throw new NotImplementedException();
-        }
+        { return Load<Column, IEnumerable<Column>>(Command.Create(SchemaWriter.CreateGetColumnsStatement(tableName), _profiler)); }
 
         public void AddColumn(string tableName, Column column)
         { Command.Create(SchemaWriter.CreateAddColumnStatement(tableName, column), _profiler).ExecuteNonQuery(_connectionManager); }
@@ -86,7 +100,7 @@ namespace Gribble
         public void RemoveColumn(string tableName, string columnName)
         { Command.Create(SchemaWriter.CreateRemoveColumnStatement(tableName, columnName), _profiler).ExecuteNonQuery(_connectionManager); }
 
-        public IEnumerable<Index> GetIndexes(string tableName)
+        public IEnumerable<Gribble.Model.Index> GetIndexes(string tableName)
         {
             throw new NotImplementedException();
         }

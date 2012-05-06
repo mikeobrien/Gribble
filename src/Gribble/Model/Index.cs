@@ -21,14 +21,14 @@ namespace Gribble.Model
 
         public class IndexColumn
         {
-            public IndexColumn(string name, bool ascending)
+            public IndexColumn(string name, bool descending)
             {
                 Name = name;
-                Ascending = ascending;
+                Descending = descending;
             }
 
             public string Name { get; private set; }
-            public bool Ascending { get; private set; }
+            public bool Descending { get; private set; }
         }
     }
 }
