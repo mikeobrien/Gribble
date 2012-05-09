@@ -180,9 +180,9 @@ namespace Tests.TransactSql
             var statement = SchemaWriter.CreateUnionColumnsStatement(SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name));
 
             statement.Parameters.Count().ShouldEqual(0);
-            statement.Text.ShouldEqual("SELECT [name], CASE [system_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [system_type_id] END AS [system_type_id], CASE [user_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [user_type_id] END AS [user_type_id] FROM [sys].[columns] WHERE [object_id] = OBJECT_ID(N'XLIST_3') INTERSECT " +
+            statement.Text.ShouldEqual("SELECT [name], CASE [system_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [system_type_id] END AS [system_type_id], CASE [user_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [user_type_id] END AS [user_type_id] FROM [sys].[columns] WHERE [object_id] = OBJECT_ID(N'XLIST_1') INTERSECT " +
                                     "SELECT [name], CASE [system_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [system_type_id] END AS [system_type_id], CASE [user_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [user_type_id] END AS [user_type_id] FROM [sys].[columns] WHERE [object_id] = OBJECT_ID(N'XLIST_2') INTERSECT " +
-                                    "SELECT [name], CASE [system_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [system_type_id] END AS [system_type_id], CASE [user_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [user_type_id] END AS [user_type_id] FROM [sys].[columns] WHERE [object_id] = OBJECT_ID(N'XLIST_1')");
+                                    "SELECT [name], CASE [system_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [system_type_id] END AS [system_type_id], CASE [user_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [user_type_id] END AS [user_type_id] FROM [sys].[columns] WHERE [object_id] = OBJECT_ID(N'XLIST_3')");
         }
 
         [Test]
@@ -194,11 +194,11 @@ namespace Tests.TransactSql
 
             statement.Parameters.Count().ShouldEqual(0);
             statement.Text.ShouldEqual("SELECT [__SubQuery__].[name], " + 
-                "CAST(CASE WHEN [SC].[system_type_id] < (SELECT MAX([system_type_id]) FROM [sys].[columns] WHERE [name] = [__SubQuery__].[name] AND [system_type_id] IN (175, 167, 35, 239, 231, 99) AND [object_id] IN (OBJECT_ID(N'XLIST_3'), OBJECT_ID(N'XLIST_2'), OBJECT_ID(N'XLIST_1'))) THEN 1 ELSE 0 END AS bit) AS [NarrowingConversion] " + 
+                "CAST(CASE WHEN [SC].[system_type_id] < (SELECT MAX([system_type_id]) FROM [sys].[columns] WHERE [name] = [__SubQuery__].[name] AND [system_type_id] IN (175, 167, 35, 239, 231, 99) AND [object_id] IN (OBJECT_ID(N'XLIST_1'), OBJECT_ID(N'XLIST_2'), OBJECT_ID(N'XLIST_3'))) THEN 1 ELSE 0 END AS bit) AS [NarrowingConversion] " + 
                 "FROM (SELECT [name], CASE [system_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [system_type_id] END AS [system_type_id], CASE [user_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [user_type_id] END AS [user_type_id] " + 
-                        "FROM [sys].[columns] WHERE [object_id] = OBJECT_ID(N'XLIST_3') INTERSECT SELECT [name], CASE [system_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [system_type_id] END AS [system_type_id], CASE [user_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [user_type_id] END AS [user_type_id] " + 
+                        "FROM [sys].[columns] WHERE [object_id] = OBJECT_ID(N'XLIST_1') INTERSECT SELECT [name], CASE [system_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [system_type_id] END AS [system_type_id], CASE [user_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [user_type_id] END AS [user_type_id] " + 
                             "FROM [sys].[columns] WHERE [object_id] = OBJECT_ID(N'XLIST_2') INTERSECT SELECT [name], CASE [system_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [system_type_id] END AS [system_type_id], CASE [user_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [user_type_id] END AS [user_type_id] " + 
-                                "FROM [sys].[columns] WHERE [object_id] = OBJECT_ID(N'XLIST_1') INTERSECT SELECT [name], CASE [system_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [system_type_id] END AS [system_type_id], CASE [user_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [user_type_id] END AS [user_type_id] " + 
+                                "FROM [sys].[columns] WHERE [object_id] = OBJECT_ID(N'XLIST_3') INTERSECT SELECT [name], CASE [system_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [system_type_id] END AS [system_type_id], CASE [user_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [user_type_id] END AS [user_type_id] " + 
                                     "FROM [sys].[columns] WHERE [object_id] = OBJECT_ID(N'XLIST_4')) [__SubQuery__] JOIN [sys].[columns] [SC] ON [__SubQuery__].[name] = [SC].[name] AND [SC].[object_id] = OBJECT_ID(N'XLIST_4')");
         }
 
