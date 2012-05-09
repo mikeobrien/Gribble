@@ -51,7 +51,7 @@ namespace Gribble
         {
             var adapter = new EntityAdapter<TEntity>(map);
             var values = Enumerable.Range(0, reader.FieldCount).
-                                    Select(x => new { ColumnName = reader.GetName(x), Value = reader[x] == DBNull.Value ? null : reader[x] }).
+                                    Select(x => new { ColumnName = reader.GetName(x), Value = reader[x].FromDb<object>() }).
                                     ToDictionary(value => value.ColumnName, value => value.Value);
             adapter.SetValues(values);
             return adapter.Entity;

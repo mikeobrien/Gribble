@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using Gribble.Mapping;
 using Gribble.Model;
@@ -75,13 +76,13 @@ namespace Gribble.TransactSql
                 // already specified in the row number definition. So we dont need to specify it again.
                 else if (select.HasOrderBy && !select.HasStart && !select.HasDistinct) sql.OrderBy.Write(orderByClause);
 
-                if (select.HasDistinct) sql.Trim().CloseBlock.As.Write(select.Source.Alias).Where.PartitionAlias.Equal.Value(1).Flush();
+                if (select.HasDistinct) sql.Trim().CloseBlock.As.Write(select.Source.Alias).Where.PartitionAlias.Equal.Value(1, SqlDbType.Int).Flush();
 
                 if (select.HasStart)
                 {
                     sql.Trim().CloseBlock.As.Write(select.Source.Alias).Where.RowNumberAlias.Flush();
                     if (select.HasTop && select.HasStart) sql.Between(select.Start, select.Start + (select.Top - 1));
-                    else sql.GreaterThanOrEqual.Value(select.Start);
+                    else sql.GreaterThanOrEqual.Value(select.Start, SqlDbType.Int);
                 }
             }
 

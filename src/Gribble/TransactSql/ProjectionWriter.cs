@@ -48,7 +48,7 @@ namespace Gribble.TransactSql
                                   x => VisitProjection(function.Coalesce.Second));
                     break;
                 case Function.FunctionType.Convert:
-                    _sql.Cast(x => VisitProjection(function.Convert.Value), function.Convert.Type);
+                    _sql.Cast(x => VisitProjection(function.Convert.Value), function.Convert.Type, 0, null, null);
                     break;
                 case Function.FunctionType.IndexOf:
                     _sql.IndexOf(x => VisitProjection(function.IndexOf.Text),
@@ -85,7 +85,7 @@ namespace Gribble.TransactSql
                     _sql.ToLower(x => VisitProjection(function.ToLower.Text));
                     break;
                 case Function.FunctionType.ToString:
-                    _sql.Cast(x => VisitProjection(function.ToString.Value), typeof(string));
+                    _sql.Cast(x => VisitProjection(function.ToString.Value), typeof(string), 0, null, null);
                     break;
                 case Function.FunctionType.ToUpper:
                     _sql.ToUpper(x => VisitProjection(function.ToUpper.Text));

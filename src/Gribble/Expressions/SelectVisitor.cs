@@ -78,6 +78,8 @@ namespace Gribble.Expressions
                     { select.FirstOrDefault = true; HandleWhere(select, node); }
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Count())) 
                     select.Count = true;
+                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Count(y => true)))
+                    { select.Count = true; HandleWhere(select, node); }
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Randomize())) 
                     select.Randomize = true;
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Intersect(Queryable.Empty<T>(), new Expression<Func<T, object>>[] { })))

@@ -48,6 +48,18 @@ namespace Gribble.Model
         public bool HasConditions
         { get { return HasTop || HasStart || First || FirstOrDefault || Count || Randomize || HasProjection ||
                    HasWhere || HasDistinct || HasOrderBy || HasSetOperations; } }
-        
+
+        public IEnumerable<Select> GetSourceTables()
+        {
+            return GetSourceTables(this).Reverse();
+        }
+
+        private static IEnumerable<Select> GetSourceTables(Select select)
+        {
+            var tables = new List<Select>();
+            if (select.Source.Type == Data.DataType.Table) tables.Add(select);
+            else if (select.Source.HasQueries) tables.AddRange(select.Source.Queries.SelectMany(GetSourceTables));
+            return tables;
+        }   
     }
 }

@@ -15,16 +15,11 @@ namespace Gribble.TransactSql
 
         public SqlWriter Write(object value) { return Write(value.ToString()); }
 
-        public SqlWriter Write(string value)
-        {
-            _text.Append((_whitespace ? " " : string.Empty) + value);
-            _whitespace = true;
-            return this;
-        }
-         
         public SqlWriter Write(string format, params object[] args)
         {
-            Write(string.Format(format, args));
+            _text.Append((_whitespace ? " " : string.Empty) + 
+                (args.Length > 0 ? string.Format(format, args) : format));
+            _whitespace = true;
             return this;
         }
 
@@ -76,7 +71,7 @@ namespace Gribble.TransactSql
         public SqlWriter Union { get { return Write("UNION"); } }
         public SqlWriter UnionAll { get { return Write("UNION ALL"); } }
         public SqlWriter Between(int start, int end) 
-            { return Write("BETWEEN").Value(start).And.Value(end); }
+            { return Write("BETWEEN").Value(start, SqlDbType.Int).And.Value(end, SqlDbType.Int); }
         public SqlWriter In { get { return Write("IN"); } }
         public SqlWriter Exists { get { return Write("EXISTS"); } }
         public SqlWriter Like(bool condition) { return Do(!condition, x => x.Not.Flush()).Write("LIKE"); }
@@ -85,11 +80,13 @@ namespace Gribble.TransactSql
         public SqlWriter Values { get { return Write("VALUES"); } }
         public SqlWriter Set { get { return Write("SET"); } }
         public SqlWriter Delete { get { return Write("DELETE"); } }
+        public SqlWriter MaxLength { get { return Write("MAX"); } }
         public SqlWriter Top(int total)
-        { return Write("TOP").OpenBlock.Trim().Value(total).Trim().CloseBlock; }
+        { return Write("TOP").OpenBlock.Trim().Value(total, SqlDbType.Int).Trim().CloseBlock; }
         public SqlWriter TopPercent(int total) { return Top(total).Percent; }
         public SqlWriter Percent { get { return Write("PERCENT"); } }
         public SqlWriter Distinct { get { return Write("DISTINCT"); } }
+        public SqlWriter Left { get { return Write("LEFT"); } }
         public SqlWriter Inner { get { return Write("INNER"); } }
         public SqlWriter Join { get { return Write("JOIN"); } }
         public SqlWriter On { get { return Write("ON"); } }
@@ -101,7 +98,7 @@ namespace Gribble.TransactSql
         public SqlWriter PartitionAlias { get { return QuotedName("__Partition__"); } }
         public SqlWriter SubQueryAlias { get { return QuotedName("__SubQuery__"); } }
         public SqlWriter SubQueryColumn(string name)
-            { return SubQueryAlias.Period.QuotedName(name); }
+            { return SubQueryAlias.Trim().Period.Trim().QuotedName(name); }
         public SqlWriter CountWildcard { get { return Write("COUNT(*)"); } }
         public SqlWriter Count(params string[] name) 
             { return Write("COUNT").OpenBlock.Trim().QuotedName(name).Trim().CloseBlock; }
@@ -109,13 +106,12 @@ namespace Gribble.TransactSql
         public SqlWriter Period { get { return Write("."); } }
         public SqlWriter QuotedName(params string[] name) 
             { return Write(name.Select(QuoteName).Aggregate((a, s) => a + "." + s)); }
-        private SqlWriter JoinName(params Action<SqlWriter>[] name) 
-            { return WriteList(x => x.Period.Trim().Flush(), name); }
         public SqlWriter QuotedString(string value) { return QuotedString(value, false); }
         public SqlWriter QuotedString(string value, bool unicode) 
             { return QuotedString(x => x.Write(value), unicode); }
         public SqlWriter QuotedString(Action<SqlWriter> value, bool unicode)
         { return Do(unicode, x => x.Write("N").Trim()).SingleQuote.Trim().Do(value).Trim().SingleQuote; }
+        public SqlWriter Persisted { get { return Write("PERSISTED"); } }
 
         public SqlWriter If { get { return Write("IF"); } }
         public SqlWriter Case { get { return Write("CASE"); } }
@@ -180,14 +176,22 @@ namespace Gribble.TransactSql
             { return ParameterAssignmentList(seperator, (IEnumerable<KeyValuePair<string, string>>)assignments); }
         public SqlWriter ParameterAssignmentList(Action<SqlWriter> seperator, IEnumerable<KeyValuePair<string, string>> assignments)
             { return WriteList(seperator, assignments.Select<KeyValuePair<string, string>, Action<SqlWriter>>(x => y => y.QuotedName(x.Key).Equal.Parameter(x.Value))); }
+        
+        public SqlWriter DataTypeId(int typeId) { return Write(typeId); }
 
-        public SqlWriter DataType(Type type) { return Write(DataTypes.GetSqlTypeString(type)); }
-        public SqlWriter DataType(Type type, int length) { return Write(DataTypes.GetSqlTypeString(type, length)); }
-        public SqlWriter DataType(SqlDbType type) { return Write(DataTypes.GetSqlTypeString(type)); }
-        public SqlWriter DataType(SqlDbType type, int length) { return Write(DataTypes.GetSqlTypeString(type, length)); }
-        public SqlWriter DataTypeId(DataTypes.SqlTypeId typeId) { return Write((int)typeId); }
+        public SqlWriter DataTypeDefinition(Type type, int? length, int? precision, int? scale) { return DataTypeDefinition(type.GetSqlTypeName(), length, precision, scale); }
+        public SqlWriter DataTypeDefinition(SqlDbType type, int? length, int? precision, int? scale) { return DataTypeDefinition(type.GetSqlTypeName(), length, precision, scale); }
+        public SqlWriter DataTypeDefinition(string typeName, int? length, int? precision, int? scale)
+        {
+            var writer = Write(typeName);
+            if (DataTypes.TypesWithLength.Any(x => x.SqlName == typeName))
+                return writer.OpenBlock.Trim().Do(length != null && length > 0, x => x.Write(length), x => x.MaxLength.Flush()).Trim().CloseBlock;
+            if (precision != null && precision > 0 && DataTypes.TypesWithScaleAndPrecision.Any(x => x.SqlName == typeName))
+                return writer.OpenBlock.Trim().Write(precision).Do(scale != null, x => x.Trim().Comma.Write(scale).Trim()).Trim().CloseBlock;
+            return writer;
+        }
 
-        public SqlWriter Value(object value) { return Write(ToSqlLiteral(value)); }
+        public SqlWriter Value(object value, SqlDbType type) { return Write(ToSqlLiteral(value, type)); }
         
         public SqlWriter NewId() { return WriteFunction("NEWID"); }
         public SqlWriter NewIdColumnDefault { get { return QuotedString(x => x.OpenBlock.Trim().NewId().Trim().CloseBlock.Flush(), false); } }
@@ -196,7 +200,7 @@ namespace Gribble.TransactSql
         public SqlWriter GetDate() { return WriteFunction("GETDATE"); }
         public SqlWriter GetDateColumnDefault { get { return QuotedString(x => x.OpenBlock.Trim().GetDate().Trim().CloseBlock.Flush(), false); } }
         public SqlWriter RowNumber() { return WriteFunction("ROW_NUMBER"); }
-        public SqlWriter ScopeIdentity(Type type) { return Cast(x => x.WriteFunction("SCOPE_IDENTITY"), type); }
+        public SqlWriter ScopeIdentity(Type type) { return Cast(x => x.WriteFunction("SCOPE_IDENTITY"), type, null, null, null); }
         public SqlWriter ObjectId(string name) { return WriteFunction("OBJECT_ID", x => x.QuotedString(name, true)); }
         public SqlWriter ObjectDefinition(Action<SqlWriter> value) { return WriteFunction("OBJECT_DEFINITION", value); }
         public SqlWriter Trim(Action<SqlWriter> value) { return LeftTrim(x => x.RightTrim(value)); }
@@ -205,8 +209,8 @@ namespace Gribble.TransactSql
         public SqlWriter Length(Action<SqlWriter> value) { return WriteFunction("LEN", value); }
         public SqlWriter ToUpper(Action<SqlWriter> value) { return WriteFunction("UPPER", value); }
         public SqlWriter ToLower(Action<SqlWriter> value) { return WriteFunction("LOWER", value); }
-        public SqlWriter Cast(Action<SqlWriter> value, Type type, int length = 0)
-            { return Write("CAST").Trim().OpenBlock.Trim().Do(value).As.DataType(type, 0).Trim().CloseBlock; }
+        public SqlWriter Cast(Action<SqlWriter> value, Type type, int? length, int? scale, int? precision)
+            { return Write("CAST").Trim().OpenBlock.Trim().Do(value).As.DataTypeDefinition(type, length, scale, precision).Trim().CloseBlock; }
         public SqlWriter IndexOf(Action<SqlWriter> text, Action<SqlWriter> searchText) 
             { return WriteFunction("CHARINDEX", searchText, text); }
         public SqlWriter IndexOf(Action<SqlWriter> text, Action<SqlWriter> searchText, Action<SqlWriter> start) 
@@ -223,7 +227,7 @@ namespace Gribble.TransactSql
             { return WriteFunction("RIGHT", text, x => x.Length(text).Minus.Do(length)); }
         public SqlWriter IsNull(Action<SqlWriter> expression, Action<SqlWriter> defaultValue)
             { return WriteFunction("ISNULL", expression, defaultValue); }
-        public SqlWriter ToHex(Action<SqlWriter> value) { return WriteFunction("CONVERT", x => x.DataType(typeof(string), 0), value, x => x.Value(1)); }
+        public SqlWriter ToHex(Action<SqlWriter> value) { return WriteFunction("CONVERT", x => x.DataTypeDefinition(typeof(string), 0, null, null), value, x => x.Value(1, SqlDbType.Int)); }
 
         public enum HashAlgorithm { Md2, Md4, Md5, Sha, Sha1 }
 
@@ -246,7 +250,7 @@ namespace Gribble.TransactSql
         public SqlWriter Drop { get { return Write("DROP"); } }
         public SqlWriter Identity { get { return Write("IDENTITY"); } }
         public SqlWriter IntegerIdentity 
-            { get { return Identity.Trim().OpenBlock.Trim().Value(1).Trim().Comma.Trim().Value(1).Trim().CloseBlock; } }
+            { get { return Identity.Trim().OpenBlock.Trim().Value(1, SqlDbType.Int).Trim().Comma.Trim().Value(1, SqlDbType.Int).Trim().CloseBlock; } }
         public SqlWriter Nullable { get { return Write("NULL"); } }
         public SqlWriter NotNullable { get { return Write("NOT NULL"); } }
         public SqlWriter Default { get { return Write("DEFAULT"); } }
@@ -258,40 +262,15 @@ namespace Gribble.TransactSql
         public SqlWriter Clustered { get { return Write("CLUSTERED"); } }
         public SqlWriter NonClustered { get { return Write("NONCLUSTERED"); } }
 
-        public SqlWriter SystemTables { get { return QuotedName("sys", "tables"); } }
-        public SqlWriter SystemTablessAlias { get { return QuotedName("ST"); } }
-        public SqlWriter SystemColumns { get { return QuotedName("sys", "columns"); } }
-        public SqlWriter SystemColumnsAlias { get { return QuotedName("SC"); } }
-        public SqlWriter SystemIndexColumns { get { return QuotedName("sys", "index_columns"); } }
-        public SqlWriter SystemIndexes { get { return QuotedName("sys", "indexes"); } }
-        public SqlWriter SystemObjectIdColumn { get { return QuotedName("object_id"); } }
-        public SqlWriter SystemNameColumn { get { return QuotedName("name"); } }
-        public SqlWriter SystemTypeColumn { get { return QuotedName("system_type_id"); } }
-        public SqlWriter SystemUserTypeColumn { get { return QuotedName("user_type_id"); } }
-        public SqlWriter SystemMaxLengthColumn { get { return QuotedName("max_length"); } }
-        public SqlWriter SystemIsNullableColumn { get { return QuotedName("is_nullable"); } }
-        public SqlWriter SystemIsIdentityColumn { get { return QuotedName("is_identity"); } }
-        public SqlWriter SystemDefaultObjectIdColumn { get { return QuotedName("default_object_id"); } }
-        public SqlWriter SystemIsPrimaryKeyColumn { get { return QuotedName("is_primary_key"); } }
-        public SqlWriter SystemColumnIdColumn { get { return QuotedName("column_id"); } }
-        public SqlWriter SystemIndexIdColumn { get { return QuotedName("index_id"); } }
-        public SqlWriter SystemIsAutoGeneratedAlias { get { return QuotedName("is_auto_generated"); } }
-        public SqlWriter SystemDefaultValueAlias { get { return QuotedName("default_value"); } }
-
-        public SqlWriter SubQueryAlias_Name { get { return JoinName(x => x.SubQueryAlias.Flush(), x => x.SystemNameColumn.Flush()); } }
-        public SqlWriter SystemColumns_Type { get { return JoinName(x => x.SystemColumns.Flush(), x => x.SystemTypeColumn.Flush()); } }
-        public SqlWriter SystemColumns_Name { get { return JoinName(x => x.SystemColumns.Flush(), x => x.SystemNameColumn.Flush()); } }
-        public SqlWriter SystemColumns_ObjectId { get { return JoinName(y => y.SystemColumns.Flush(), y => y.SystemObjectIdColumn.Flush()); } }
-        public SqlWriter SystemColumns_ColumnId { get { return JoinName(y => y.SystemColumns.Flush(), y => y.SystemColumnIdColumn.Flush()); } }
-        public SqlWriter SystemColumnsAlias_ObjectId { get { return JoinName(y => y.SystemColumnsAlias.Flush(), y => y.SystemObjectIdColumn.Flush()); } }
-        public SqlWriter SystemColumnsAlias_ColumnId { get { return JoinName(y => y.SystemColumnsAlias.Flush(), y => y.SystemColumnIdColumn.Flush()); } }
-        public SqlWriter SystemColumnsAlias_Name { get { return JoinName(y => y.SystemColumnsAlias.Flush(), y => y.SystemNameColumn.Flush()); } }
-        public SqlWriter SystemColumnsAlias_Type { get { return JoinName(y => y.SystemColumnsAlias.Flush(), y => y.SystemTypeColumn.Flush()); } }
-        public SqlWriter SystemIndexColumns_ColumnId { get { return JoinName(y => y.SystemIndexColumns.Flush(), y => y.SystemColumnIdColumn.Flush()); } }
-        public SqlWriter SystemIndexColumns_ObjectId { get { return JoinName(y => y.SystemIndexColumns.Flush(), y => y.SystemObjectIdColumn.Flush()); } }
-        public SqlWriter SystemIndexColumns_IndexId { get { return JoinName(y => y.SystemIndexColumns.Flush(), y => y.SystemIndexIdColumn.Flush()); } }
-        public SqlWriter SystemIndexes_ObjectId { get { return JoinName(y => y.SystemIndexes.Flush(), y => y.SystemObjectIdColumn.Flush()); } }
-        public SqlWriter SystemIndexes_IndexId { get { return JoinName(y => y.SystemIndexes.Flush(), y => y.SystemIndexIdColumn.Flush()); } }
+        public static class Aliases
+        {
+            public const string IsAutoGenerated = "[is_auto_generated]";
+            public const string IsPrimaryKeyClustered = "[is_primary_key_clustered]";
+            public const string DefalutValue = "[default_value]";
+            public const string Computation = "[computation]";
+            public const string PersistedComputation = "[persisted_computation]";
+            public const string ColumnName = "[column_name]";
+        }
 
         public SqlWriter PrimaryKeyConstraint(string tableName, string columnName, bool clustered) 
         {
@@ -299,24 +278,22 @@ namespace Gribble.TransactSql
                     OpenBlock.Trim().QuotedName(columnName).Ascending.Trim().CloseBlock;
         }
 
-        public SqlWriter ColumnDefinition(string name, Type type, int length, bool isPrimaryKey, bool isIdentity,
-                                            bool nullable, bool autoGenerated, object defaultValue)
+        public SqlWriter ColumnDefinition(string name, Type clrType, SqlDbType? sqlType, int? length, int? precision, int? scale, bool isPrimaryKey, bool isIdentity, 
+                                            bool nullable, bool autoGenerated, string computation, bool? computationPersisted, object defaultValue)
         {
-            return ColumnDefinition(name, DataTypes.GetSqlType(type), length, isPrimaryKey, 
-                isIdentity, nullable, autoGenerated, defaultValue);
-        }
-
-        public SqlWriter ColumnDefinition(string name, SqlDbType type, int length, bool isPrimaryKey, bool isIdentity, 
-                                            bool nullable, bool autoGenerated, object defaultValue)
-        {
-            QuotedName(name).DataType(type, length);
+            Action<SqlWriter> writeNullable = x => { if (nullable) x.Nullable.Flush(); else x.NotNullable.Flush(); };
+            var writer = QuotedName(name);
+            if (!string.IsNullOrEmpty(computation))
+                return writer.As.OpenBlock.Trim().Write(computation).Trim().CloseBlock.Do(
+                    computationPersisted.HasValue && computationPersisted.Value, x => x.Persisted.Do(writeNullable).Flush());
+            var type = clrType != null ? clrType.GetSqlType() : (sqlType != null ? sqlType.Value : SqlDbType.NVarChar);
+            writer.DataTypeDefinition(type, length, precision, scale);
             if (type == SqlDbType.Int && isIdentity) IntegerIdentity.Flush();
-            if (nullable) Nullable.Flush();
-            else NotNullable.Flush();
+            writeNullable(writer);
             if (!isIdentity)
             {
                 if (autoGenerated || (defaultValue != null && defaultValue != DBNull.Value)) Default.Flush();
-                if (defaultValue != null && defaultValue != DBNull.Value) Value(defaultValue);
+                if (defaultValue != null && defaultValue != DBNull.Value) Value(defaultValue, type);
                 else if (autoGenerated)
                 {
                     if (type == SqlDbType.DateTime || type == SqlDbType.SmallDateTime || 
@@ -332,25 +309,27 @@ namespace Gribble.TransactSql
 
         public SqlWriter TableExistsValue(string tableName)
         {
-            return Cast(x => x.Case.When.TableExists(tableName).Then.True.Else.False.End.Flush(), typeof(bool));
+            return Cast(x => x.Case.When.TableExists(tableName).Then.True.Else.False.End.Flush(), typeof(bool), null, null, null);
         }
 
         public SqlWriter TableExists(string tableName)
         {
-            return Exists.OpenBlock.Trim().Select.Wildcard.From.SystemTables.Where.
-                    SystemNameColumn.Equal.QuotedString(tableName).Trim().CloseBlock;
+            return Exists.OpenBlock.Trim().Select.Wildcard.From.Write(System.Tables.TableName).Where.
+                    Write(System.Tables.Name).Equal.QuotedString(tableName).Trim().CloseBlock;
         }
 
         public SqlWriter IfColumnExists(string tableName, string columnName)
         {
-            return If.Exists.OpenBlock.Trim().Select.Wildcard.From.SystemColumns.Where.SystemObjectIdColumn.Equal.ObjectId(tableName).
-                   And.SystemNameColumn.Equal.QuotedString(columnName).Trim().CloseBlock;
+            return If.Exists.OpenBlock.Trim().Select.Wildcard.From.Write(System.Columns.TableName).Where.
+                Write(System.Columns.ObjectId).Equal.ObjectId(tableName).
+                   And.Write(System.Columns.Name).Equal.QuotedString(columnName).Trim().CloseBlock;
         }
 
         public SqlWriter IfIndexExists(string tableName, string indexName)
         {
-            return If.Exists.OpenBlock.Trim().Select.Wildcard.From.SystemIndexes.Where.SystemObjectIdColumn.Equal.ObjectId(tableName).
-                   And.SystemNameColumn.Equal.QuotedString(indexName).Trim().CloseBlock;
+            return If.Exists.OpenBlock.Trim().Select.Wildcard.From.Write(System.Indexes.TableName).Where.
+                Write(System.Indexes.ObjectId).Equal.ObjectId(tableName).
+                   And.Write(System.Indexes.Name).Equal.QuotedString(indexName).Trim().CloseBlock;
         }
 
         // ------------------------ Private Members --------------------------------
@@ -374,19 +353,30 @@ namespace Gribble.TransactSql
             return this;
         }
 
-        private static string ToSqlLiteral(object value)
+        private static string ToSqlLiteral(object value, SqlDbType type)
         {
-            if (value is string) return QuoteString((string)value);
-            if (value is int || value is int?) return value.ToString();
-            if (value is DateTime || value is DateTime?) QuoteString(value.ToString());
-            if (value is bool || value is bool?) return (bool)value ? "1" : "0";
-            if (value is long || value is long?) return value.ToString();
-            if (value is decimal || value is decimal?) return value.ToString();
-            if (value is byte || value is byte?) return value.ToString();
-            if (value is double || value is double?) string.Format("{0}E", value);
-            if (value is float || value is float?) string.Format("{0}E", value);
-            if (value is Guid || value is Guid?) return QuoteString(value.ToString());
-            return value.ToString();
+            switch (type)
+            {
+                case SqlDbType.Char:
+                case SqlDbType.NChar:
+                case SqlDbType.NVarChar:
+                case SqlDbType.NText:
+                case SqlDbType.DateTime:
+                case SqlDbType.Timestamp:
+                case SqlDbType.Text:
+                case SqlDbType.UniqueIdentifier:
+                case SqlDbType.VarChar:
+                case SqlDbType.SmallDateTime:
+                case SqlDbType.DateTimeOffset:
+                case SqlDbType.DateTime2:
+                case SqlDbType.Time:
+                case SqlDbType.Date: return QuoteString(value.ToString());
+                case SqlDbType.Bit: return (value is bool && (bool)value) || 
+                                            value.ToString().ToLower() == "true" || 
+                                            value.ToString() == "1" ? "1" : "0";
+                case SqlDbType.Float: return string.Format("{0}E", value);
+                default: return value.ToString();
+            }
         }
 
         private static string QuoteName(string name)

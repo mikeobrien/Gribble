@@ -17,14 +17,17 @@ namespace Gribble
         IEnumerable<TEntity> CallProcedureMany<TEntity>(string name, Dictionary<string, object> parameters);
 
         void CreateTable(string tableName, params Column[] columns);
+        bool TableExists(string tableName);
         void DeleteTable(string tableName);
 
         IEnumerable<Column> GetColumns(string tableName);
         void AddColumn(string tableName, Column column);
+        void AddColumns(string tableName, params Column[] columns);
         void RemoveColumn(string tableName, string columnName);
 
         IEnumerable<Index> GetIndexes(string tableName);
         void AddNonClusteredIndex(string tableName, params string[] columnNames);
+        void AddNonClusteredIndexes(string tableName, params string[][] indexes);
         void RemoveNonClusteredIndex(string tableName, string indexName);
     }
 }

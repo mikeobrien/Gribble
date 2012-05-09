@@ -11,21 +11,6 @@ namespace Tests
     [TestFixture]
     public class TableTests
     {
-        private static readonly TestDatabase Database = new TestDatabase();
-
-        static TableTests()
-        {
-            const int records = 10;
-            const string columnSchena = "[id] [int] IDENTITY(1,1) NOT NULL, [name] [nvarchar] (500) NULL, [hide] [bit] NULL, [timestamp] [datetime] NULL, [upc] [uniqueidentifier] DEFAULT NEWID(), [code] [int] DEFAULT 5, [uid] [uniqueidentifier] NOT NULL";
-            const string dataColumns = "name, hide, [timestamp], [uid]";
-            const string data = "'oh hai', 0, GETDATE(), NEWID()";
-
-            Database.AddTable(columnSchena, records, dataColumns, data);
-            Database.AddTable(columnSchena, records, dataColumns, data);
-            Database.AddTable("[id] [int] IDENTITY(1,1) NOT NULL, [name] [nvarchar] (500) NULL, [hide] [bit] NULL, [upc] [uniqueidentifier] DEFAULT NEWID(), [code] [int] DEFAULT 5", 5, "name, hide", "'oh hai yo', 1");
-            Database.AddTable("[id] [int] IDENTITY(1,1) NOT NULL, [name] [varchar] (500) NULL, [hide] [bit] NULL, [upc] [uniqueidentifier] DEFAULT NEWID(), [code] [int] DEFAULT 5", 5, "name, hide", "'oh hai yo', 1");
-        }
-
         public class IdentityEntity
         {
             public IdentityEntity() { Values = new Dictionary<string, object>(); }
@@ -65,26 +50,40 @@ namespace Tests
         private static readonly EntityMapping IdentityMap = new EntityMapping(new IdentityEntityMap());
         private static readonly EntityMapping GuidMap = new EntityMapping(new GuidEntityMap());
 
+        private TestDatabase _database = new TestDatabase();
         private Table<IdentityEntity> _identityTable1;
         private Table<GuidEntity> _guidTable1;
         private Table<IdentityEntity> _identityTable2;
         private Table<IdentityEntity> _identityTable3;
-
-        [TestFixtureSetUp]
-        public void Setup()
-        {
-            Database.SetUp();
-            _identityTable1 = new Table<IdentityEntity>(Database.Connection, TimeSpan.FromMinutes(5), Database.FirstTable.Name, IdentityMap, true);
-            _guidTable1 = new Table<GuidEntity>(Database.Connection, TimeSpan.FromMinutes(5), Database.SecondTable.Name, GuidMap, true);
-            _identityTable2 = new Table<IdentityEntity>(Database.Connection, TimeSpan.FromMinutes(5), Database.ThirdTable.Name, IdentityMap, true);
-            _identityTable3 = new Table<IdentityEntity>(Database.Connection, TimeSpan.FromMinutes(5), Database.FourthTable.Name, IdentityMap, true);
-        }
-
-        [TestFixtureTearDown]
-        public void TearDown() { Database.TearDown(); }
+        private IDatabase _gribbleDatabase;
 
         [SetUp]
-        public void TestSetup() { Database.CreateTables(); }
+        public void Setup()
+        {
+            const int records = 10;
+            const string columnSchena = "[id] [int] IDENTITY(1,1) NOT NULL, [name] [nvarchar] (500) NULL, [hide] [bit] NULL, [timestamp] [datetime] NULL, [upc] [uniqueidentifier] DEFAULT NEWID(), [code] [int] DEFAULT 5, [uid] [uniqueidentifier] NOT NULL";
+            const string dataColumns = "name, hide, [timestamp], [uid]";
+            const string data = "'oh hai', 0, GETDATE(), NEWID()";
+
+            _database = new TestDatabase();
+            _database.AddTable(columnSchena, records, dataColumns, data);
+            _database.AddTable(columnSchena, records, dataColumns, data);
+            _database.AddTable("[id] [int] IDENTITY(1,1) NOT NULL, [name] [nvarchar] (500) NULL, [hide] [bit] NULL, [upc] [uniqueidentifier] DEFAULT NEWID(), [code] [int] DEFAULT 5", 5, "name, hide", "'oh hai yo', 1");
+            _database.AddTable("[id] [int] IDENTITY(1,1) NOT NULL, [name] [varchar] (500) NULL, [hide] [bit] NULL, [upc] [uniqueidentifier] DEFAULT NEWID(), [code] [int] DEFAULT 5", 5, "name, hide", "'oh hai yo', 1");
+
+            _database.SetUp();
+
+            _identityTable1 = new Table<IdentityEntity>(_database.Connection, TimeSpan.FromMinutes(5), _database.FirstTable.Name, IdentityMap, true);
+            _guidTable1 = new Table<GuidEntity>(_database.Connection, TimeSpan.FromMinutes(5), _database.SecondTable.Name, GuidMap, true);
+            _identityTable2 = new Table<IdentityEntity>(_database.Connection, TimeSpan.FromMinutes(5), _database.ThirdTable.Name, IdentityMap, true);
+            _identityTable3 = new Table<IdentityEntity>(_database.Connection, TimeSpan.FromMinutes(5), _database.FourthTable.Name, IdentityMap, true);
+            _gribbleDatabase = Database.Create(_database.Connection, TimeSpan.FromMinutes(5));
+            
+            _database.CreateTables();
+        }
+
+        [TearDown]
+        public void TearDown() { _database.TearDown(); }
 
         [Test]
         public void Get_Test()
@@ -125,9 +124,9 @@ namespace Tests
         public void Delete_By_Id_Test()
         {
             var count = _identityTable1.Count();
-            _identityTable1.Where(x => x.Id == 4).Count().ShouldEqual(1);
+            _identityTable1.Count(x => x.Id == 4).ShouldEqual(1);
             _identityTable1.Delete(4);
-            _identityTable1.Where(x => x.Id == 4).Count().ShouldEqual(0);
+            _identityTable1.Count(x => x.Id == 4).ShouldEqual(0);
             _identityTable1.Count().ShouldEqual(count - 1);
         }
 
@@ -135,9 +134,9 @@ namespace Tests
         public void Delete_Entity_Test()
         {
             var count = _identityTable1.Count();
-            _identityTable1.Where(x => x.Id == 4).Count().ShouldEqual(1);
+            _identityTable1.Count(x => x.Id == 4).ShouldEqual(1);
             _identityTable1.Delete(new IdentityEntity { Id = 4 });
-            _identityTable1.Where(x => x.Id == 4).Count().ShouldEqual(0);
+            _identityTable1.Count(x => x.Id == 4).ShouldEqual(0);
             _identityTable1.Count().ShouldEqual(count - 1);
         }
 
@@ -145,20 +144,20 @@ namespace Tests
         public void Delete_Single_By_Query_Test()
         {
             var count = _identityTable1.Count();
-            _identityTable1.Where(x => x.Id == 8).Count().ShouldEqual(1);
+            _identityTable1.Count(x => x.Id == 8).ShouldEqual(1);
             _identityTable1.Delete(x => x.Id == 8);
-            _identityTable1.Where(x => x.Id == 8).Count().ShouldEqual(0);
+            _identityTable1.Count(x => x.Id == 8).ShouldEqual(0);
             _identityTable1.Count().ShouldEqual(count - 1);
         }
 
         [Test]
         public void Delete_Many_By_Query_Test()
         {
-            Database.CreateTables();
+            _database.CreateTables();
             var totalCount = _identityTable1.Count();
-            var setCount = _identityTable1.Where(x => x.Id > 8).Count();
+            var setCount = _identityTable1.Count(x => x.Id > 8);
             _identityTable1.DeleteMany(x => x.Id > 8);
-            _identityTable1.Where(x => x.Id > 8).Count().ShouldEqual(0);
+            _identityTable1.Count(x => x.Id > 8).ShouldEqual(0);
             _identityTable1.Count().ShouldEqual(totalCount - setCount);
         }
 
@@ -214,27 +213,56 @@ namespace Tests
         [Test]
         public void Copy_Into_Existing_Test()
         {
-            Database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", Database.FirstTable.Name).ShouldEqual(10);
-            Database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", Database.ThirdTable.Name).ShouldEqual(5);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", _database.FirstTable.Name).ShouldEqual(10);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", _database.ThirdTable.Name).ShouldEqual(5);
             _identityTable1.Take(7).CopyTo(_identityTable2).Count().ShouldEqual(12);
-            Database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", Database.FirstTable.Name).ShouldEqual(10);
-            Database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", Database.ThirdTable.Name).ShouldEqual(12);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", _database.FirstTable.Name).ShouldEqual(10);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", _database.ThirdTable.Name).ShouldEqual(12);
         }
 
         [Test]
         public void Copy_Into_New_Test()
         {
             const string newTable = "some_new_table";
-            Database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", Database.FirstTable.Name).ShouldEqual(10);
-            Database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", Database.ThirdTable.Name).ShouldEqual(5);
+            _gribbleDatabase.AddNonClusteredIndex(_database.FirstTable.Name, "name", "hide");
+            _gribbleDatabase.AddNonClusteredIndex(_database.FirstTable.Name, "upc");
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", _database.FirstTable.Name).ShouldEqual(10);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", _database.ThirdTable.Name).ShouldEqual(5);
             _identityTable1.Take(7).Union(_identityTable2).CopyTo(newTable).Count().ShouldEqual(12);
-            Database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", Database.FirstTable.Name).ShouldEqual(10);
-            Database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", Database.ThirdTable.Name).ShouldEqual(5);
-            Database.ExecuteScalar<int>("SELECT COUNT(*) FROM sys.columns WHERE object_id=object_id('{0}') AND name = 'id'", newTable).ShouldEqual(1);
-            Database.ExecuteScalar<int>("SELECT COUNT(*) FROM sys.columns WHERE object_id=object_id('{0}') AND name = 'name'", newTable).ShouldEqual(1);
-            Database.ExecuteScalar<int>("SELECT COUNT(*) FROM sys.columns WHERE object_id=object_id('{0}') AND name = 'hide'", newTable).ShouldEqual(1);
-            Database.ExecuteScalar<int>("SELECT COUNT(*) FROM sys.columns WHERE object_id=object_id('{0}') AND name = 'upc'", newTable).ShouldEqual(1);
-            Database.ExecuteScalar<int>("SELECT COUNT(*) FROM sys.columns WHERE object_id=object_id('{0}') AND name = 'code'", newTable).ShouldEqual(1);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", _database.FirstTable.Name).ShouldEqual(10);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", _database.ThirdTable.Name).ShouldEqual(5);
+            var columns = _gribbleDatabase.GetColumns(newTable).ToList();
+            columns.Count.ShouldEqual(5);
+            columns.Count(x => x.Name == "id").ShouldEqual(1);
+            columns.Count(x => x.Name == "name").ShouldEqual(1);
+            columns.Count(x => x.Name == "hide").ShouldEqual(1);
+            columns.Count(x => x.Name == "upc").ShouldEqual(1);
+            columns.Count(x => x.Name == "code").ShouldEqual(1);
+
+            var indexes = _gribbleDatabase.GetIndexes(newTable).ToList();
+            indexes.Count.ShouldEqual(2);
+
+            var index = indexes[1];
+            index.Clustered.ShouldBeFalse();
+            index.Columns.Count().ShouldEqual(1);
+            index.Columns.First().Name.ShouldEqual("upc");
+            index.Columns.First().Descending.ShouldBeFalse();
+            index.Name.ShouldStartWith("IX_");
+            index.Name.ShouldContain("_upc");
+            index.PrimaryKey.ShouldBeFalse();
+            index.Unique.ShouldBeFalse();
+
+            index = indexes[0];
+            index.Clustered.ShouldBeFalse();
+            index.Columns.Count().ShouldEqual(2);
+            index.Columns.First().Name.ShouldEqual("name");
+            index.Columns.First().Descending.ShouldBeFalse();
+            index.Columns.Last().Name.ShouldEqual("hide");
+            index.Columns.Last().Descending.ShouldBeFalse();
+            index.Name.ShouldStartWith("IX_");
+            index.Name.ShouldContain("_name_hide");
+            index.PrimaryKey.ShouldBeFalse();
+            index.Unique.ShouldBeFalse();
         }
 
         [Test]
