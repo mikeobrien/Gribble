@@ -203,15 +203,15 @@ namespace Gribble.TransactSql
             return new Statement(writer.ToString(), Statement.StatementType.Text, Statement.ResultType.Multiple);
         }
 
-        public static Statement CreateAddNonClusteredIndexStatement(string tableName, params string[] columnNames)
+        public static Statement CreateAddNonClusteredIndexStatement(string tableName, params Index.Column[] columns)
         {
-            var indexName = string.Format("IX_{0}_{1}", tableName, string.Join("_", columnNames));
+            var indexName = string.Format("IX_{0}_{1}", tableName, string.Join("_", columns.Select(x => x.Name)));
             var writer = SqlWriter.CreateWriter().Create.NonClustered.Index.QuotedName(indexName).On.QuotedName(tableName).OpenBlock.Trim();
             var first = true;
-            foreach (var columnName in columnNames)
+            foreach (var column in columns)
             {
                 if (!first) writer.Trim().Comma.Flush();
-                writer.QuotedName(columnName).Ascending.Flush();
+                writer.QuotedName(column.Name).Do(column.Descending, x => x.Descending.Flush(), x => x.Ascending.Flush()).Flush();
                 first = false;
             }
             writer.Trim().CloseBlock.Flush();

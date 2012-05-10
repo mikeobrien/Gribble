@@ -231,7 +231,7 @@ namespace Tests.TransactSql
         [Test]
         public void Create_Non_Clustered_Index_Test()
         {
-            var statement = SchemaWriter.CreateAddNonClusteredIndexStatement(TableName, "Created", "Id");
+            var statement = SchemaWriter.CreateAddNonClusteredIndexStatement(TableName, new Index.Column("Created"), new Index.Column("Id"));
             statement.Result.ShouldEqual(Statement.ResultType.None);
             statement.Text.ShouldEqual("CREATE NONCLUSTERED INDEX [IX_some_table_in_the_db_Created_Id] ON [some_table_in_the_db] ([Created] ASC, [Id] ASC)");
         }

@@ -26,8 +26,8 @@ namespace Gribble
         void RemoveColumn(string tableName, string columnName);
 
         IEnumerable<Index> GetIndexes(string tableName);
-        void AddNonClusteredIndex(string tableName, params string[] columnNames);
-        void AddNonClusteredIndexes(string tableName, params string[][] indexes);
+        void AddNonClusteredIndex(string tableName, params Index.Column[] columns);
+        void AddNonClusteredIndexes(string tableName, params Index.ColumnSet[] indexColumns);
         void RemoveNonClusteredIndex(string tableName, string indexName);
     }
 }

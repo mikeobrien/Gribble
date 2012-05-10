@@ -4,7 +4,7 @@ namespace Gribble.Model
 {
     public class Index
     {
-        public Index(string name, bool clustered, bool unique, bool primaryKey, IEnumerable<IndexColumn> columns)
+        public Index(string name, bool clustered, bool unique, bool primaryKey, ColumnSet columns)
         {
             Name = name;
             Clustered = clustered;
@@ -17,11 +17,20 @@ namespace Gribble.Model
         public bool Clustered { get; private set; }
         public bool Unique { get; private set; }
         public bool PrimaryKey { get; private set; }
-        public IEnumerable<IndexColumn> Columns { get; private set; }
+        public ColumnSet Columns { get; private set; }
 
-        public class IndexColumn
+        public class ColumnSet : List<Column>
         {
-            public IndexColumn(string name, bool descending)
+            public ColumnSet Add(string name, bool descending = false)
+            {
+                Add(new Column(name, descending));
+                return this;
+            }
+        }
+
+        public class Column
+        {
+            public Column(string name, bool descending = false)
             {
                 Name = name;
                 Descending = descending;

@@ -144,35 +144,35 @@ namespace Gribble
             using (var reader = Command.Create(SchemaWriter.CreateGetIndexesStatement(tableName), _profiler).ExecuteReader(_connectionManager))
             {
                 Index index = null;
-                IList<Index.IndexColumn> columns = null;
+                Index.ColumnSet columns = null;
                 while (reader.Read())
                 {
                     var name = (string)reader["name"];
                     if (index == null || index.Name != name)
                     {
-                        columns = new List<Index.IndexColumn>();
+                        columns = new Index.ColumnSet();
                         index = new Index(name,
                             (byte)reader["type"] == 1,
                             (bool)reader["is_unique"],
                             (bool)reader["is_primary_key"], columns);
                         indexes.Add(index);
                     }
-                    columns.Add(new Index.IndexColumn(
+                    columns.Add(
                         (string)reader["column_name"],
-                        (bool)reader["is_descending_key"]));
+                        (bool)reader["is_descending_key"]);
                 }
             }
             return indexes;
         }
 
-        public void AddNonClusteredIndex(string tableName, params string[] columnNames)
-        { Command.Create(SchemaWriter.CreateAddNonClusteredIndexStatement(tableName, columnNames), _profiler).ExecuteNonQuery(_connectionManager); }
+        public void AddNonClusteredIndex(string tableName, params Index.Column[] columns)
+        { Command.Create(SchemaWriter.CreateAddNonClusteredIndexStatement(tableName, columns), _profiler).ExecuteNonQuery(_connectionManager); }
 
-        public void AddNonClusteredIndexes(string tableName, params string[][] indexes)
+        public void AddNonClusteredIndexes(string tableName, params Index.ColumnSet[] indexColumns)
         {
             var existingIndexes = GetIndexes(tableName).Select(x => x.Columns.Select(y => y.Name).OrderBy(y => y));
-            indexes.Where(x => !existingIndexes.Any(y => y.SequenceEqual(x.OrderBy(z => z), StringComparer.OrdinalIgnoreCase))).
-                ToList().ForEach(x => AddNonClusteredIndex(tableName, x));
+            indexColumns.Where(x => !existingIndexes.Any(y => y.SequenceEqual(x.Select(z => z.Name).OrderBy(z => z), StringComparer.OrdinalIgnoreCase))).
+                ToList().ForEach(x => AddNonClusteredIndex(tableName, x.ToArray()));
         }
 
         public void RemoveNonClusteredIndex(string tableName, string indexName)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Gribble;
 using Gribble.Mapping;
+using Gribble.Model;
 using NUnit.Framework;
 using Should;
 
@@ -224,8 +225,8 @@ namespace Tests
         public void Copy_Into_New_Test()
         {
             const string newTable = "some_new_table";
-            _gribbleDatabase.AddNonClusteredIndex(_database.FirstTable.Name, "name", "hide");
-            _gribbleDatabase.AddNonClusteredIndex(_database.FirstTable.Name, "upc");
+            _gribbleDatabase.AddNonClusteredIndex(_database.FirstTable.Name, new Index.Column("name"), new Index.Column("hide"));
+            _gribbleDatabase.AddNonClusteredIndex(_database.FirstTable.Name, new Index.Column("upc"));
             _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", _database.FirstTable.Name).ShouldEqual(10);
             _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", _database.ThirdTable.Name).ShouldEqual(5);
             _identityTable1.Take(7).Union(_identityTable2).CopyTo(newTable).Count().ShouldEqual(12);
