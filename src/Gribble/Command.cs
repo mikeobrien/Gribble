@@ -91,7 +91,7 @@ namespace Gribble
             var command = connectionManager.CreateCommand();
             command.CommandText = Statement.Text;
             command.CommandType = Statement.Type == Statement.StatementType.Text ? CommandType.Text : CommandType.StoredProcedure;
-            Statement.Parameters.Select(x => new SqlParameter(x.Key, x.Value)).ToList().ForEach(y => command.Parameters.Add(y));
+            Statement.Parameters.Select(x => new SqlParameter(x.Key, x.Value ?? DBNull.Value)).ToList().ForEach(y => command.Parameters.Add(y));
             return command;
         }
 

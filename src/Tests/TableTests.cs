@@ -212,6 +212,16 @@ namespace Tests
         }
 
         [Test]
+        public void should_insert_entity_with_null_value()
+        {
+            var entity = new GuidEntity();
+            _guidTable1.Insert(entity);
+            entity.Id.ShouldNotEqual(Guid.Empty);
+            var newEntity = _guidTable1.First(x => x.Id == entity.Id);
+            newEntity.Name.ShouldBeNull();
+        }
+
+        [Test]
         public void Copy_Into_Existing_Test()
         {
             _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", _database.FirstTable.Name).ShouldEqual(10);
