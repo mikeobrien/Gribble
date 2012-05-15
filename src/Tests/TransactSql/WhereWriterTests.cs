@@ -414,5 +414,17 @@ namespace Tests.TransactSql
             statement.Parameters.First().Value.ShouldEqual("ed");
             statement.Text.ShouldEqual(string.Format("(LTRIM(RTRIM([name])) = @{0})", statement.Parameters.First().Key));
         }
+
+        [Test]
+        public void should_not_cast_dynamic_value()
+        {
+            var optout = (object)true;
+            Expression<Func<Entity, bool>> expression = x => x.Values["optout"] == optout;
+            var statement = WhereWriter<Entity>.CreateStatement(WhereVisitor<Entity>.CreateModel(expression.Body), Map);
+
+            statement.Parameters.Count().ShouldEqual(1);
+            statement.Parameters.First().Value.ShouldEqual(true);
+            statement.Text.ShouldEqual(string.Format("([optout] = @{0})", statement.Parameters.First().Key));
+        }
     }
 }

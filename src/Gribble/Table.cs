@@ -23,27 +23,23 @@ namespace Gribble
         private readonly IEntityMapping _map;
         private readonly IProfiler _profiler;
 
-        public Table(SqlConnection connection, TimeSpan commandTimeout, string table, IEntityMapping mapping) :
-            this(connection, commandTimeout, table, mapping, null) { }
-
-        public Table(SqlConnection connection, TimeSpan commandTimeout, string table, IEntityMapping mapping, bool profile) : 
-            this(connection, commandTimeout, table, mapping, profile ? new ConsoleProfiler() : null) { }
-
-        public Table(SqlConnection connection, TimeSpan commandTimeout, string table, IEntityMapping mapping, IProfiler profiler) :
-            this(new ConnectionManager(connection, commandTimeout), table, mapping, profiler) { }
-
-        public Table(IConnectionManager connectionManagerManager, string table, IEntityMapping mapping) :
-            this(connectionManagerManager, table, mapping, null) { }
-
-        public Table(IConnectionManager connectionManagerManager, string table, IEntityMapping mapping, bool profile) :
-            this(connectionManagerManager, table, mapping, profile ? new ConsoleProfiler() : null) { }
-
         public Table(IConnectionManager connectionManagerManager, string table, IEntityMapping mapping, IProfiler profiler)
         {
             _connectionManager = connectionManagerManager;
             _table = table;
             _map = mapping;
             _profiler = profiler;
+        }
+
+        public static ITable<TEntity> Create<TKey>(SqlConnection connection, string tableName, string keyColumn, TimeSpan? commandTimeout = null, IProfiler profiler = null)
+        {
+            var mapping = new EntityMapping(typeof(Guid) == typeof(TKey) ? new GuidKeyEntityMap(keyColumn) : (typeof(int) == typeof(TKey) ? (IClassMap)new IntKeyEntityMap(keyColumn) : null));
+            return new Table<TEntity>(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), tableName, mapping, profiler ?? new ConsoleProfiler());
+        }
+
+        public static ITable<TEntity> Create(SqlConnection connection, string tableName, IEntityMapping entityMapping, TimeSpan? commandTimeout = null, IProfiler profiler = null)
+        {
+            return new Table<TEntity>(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), tableName, entityMapping, profiler ?? new ConsoleProfiler());
         }
 
         public string Name { get { return _table; } }

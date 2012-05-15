@@ -27,24 +27,19 @@ namespace Gribble
             _mappingCollection = mappingCollection;
         }
 
-        public static IDatabase Create(SqlConnection connection, TimeSpan commandTimeout)
+        public static IDatabase Create(SqlConnection connection, TimeSpan? commandTimeout = null, IProfiler profiler = null)
         {
-            return new Database(new ConnectionManager(connection, commandTimeout), new EntityMappingCollection(Enumerable.Empty<IClassMap>()), null);
+            return Create(connection, new EntityMappingCollection(Enumerable.Empty<IClassMap>()), commandTimeout, profiler);
         }
 
-        public static IDatabase Create(SqlConnection connection, TimeSpan commandTimeout, EntityMappingCollection mappingCollection)
+        public static IDatabase Create(SqlConnection connection, string keyColumn, TimeSpan? commandTimeout = null, IProfiler profiler = null)
         {
-            return new Database(new ConnectionManager(connection, commandTimeout), mappingCollection, null);
+            return Create(connection, new EntityMappingCollection(new IClassMap[] { new GuidKeyEntityMap(keyColumn), new IntKeyEntityMap(keyColumn) }), commandTimeout, profiler);
         }
 
-        public static IDatabase Create(SqlConnection connection, TimeSpan commandTimeout, EntityMappingCollection mappingCollection, IProfiler profiler)
+        public static IDatabase Create(SqlConnection connection, EntityMappingCollection mappingCollection, TimeSpan? commandTimeout = null, IProfiler profiler = null)
         {
-            return new Database(new ConnectionManager(connection, commandTimeout), mappingCollection, profiler);
-        }
-        
-        public static IDatabase Create(IConnectionManager connectionManager, EntityMappingCollection mappingCollection, IProfiler profiler)
-        {
-            return new Database(connectionManager, mappingCollection, profiler);
+            return new Database(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), mappingCollection, profiler);
         }
 
         public void CallProcedure(string name)

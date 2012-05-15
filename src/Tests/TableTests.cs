@@ -52,10 +52,10 @@ namespace Tests
         private static readonly EntityMapping GuidMap = new EntityMapping(new GuidEntityMap());
 
         private TestDatabase _database = new TestDatabase();
-        private Table<IdentityEntity> _identityTable1;
-        private Table<GuidEntity> _guidTable1;
-        private Table<IdentityEntity> _identityTable2;
-        private Table<IdentityEntity> _identityTable3;
+        private ITable<IdentityEntity> _identityTable1;
+        private ITable<GuidEntity> _guidTable1;
+        private ITable<IdentityEntity> _identityTable2;
+        private ITable<IdentityEntity> _identityTable3;
         private IDatabase _gribbleDatabase;
 
         [SetUp]
@@ -74,10 +74,10 @@ namespace Tests
 
             _database.SetUp();
 
-            _identityTable1 = new Table<IdentityEntity>(_database.Connection, TimeSpan.FromMinutes(5), _database.FirstTable.Name, IdentityMap, true);
-            _guidTable1 = new Table<GuidEntity>(_database.Connection, TimeSpan.FromMinutes(5), _database.SecondTable.Name, GuidMap, true);
-            _identityTable2 = new Table<IdentityEntity>(_database.Connection, TimeSpan.FromMinutes(5), _database.ThirdTable.Name, IdentityMap, true);
-            _identityTable3 = new Table<IdentityEntity>(_database.Connection, TimeSpan.FromMinutes(5), _database.FourthTable.Name, IdentityMap, true);
+            _identityTable1 = Table<IdentityEntity>.Create(_database.Connection, _database.FirstTable.Name, IdentityMap);
+            _guidTable1 = Table<GuidEntity>.Create(_database.Connection, _database.SecondTable.Name, GuidMap);
+            _identityTable2 = Table<IdentityEntity>.Create(_database.Connection, _database.ThirdTable.Name, IdentityMap);
+            _identityTable3 = Table<IdentityEntity>.Create(_database.Connection, _database.FourthTable.Name, IdentityMap);
             _gribbleDatabase = Database.Create(_database.Connection, TimeSpan.FromMinutes(5));
             
             _database.CreateTables();
