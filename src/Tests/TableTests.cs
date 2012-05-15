@@ -142,7 +142,7 @@ namespace Tests
         }
 
         [Test]
-        public void Delete_Single_By_Query_Test()
+        public void should_delete_one_by_predicate()
         {
             var count = _identityTable1.Count();
             _identityTable1.Count(x => x.Id == 8).ShouldEqual(1);
@@ -152,7 +152,7 @@ namespace Tests
         }
 
         [Test]
-        public void Delete_Many_By_Query_Test()
+        public void should_delete_many_by_predicate()
         {
             _database.CreateTables();
             var totalCount = _identityTable1.Count();
@@ -160,6 +160,26 @@ namespace Tests
             _identityTable1.DeleteMany(x => x.Id > 8);
             _identityTable1.Count(x => x.Id > 8).ShouldEqual(0);
             _identityTable1.Count().ShouldEqual(totalCount - setCount);
+        }
+
+        [Test]
+        public void should_delete_many_by_query()
+        {
+            _database.CreateTables();
+            var totalCount = _identityTable1.Count();
+            var setCount = _identityTable1.Count(x => x.Id > 8);
+            _identityTable1.DeleteMany(_identityTable1.Where(x => x.Id > 8));
+            _identityTable1.Count(x => x.Id > 8).ShouldEqual(0);
+            _identityTable1.Count().ShouldEqual(totalCount - setCount);
+        }
+
+        [Test]
+        public void should_delete_duplicates()
+        {
+            _database.CreateTables();
+            _identityTable1.DeleteMany(_identityTable1.Duplicates(x => x.Name, x => x.Id != 5));
+            _identityTable1.Count().ShouldEqual(1);
+            _identityTable1.First().Id.ShouldEqual(5);
         }
 
         [Test]

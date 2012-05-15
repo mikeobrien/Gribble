@@ -112,9 +112,18 @@ namespace Gribble
             Delete(WhereVisitor<TEntity>.CreateModel(filter), true); 
         }
 
+        public void DeleteMany(IQueryable<TEntity> source)
+        {
+            var select = SelectVisitor<TEntity>.CreateModel(source.Expression, x => ((Table<TEntity>) x).Name);
+            Command.Create(DeleteWriter<TEntity>.CreateStatement(
+                new Delete(_table, select, true), _map), _profiler).
+                    ExecuteNonQuery(_connectionManager);
+        }
+
         private void Delete(Operator filter, bool multiDelete)
         {
-            Command.Create(DeleteWriter<TEntity>.CreateStatement(new Delete(_table, filter, multiDelete), _map), _profiler).
+            Command.Create(DeleteWriter<TEntity>.CreateStatement(
+                new Delete(_table, filter, multiDelete), _map), _profiler).
                     ExecuteNonQuery(_connectionManager);
         }
 

@@ -24,6 +24,21 @@ namespace Gribble.Expressions
             return TypesAreAssignable(method.GetFirstArgument().Type, typeof(T));
         }
 
+        public static bool HasFirstArgument(this MethodCallExpression method)
+        {
+            return method.Arguments.Count > 0;
+        }
+
+        public static bool HasSecondArgument(this MethodCallExpression method)
+        {
+            return method.Arguments.Count > 1;
+        }
+
+        public static bool HasThirdArgument(this MethodCallExpression method)
+        {
+            return method.Arguments.Count > 2;
+        }
+
         public static Expression GetFirstArgument(this MethodCallExpression method)
         {
             return method.Arguments[0];

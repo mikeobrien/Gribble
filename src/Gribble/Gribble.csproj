@@ -72,6 +72,7 @@
     <Compile Include="Mapping\IClassMap.cs" />
     <Compile Include="Mapping\IEntityMapping.cs" />
     <Compile Include="Mapping\PrimaryKeyType.cs" />
+    <Compile Include="Model\Duplicates.cs" />
     <Compile Include="Model\Index.cs" />
     <Compile Include="ObjectExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

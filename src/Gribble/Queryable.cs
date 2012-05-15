@@ -49,6 +49,20 @@ namespace Gribble
             return source.Provider.CreateQuery<TSource>(Expression.Call(null, ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TKey) }), new[] { source.Expression, Expression.Quote(selector) }));
         }
 
+        public static IQueryable<TSource> Duplicates<TSource, TKey>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (selector == null) throw new ArgumentNullException("selector");
+            return source.Provider.CreateQuery<TSource>(Expression.Call(null, ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TKey) }), new[] { source.Expression, Expression.Quote(selector) }));
+        }
+
+        public static IQueryable<TSource> Duplicates<TSource, TKey>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector, Expression<Func<TSource, bool>> precedence)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (selector == null) throw new ArgumentNullException("selector");
+            return source.Provider.CreateQuery<TSource>(Expression.Call(null, ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TKey) }), new[] { source.Expression, Expression.Quote(selector), Expression.Quote(precedence) }));
+        }
+
         public static IQueryable<TSource> Intersect<TSource>(this IQueryable<TSource> source, IQueryable<TSource> compare, params Expression<Func<TSource, object>>[] selectors)
         {
             return SetOperation(MethodBase.GetCurrentMethod(), source, compare, selectors);
@@ -117,6 +131,20 @@ namespace Gribble
             if (source == null) throw new ArgumentNullException("source");
             if (selector == null) throw new ArgumentNullException("selector");
             return source.Distinct(LambdaComparer<TSource, TKey>.Create(selector));
+        }
+
+        public static IEnumerable<TSource> Duplicates<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> selector)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (selector == null) throw new ArgumentNullException("selector");
+            return source.GroupBy(selector).Where(x => x.Count() > 1).SelectMany(x => x.Take(1));
+        }
+
+        public static IEnumerable<TSource> Duplicates<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> selector, Func<TSource, bool> precedence)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (selector == null) throw new ArgumentNullException("selector");
+            return source.GroupBy(selector).Where(x => x.Count() > 1).SelectMany(x => x.OrderBy(y => !precedence(y)).Take(1));
         }
 
         public static IEnumerable<TSource> Intersect<TSource>(this IEnumerable<TSource> source, IEnumerable<TSource> compare, params Func<TSource, object>[] selectors)

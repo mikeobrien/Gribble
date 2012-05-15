@@ -41,11 +41,24 @@ namespace Gribble.TransactSql
                         CloseBlock.As.RowNumberAlias.From.Flush();
                 }
 
-                if (select.HasDistinct)
+                if (select.HasDuplicates)
                 {
-                    var distinct = BuildDistinctProjection(select, mapping, parameters);
+                    var duplicateProjection = BuildProjection(select.Duplicates.Field, mapping, parameters);
                     sql.OpenBlock.Trim().Select.Do(writeProjection).Trim().Comma.
-                        RowNumber().Over.OpenBlock.Trim().Partition.By.ExpressionList(z => z.Comma.Flush(), distinct).OrderBy.
+                        RowNumber().Over.OpenBlock.Trim().Partition.By.Write(duplicateProjection).OrderBy.Flush();
+                    if (select.Duplicates.HasPrecedence)
+                    {
+                        var duplicatePrecedence = BuildOperators(select.Duplicates.Precedence, mapping, parameters);
+                        sql.Case.When.Write(duplicatePrecedence).Then.Value(1, SqlDbType.Int).Else.Value(0, SqlDbType.Int).End.Flush();
+                    }
+                    else sql.Write(duplicateProjection);
+                    sql.Trim().CloseBlock.As.PartitionAlias.From.Flush();
+                } 
+                else if (select.HasDistinct)
+                {
+                    var distinctProjection = BuildProjections(select.Distinct, mapping, parameters);
+                    sql.OpenBlock.Trim().Select.Do(writeProjection).Trim().Comma.
+                        RowNumber().Over.OpenBlock.Trim().Partition.By.ExpressionList(z => z.Comma.Flush(), distinctProjection).OrderBy.
                         Do(select.HasOrderBy, x => x.Write(orderByClause), x => x.Do(projection != null, writeProjection, y => y.QuotedName(mapping.Key.GetColumnName()))).Trim().
                         CloseBlock.As.PartitionAlias.From.Flush();
                 }
@@ -76,7 +89,10 @@ namespace Gribble.TransactSql
                 // already specified in the row number definition. So we dont need to specify it again.
                 else if (select.HasOrderBy && !select.HasStart && !select.HasDistinct) sql.OrderBy.Write(orderByClause);
 
-                if (select.HasDistinct) sql.Trim().CloseBlock.As.Write(select.Source.Alias).Where.PartitionAlias.Equal.Value(1, SqlDbType.Int).Flush();
+                if (select.HasDuplicates)
+                    sql.Trim().CloseBlock.As.Write(select.Source.Alias).Where.PartitionAlias.GreaterThan.Value(1, SqlDbType.Int).Flush();
+                else if (select.HasDistinct) 
+                    sql.Trim().CloseBlock.As.Write(select.Source.Alias).Where.PartitionAlias.Equal.Value(1, SqlDbType.Int).Flush();
 
                 if (select.HasStart)
                 {
@@ -100,20 +116,19 @@ namespace Gribble.TransactSql
         private static IEnumerable<string> BuildProjection(Select select, IEntityMapping mapping, IDictionary<string, object> parameters)
         {
             if (!select.HasProjection) return null;
-            return BuildProjection(select.Projection.Select(x => x.Projection), mapping, parameters);
+            return BuildProjections(select.Projection.Select(x => x.Projection), mapping, parameters);
         }
 
-        private static IEnumerable<string> BuildDistinctProjection(Select select, IEntityMapping mapping, IDictionary<string, object> parameters)
+        private static IEnumerable<string> BuildProjections(IEnumerable<Projection> projections, IEntityMapping mapping, IDictionary<string, object> parameters)
         {
-            if (!select.HasDistinct) return null;
-            return BuildProjection(select.Distinct, mapping, parameters);
+            return projections.Select(x => BuildProjection(x, mapping, parameters));
         }
 
-        private static IEnumerable<string> BuildProjection(IEnumerable<Projection> projections, IEntityMapping mapping, IDictionary<string, object> parameters)
+        private static string BuildProjection(Projection projection, IEntityMapping mapping, IDictionary<string, object> parameters)
         {
-            var projectionStatements = projections.Select(x => ProjectionWriter<TEntity>.CreateStatement(x, mapping));
-            parameters.AddRange(projectionStatements.SelectMany(x => x.Parameters));
-            return projectionStatements.Select(x => x.Text);
+            var projectionStatement = ProjectionWriter<TEntity>.CreateStatement(projection, mapping);
+            parameters.AddRange(projectionStatement.Parameters);
+            return projectionStatement.Text;
         }
 
         private static string BuildWhereClause(Select select, IEntityMapping mapping, IDictionary<string, object> parameters)
@@ -122,12 +137,7 @@ namespace Gribble.TransactSql
 
             var writer = new SqlWriter();
 
-            if (select.HasWhere)
-            {
-                var statement = WhereWriter<TEntity>.CreateStatement(select.Where, mapping);
-                parameters.AddRange(statement.Parameters);
-                writer.Write(statement.Text);
-            }
+            if (select.HasWhere) writer.Write(BuildOperators(select.Where, mapping, parameters));
 
             if (select.HasSetOperations)
             {
@@ -141,6 +151,15 @@ namespace Gribble.TransactSql
                 }
             }
 
+            return writer.ToString();
+        }
+
+        private static string BuildOperators(Operator @operator, IEntityMapping mapping, IDictionary<string, object> parameters)
+        {
+            var writer = new SqlWriter();
+            var statement = WhereWriter<TEntity>.CreateStatement(@operator, mapping);
+            parameters.AddRange(statement.Parameters);
+            writer.Write(statement.Text);
             return writer.ToString();
         }
 

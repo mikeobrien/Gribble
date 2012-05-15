@@ -56,8 +56,12 @@ namespace Gribble.Expressions
                     HandleSelectInto(select, node);
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Where(y => true))) 
                     HandleWhere(select, node);
-                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Distinct(y => emptyObject))) 
+                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Distinct(y => emptyObject)))
                     HandleDistinct(select, node);
+                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Duplicates(y => emptyObject)))
+                    HandleDuplicates(select, node);
+                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Duplicates(y => emptyObject, y => false)))
+                    HandleDuplicates(select, node);
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.OrderBy(y => emptyObject))) 
                     HandleOrderBy(select, node, false);
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.OrderByDescending(y => emptyObject))) 
@@ -94,7 +98,7 @@ namespace Gribble.Expressions
 
         private static void HandleQuery(Select select, object value, Func<IQueryable<T>, string> getTableName)
         {
-            if (getTableName == null || !typeof(IQueryable<T>).IsAssignableFrom(value.GetType())) return;
+            if (getTableName == null || !(value is IQueryable<T>)) return;
 
             // If we have unions we need to nest the source table as an additional source query.
             if (select.Source.HasQueries) select = CreateSubQuery(select);
@@ -142,6 +146,13 @@ namespace Gribble.Expressions
         {
             if (select.Distinct == null) select.Distinct = new List<Projection>();
             select.Distinct.Add(ProjectionVisitor<T>.CreateModel(expression.GetSecondArgument()));
+        }
+
+        private static void HandleDuplicates(Select select, MethodCallExpression expression)
+        {
+            if (select.Duplicates == null) select.Duplicates = new Duplicates();
+            select.Duplicates.Field = ProjectionVisitor<T>.CreateModel(expression.GetSecondArgument());
+            if (expression.HasThirdArgument()) select.Duplicates.Precedence = WhereVisitor<T>.CreateModel(expression.GetThirdArgument());
         }
 
         private static void AddSourceQuery(Select select, Select query)

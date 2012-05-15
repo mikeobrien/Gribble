@@ -74,5 +74,19 @@ namespace Tests.TransactSql
             statement.Text.ShouldEqual(string.Format("DELETE FROM [{0}] WHERE ([age] > @{1})", TableName,
                             statement.Parameters.First().Key));
         }
+
+        [Test]
+        public void should_render_multi_delete_by_query_sql()
+        {
+            var delete = new Delete(TableName, new Select { 
+                Source = { Type = Data.DataType.Table, Table = new Table { Name = TableName }}, 
+                Where = Operator.Create.FieldAndConstant("Age", Operator.OperatorType.GreaterThan, 20)}, true);
+            var statement = DeleteWriter<Entity>.CreateStatement(delete, Map);
+            statement.Result.ShouldEqual(Statement.ResultType.None);
+            statement.Parameters.Count.ShouldEqual(1);
+            statement.Parameters.First().Value.ShouldEqual(20);
+            statement.Text.ShouldEqual(string.Format("DELETE FROM [{0}] WHERE [id] IN (SELECT [id] FROM (SELECT * FROM [{0}] {1} WHERE ([age] > @{2})) AS [__SubQuery__])", 
+                TableName, delete.Select.Source.Alias, statement.Parameters.First().Key));
+        }
     }
 }

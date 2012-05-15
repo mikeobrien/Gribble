@@ -34,6 +34,9 @@ namespace Gribble.Model
         public Operator Where;
         public bool HasWhere { get { return Where != null; } }
 
+        public Duplicates Duplicates;
+        public bool HasDuplicates { get { return Duplicates != null; } }
+
         public IList<Projection> Distinct;
         public bool HasDistinct { get { return Distinct != null && Distinct.Any(); } }
 
