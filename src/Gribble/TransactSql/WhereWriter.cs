@@ -38,9 +38,12 @@ namespace Gribble.TransactSql
 
         private void VisitExpression(Operator @operator, Operator parent)
         {
+            var isNotNull = @operator.Type == Operator.OperatorType.NotEqual && !IsRightOperandNullConstant(@operator);
             if (IsComparisonOperator(parent) && !IsMathOperator(@operator)) _sql.Case.When.Flush();
 
             _sql.OpenBlock.Trim();
+            if (isNotNull) _sql.OpenBlock.Trim();
+
             VisitOperand(@operator.LeftOperand, @operator);
             switch (@operator.Type)
             {
@@ -60,6 +63,13 @@ namespace Gribble.TransactSql
             }
             VisitOperand(@operator.RightOperand, @operator);
             _sql.Trim().CloseBlock.Flush();
+
+            if (isNotNull)
+            {
+                _sql.Or.Flush();
+                VisitOperand(@operator.LeftOperand, @operator);
+                _sql.Is.Null.Trim().CloseBlock.Flush();
+            }
 
             if (IsComparisonOperator(parent) && !IsMathOperator(@operator)) _sql.Then.True.Else.False.End.Flush();
         }

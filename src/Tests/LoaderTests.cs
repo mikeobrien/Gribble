@@ -68,6 +68,20 @@ namespace Tests
         }
 
         [Test]
+        public void should_not_return_null_comparison_values()
+        {
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name=NULL WHERE id > 5", Database.FirstTable.Name);
+            var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);
+            query.Where(x => x.Name != "ed");
+            var result = GetResult(query);
+            result.ShouldImplement<IEnumerable<Entity>>();
+            var results = ((IEnumerable<Entity>)result).ToList();
+            results.Count().ShouldEqual(10);
+            results.Count(x => x.Name == "oh hai").ShouldEqual(5);
+            results.Count(x => x.Name == null).ShouldEqual(5);
+        }
+
+        [Test]
         public void Select_Test()
         {
             var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);
