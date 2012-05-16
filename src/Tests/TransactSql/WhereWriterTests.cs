@@ -198,7 +198,7 @@ namespace Tests.TransactSql
             
             statement.Parameters.Count().ShouldEqual(1);
             statement.Parameters.First().Value.ShouldEqual(33);
-            statement.Text.ShouldEqual(string.Format("([age] <> @{0})", statement.Parameters.First().Key));
+            statement.Text.ShouldEqual(string.Format("(([age] <> @{0}) OR [age] IS NULL)", statement.Parameters.First().Key));
         }
 
         [Test]
