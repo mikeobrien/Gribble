@@ -14,13 +14,9 @@ namespace Gribble
         private readonly IProfiler _profiler;
         private readonly EntityMappingCollection _mappingCollection;
 
-        public Database(IConnectionManager connectionManager) :
-            this(connectionManager, new EntityMappingCollection(Enumerable.Empty<IClassMap>()), null) { }
+        public Database(IConnectionManager connectionManager, EntityMappingCollection mappingCollection) : this(connectionManager, mappingCollection, null) { }
 
-        public Database(IConnectionManager connectionManager, EntityMappingCollection mappingCollection) :
-            this(connectionManager, mappingCollection, null) { }
-
-        private Database(IConnectionManager connectionManager, EntityMappingCollection mappingCollection, IProfiler profiler)
+        internal Database(IConnectionManager connectionManager, EntityMappingCollection mappingCollection, IProfiler profiler)
         {
             _connectionManager = connectionManager;
             _profiler = profiler;
@@ -29,17 +25,32 @@ namespace Gribble
 
         public static IDatabase Create(SqlConnection connection, TimeSpan? commandTimeout = null, IProfiler profiler = null)
         {
-            return Create(connection, new EntityMappingCollection(Enumerable.Empty<IClassMap>()), commandTimeout, profiler);
+            return Create(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), profiler);
+        }
+
+        public static IDatabase Create(IConnectionManager connectionManager, IProfiler profiler = null)
+        {
+            return new Database(connectionManager, new EntityMappingCollection(Enumerable.Empty<IClassMap>()), profiler ?? new ConsoleProfiler());
         }
 
         public static IDatabase Create(SqlConnection connection, string keyColumn, TimeSpan? commandTimeout = null, IProfiler profiler = null)
         {
-            return Create(connection, new EntityMappingCollection(new IClassMap[] { new GuidKeyEntityMap(keyColumn), new IntKeyEntityMap(keyColumn) }), commandTimeout, profiler);
+            return Create(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), keyColumn, profiler);
+        }
+
+        public static IDatabase Create(IConnectionManager connectionManager, string keyColumn, IProfiler profiler = null)
+        {
+            return new Database(connectionManager, new EntityMappingCollection(new IClassMap[] { new GuidKeyEntityMap(keyColumn), new IntKeyEntityMap(keyColumn) }), profiler ?? new ConsoleProfiler());
         }
 
         public static IDatabase Create(SqlConnection connection, EntityMappingCollection mappingCollection, TimeSpan? commandTimeout = null, IProfiler profiler = null)
         {
-            return new Database(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), mappingCollection, profiler);
+            return Create(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), mappingCollection, profiler);
+        }
+
+        public static IDatabase Create(IConnectionManager connectionManager, EntityMappingCollection mappingCollection, IProfiler profiler = null)
+        {
+            return new Database(connectionManager, mappingCollection, profiler ?? new ConsoleProfiler());
         }
 
         public void CallProcedure(string name)

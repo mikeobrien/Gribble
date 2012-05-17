@@ -33,13 +33,23 @@ namespace Gribble
 
         public static ITable<TEntity> Create<TKey>(SqlConnection connection, string tableName, string keyColumn, TimeSpan? commandTimeout = null, IProfiler profiler = null)
         {
+            return Create<TKey>(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), keyColumn, tableName, profiler ?? new ConsoleProfiler());
+        }
+
+        public static ITable<TEntity> Create<TKey>(ConnectionManager connectionManager, string tableName, string keyColumn, IProfiler profiler = null)
+        {
             var mapping = new EntityMapping(typeof(Guid) == typeof(TKey) ? new GuidKeyEntityMap(keyColumn) : (typeof(int) == typeof(TKey) ? (IClassMap)new IntKeyEntityMap(keyColumn) : null));
-            return new Table<TEntity>(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), tableName, mapping, profiler ?? new ConsoleProfiler());
+            return new Table<TEntity>(connectionManager, tableName, mapping, profiler ?? new ConsoleProfiler());
         }
 
         public static ITable<TEntity> Create(SqlConnection connection, string tableName, IEntityMapping entityMapping, TimeSpan? commandTimeout = null, IProfiler profiler = null)
         {
-            return new Table<TEntity>(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), tableName, entityMapping, profiler ?? new ConsoleProfiler());
+            return Create(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), tableName, entityMapping, profiler ?? new ConsoleProfiler());
+        }
+
+        public static ITable<TEntity> Create(ConnectionManager connectionManager, string tableName, IEntityMapping entityMapping, IProfiler profiler = null)
+        {
+            return new Table<TEntity>(connectionManager, tableName, entityMapping, profiler ?? new ConsoleProfiler());
         }
 
         public string Name { get { return _table; } }
@@ -152,7 +162,7 @@ namespace Gribble
         {
             var hasIdentityKey = _map.Key.KeyType == PrimaryKeyType.IdentitySeed;
             var keyColumnName = _map.Key.GetColumnName();
-            var database = new Database(_connectionManager);
+            var database = new Database(_connectionManager, null, _profiler);
 
             var columns = database.TableExists(select.Target.Table.Name) ?
                               GetColumnNames(select, hasIdentityKey, keyColumnName) :
