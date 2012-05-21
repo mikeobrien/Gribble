@@ -36,7 +36,7 @@ namespace Gribble
             return Create<TKey>(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), keyColumn, tableName, profiler ?? new ConsoleProfiler());
         }
 
-        public static ITable<TEntity> Create<TKey>(ConnectionManager connectionManager, string tableName, string keyColumn, IProfiler profiler = null)
+        public static ITable<TEntity> Create<TKey>(IConnectionManager connectionManager, string tableName, string keyColumn, IProfiler profiler = null)
         {
             var mapping = new EntityMapping(typeof(Guid) == typeof(TKey) ? new GuidKeyEntityMap(keyColumn) : (typeof(int) == typeof(TKey) ? (IClassMap)new IntKeyEntityMap(keyColumn) : null));
             return new Table<TEntity>(connectionManager, tableName, mapping, profiler ?? new ConsoleProfiler());
@@ -47,7 +47,7 @@ namespace Gribble
             return Create(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), tableName, entityMapping, profiler ?? new ConsoleProfiler());
         }
 
-        public static ITable<TEntity> Create(ConnectionManager connectionManager, string tableName, IEntityMapping entityMapping, IProfiler profiler = null)
+        public static ITable<TEntity> Create(IConnectionManager connectionManager, string tableName, IEntityMapping entityMapping, IProfiler profiler = null)
         {
             return new Table<TEntity>(connectionManager, tableName, entityMapping, profiler ?? new ConsoleProfiler());
         }
