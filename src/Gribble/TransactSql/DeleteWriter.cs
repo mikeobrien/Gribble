@@ -23,8 +23,8 @@ namespace Gribble.TransactSql
                 case Delete.FilterType.Select:
                     var keyColumn = mapping.Key.GetColumnName();
                     statement = SelectWriter<TEntity>.CreateStatement(delete.Select, mapping);
-                    writer.Where.QuotedName(keyColumn).In.OpenBlock.Trim().Select.QuotedName(keyColumn).From.OpenBlock.Trim().
-                        Write(statement.Text).Trim().CloseBlock.As.SubQueryAlias.Trim().CloseBlock.Flush();
+                    writer.Where.Exists.OpenBlock.Trim().Select.QuotedName(keyColumn).From.OpenBlock.Trim().
+                        Write(statement.Text).Trim().CloseBlock.As.SubQueryAlias.Where.SubQueryColumn(keyColumn).Equal.QuotedName(delete.Table.Name, keyColumn).Trim().CloseBlock.Flush();
                     break;
             }
 

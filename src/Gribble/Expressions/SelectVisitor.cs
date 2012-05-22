@@ -44,7 +44,7 @@ namespace Gribble.Expressions
             var select = context.State;
 
             if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Union(Enumerable.Empty<T>())))
-                AddSourceQuery(select, CreateModel(node.GetSecondArgument(), _getTableName));
+                AddSourceQuery(select, CreateModel(node.GetArgument(2), _getTableName));
             else 
             {        
                 // If we have unions we need to nest the following query operators as they apply to the net result of the 
@@ -62,16 +62,18 @@ namespace Gribble.Expressions
                     HandleDuplicates(select, node);
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Duplicates(y => emptyObject, y => false)))
                     HandleDuplicates(select, node);
+                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Duplicates(y => emptyObject, y => emptyObject, Order.Ascending)))
+                    HandleDuplicates(select, node);
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.OrderBy(y => emptyObject))) 
                     HandleOrderBy(select, node, false);
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.OrderByDescending(y => emptyObject))) 
                     HandleOrderBy(select, node, true);
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Take(0)))
-                    { select.Top = node.GetSecondConstantArgument<int>(); select.TopType = Select.TopValueType.Count; }
+                    { select.Top = node.GetConstantArgument<int>(2); select.TopType = Select.TopValueType.Count; }
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.TakePercent(0)))
-                    { select.Top = node.GetSecondConstantArgument<int>(); select.TopType = Select.TopValueType.Percent; }
+                    { select.Top = node.GetConstantArgument<int>(2); select.TopType = Select.TopValueType.Percent; }
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Skip(0))) 
-                    select.Start = node.GetSecondConstantArgument<int>() + 1;
+                    select.Start = node.GetConstantArgument<int>(2) + 1;
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.First())) 
                     select.First = true;
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.First(y => true)))
@@ -119,11 +121,11 @@ namespace Gribble.Expressions
         {
             if (select.Target.Table == null) select.Target.Table = new Table();
             select.Target.Type = Data.DataType.Table;
-            if (expression.GetSecondArgument().Type == typeof(string))
-                select.Target.Table.Name = expression.GetSecondConstantArgument<string>();
+            if (expression.GetArgument(2).Type == typeof(string))
+                select.Target.Table.Name = expression.GetConstantArgument<string>(2);
             else
             {
-                var target = expression.GetSecondConstantArgument<IQueryable<T>>();
+                var target = expression.GetConstantArgument<IQueryable<T>>(2);
                 if (target is INamedQueryable) select.Target.Table.Name = ((INamedQueryable)target).Name;
                 else throw new Exception("Provider only supports SelectInto type Table<T>.");
             }
@@ -131,7 +133,7 @@ namespace Gribble.Expressions
 
         private static void HandleWhere(Select select, MethodCallExpression expression)
         {
-            var where = WhereVisitor<T>.CreateModel(expression.GetSecondArgument());
+            var where = WhereVisitor<T>.CreateModel(expression.GetArgument(2));
             if (!select.HasWhere) select.Where = where;
             else
             {
@@ -145,14 +147,25 @@ namespace Gribble.Expressions
         private static void HandleDistinct(Select select, MethodCallExpression expression)
         {
             if (select.Distinct == null) select.Distinct = new List<Projection>();
-            select.Distinct.Add(ProjectionVisitor<T>.CreateModel(expression.GetSecondArgument()));
+            select.Distinct.Add(ProjectionVisitor<T>.CreateModel(expression.GetArgument(2)));
         }
 
         private static void HandleDuplicates(Select select, MethodCallExpression expression)
         {
             if (select.Duplicates == null) select.Duplicates = new Duplicates();
-            select.Duplicates.Field = ProjectionVisitor<T>.CreateModel(expression.GetSecondArgument());
-            if (expression.HasThirdArgument()) select.Duplicates.Precedence = WhereVisitor<T>.CreateModel(expression.GetThirdArgument());
+            select.Duplicates.DistinctField = ProjectionVisitor<T>.CreateModel(expression.GetArgument(2));
+            if (expression.HasArguments(3))
+            {
+                select.Duplicates.Precedence = WhereVisitor<T>.CreateModel(expression.GetArgument(3));
+                select.Duplicates.Grouping = Duplicates.DuplicateGrouping.Precedence;
+            }
+            else if (expression.HasArguments(4)) 
+            {
+                select.Duplicates.OrderField = ProjectionVisitor<T>.CreateModel(expression.GetArgument(3));
+                select.Duplicates.Order = expression.GetConstantArgument<Order>(4);
+                select.Duplicates.Grouping = Duplicates.DuplicateGrouping.OrderField;
+            }
+            else select.Duplicates.Grouping = Duplicates.DuplicateGrouping.DistinctField;
         }
 
         private static void AddSourceQuery(Select select, Select query)
@@ -165,10 +178,10 @@ namespace Gribble.Expressions
         private static void HandleSetOperation(Select select, MethodCallExpression expression, bool intersect, Func<IQueryable<T>, string> getTableName)
         {
             if (select.SetOperatons == null) select.SetOperatons = new List<SetOperation>();
-            var setOperationSource = CreateModel(expression.GetSecondArgument(), getTableName);
+            var setOperationSource = CreateModel(expression.GetArgument(2), getTableName);
             setOperationSource.Top = 1;
             setOperationSource.TopType = Select.TopValueType.Count;
-            var operatorExpressions = expression.GetThirdArgument<NewArrayExpression>().
+            var operatorExpressions = expression.GetArgument<NewArrayExpression>(3).
                                                                        Expressions.
                                                                        Select(x => x.NodeType == ExpressionType.Quote ? ((UnaryExpression)x).Operand : x).
                                                                        Select(x => ((LambdaExpression)x).Body).
@@ -185,8 +198,8 @@ namespace Gribble.Expressions
         private static void HandleOrderBy(Select select, MethodCallExpression expression, bool descending)
         {
             if (select.OrderBy == null) select.OrderBy = new List<OrderByProjection>();
-            select.OrderBy.Insert(0, new OrderByProjection { Order = descending ? OrderByProjection.Ordering.Descending : OrderByProjection.Ordering.Ascending, 
-                                                             Projection = ProjectionVisitor<T>.CreateModel(expression.GetSecondArgument())});
+            select.OrderBy.Insert(0, new OrderByProjection { Order = descending ? Model.Order.Descending : Model.Order.Ascending, 
+                                                             Projection = ProjectionVisitor<T>.CreateModel(expression.GetArgument(2))});
         }
     }
 }

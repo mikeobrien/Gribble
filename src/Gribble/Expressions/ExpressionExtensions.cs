@@ -19,74 +19,29 @@ namespace Gribble.Expressions
             return compiledExpression();
         }
 
-        public static bool FirstArgumentIsOfType<T>(this MethodCallExpression method)
+        public static bool ArgumentIsOfType<T>(this MethodCallExpression method, int index)
         {
-            return TypesAreAssignable(method.GetFirstArgument().Type, typeof(T));
+            return TypesAreAssignable(method.GetArgument(index).Type, typeof(T));
         }
 
-        public static bool HasFirstArgument(this MethodCallExpression method)
+        public static bool HasArguments(this MethodCallExpression method, int index)
         {
-            return method.Arguments.Count > 0;
+            return method.Arguments.Count == index;
         }
 
-        public static bool HasSecondArgument(this MethodCallExpression method)
+        public static Expression GetArgument(this MethodCallExpression method, int index)
         {
-            return method.Arguments.Count > 1;
+            return method.Arguments[index - 1];
         }
 
-        public static bool HasThirdArgument(this MethodCallExpression method)
+        public static T GetArgument<T>(this MethodCallExpression method, int index) where T : Expression
         {
-            return method.Arguments.Count > 2;
+            return (T)method.GetArgument(index);
         }
 
-        public static Expression GetFirstArgument(this MethodCallExpression method)
+        public static T GetConstantArgument<T>(this MethodCallExpression method, int index)
         {
-            return method.Arguments[0];
-        }
-
-        public static Expression GetSecondArgument(this MethodCallExpression method)
-        {
-            return method.Arguments[1];
-        }
-
-        public static Expression GetThirdArgument(this MethodCallExpression method)
-        {
-            return method.Arguments[2];
-        }
-
-        public static T GetFirstArgument<T>(this MethodCallExpression method) where T : Expression
-        {
-            return (T)method.GetFirstArgument();
-        }
-
-        public static T GetSecondArgument<T>(this MethodCallExpression method) where T : Expression
-        {
-            return (T)method.GetSecondArgument();
-        }
-
-        public static T GetThirdArgument<T>(this MethodCallExpression method) where T : Expression
-        {
-            return (T)method.GetThirdArgument();
-        }
-
-        public static T GetFirstConstantArgument<T>(this MethodCallExpression method)
-        {
-            return method.ConstantArgument<T>(0);
-        }
-
-        public static T GetSecondConstantArgument<T>(this MethodCallExpression method)
-        {
-            return method.ConstantArgument<T>(1);
-        }
-
-        public static T GetThirdConstantArgument<T>(this MethodCallExpression method)
-        {
-            return method.ConstantArgument<T>(2);
-        }
-
-        private static T ConstantArgument<T>(this MethodCallExpression method, int index)
-        {
-            return (T)((ConstantExpression)method.Arguments[index]).Value;
+            return (T)((ConstantExpression)method.Arguments[index - 1]).Value;
         }
 
         public static bool MatchesProperty<T, TResult>(this MemberExpression member, Expression<Func<T, TResult>> expression)

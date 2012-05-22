@@ -85,7 +85,7 @@ namespace Tests.TransactSql
             statement.Result.ShouldEqual(Statement.ResultType.None);
             statement.Parameters.Count.ShouldEqual(1);
             statement.Parameters.First().Value.ShouldEqual(20);
-            statement.Text.ShouldEqual(string.Format("DELETE FROM [{0}] WHERE [id] IN (SELECT [id] FROM (SELECT * FROM [{0}] {1} WHERE ([age] > @{2})) AS [__SubQuery__])", 
+            statement.Text.ShouldEqual(string.Format("DELETE FROM [{0}] WHERE EXISTS (SELECT [id] FROM (SELECT * FROM [{0}] {1} WHERE ([age] > @{2})) AS [__SubQuery__] WHERE [__SubQuery__].[id] = [{0}].[id])", 
                 TableName, delete.Select.Source.Alias, statement.Parameters.First().Key));
         }
     }

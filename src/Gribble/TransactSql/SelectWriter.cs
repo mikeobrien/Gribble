@@ -43,14 +43,17 @@ namespace Gribble.TransactSql
 
                 if (select.HasDuplicates)
                 {
-                    var duplicateProjection = BuildProjection(select.Duplicates.Field, mapping, parameters);
+                    var duplicateProjection = BuildProjection(select.Duplicates.DistinctField, mapping, parameters);
                     sql.OpenBlock.Trim().Select.Do(writeProjection).Trim().Comma.
                         RowNumber().Over.OpenBlock.Trim().Partition.By.Write(duplicateProjection).OrderBy.Flush();
-                    if (select.Duplicates.HasPrecedence)
+                    if (select.Duplicates.Grouping == Duplicates.DuplicateGrouping.Precedence)
                     {
                         var duplicatePrecedence = BuildOperators(select.Duplicates.Precedence, mapping, parameters);
                         sql.Case.When.Write(duplicatePrecedence).Then.Value(1, SqlDbType.Int).Else.Value(0, SqlDbType.Int).End.Flush();
                     }
+                    else if (select.Duplicates.Grouping == Duplicates.DuplicateGrouping.OrderField)
+                        sql.Write(BuildProjection(select.Duplicates.OrderField, mapping, parameters)).
+                            Do(select.Duplicates.Order == Order.Descending, x => x.Descending.Flush());
                     else sql.Write(duplicateProjection);
                     sql.Trim().CloseBlock.As.PartitionAlias.From.Flush();
                 } 
@@ -169,8 +172,8 @@ namespace Gribble.TransactSql
 
             var projections = select.OrderBy.Select(x => new { Statement = ProjectionWriter<TEntity>.CreateStatement(x.Projection, mapping), x.Order });
             parameters.AddRange(projections.SelectMany(x => x.Statement.Parameters));
-            Func<string, OrderByProjection.Ordering, Action<SqlWriter>> writeOrderByExpression = 
-                (text, order) => y => y.Write(text).Do(order == OrderByProjection.Ordering.Ascending, z => z.Ascending.Flush(), z => z.Descending.Flush());
+            Func<string, Order, Action<SqlWriter>> writeOrderByExpression = 
+                (text, order) => y => y.Write(text).Do(order == Order.Ascending, z => z.Ascending.Flush(), z => z.Descending.Flush());
             return SqlWriter.CreateWriter().ExpressionList(x => x.Comma.Flush(), projections.Select(x => writeOrderByExpression(x.Statement.Text, x.Order))).ToString();
         }
     }

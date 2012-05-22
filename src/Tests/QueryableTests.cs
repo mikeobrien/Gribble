@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Gribble.Model;
 using NUnit.Framework;
 using Gribble;
 using Should;
@@ -45,7 +46,7 @@ namespace Tests
                 new Entity { Id = Guid.NewGuid(), Name = "Dick", Email = "richard@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 77, Price = 88.99F, Distance = 34.5, Flag = 15, Active = true },
                 new Entity { Id = Guid.NewGuid(), Name = "Dick", Email = "rich@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 77, Price = 88.99F, Distance = 34.5, Flag = 15, Active = true },
                 new Entity { Id = Guid.NewGuid(), Name = "Dick", Email = "rick@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 44, Price = 88.99F, Distance = 34.5, Flag = 6, Active = true },
-                new Entity { Id = Guid.NewGuid(), Name = "Harry", Email = "harry@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 55, Price = 88.99F, Distance = 34.5, Flag = 9, Active = true },
+                new Entity { Id = Guid.NewGuid(), Name = "Harry", Email = "harry@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 65, Price = 88.99F, Distance = 34.5, Flag = 9, Active = true },
                 new Entity { Id = Guid.NewGuid(), Name = "Harry", Email = "harry@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 55, Price = 88.99F, Distance = 34.5, Flag = 9, Active = false }
             }.AsQueryable();
         }
@@ -111,6 +112,30 @@ namespace Tests
         }
 
         [Test]
+        public void should_return_duplicates_of_order()
+        {
+            var duplicates = CreateEntitiesList().Duplicates(x => x.Email, x => x.Age, Order.Ascending).ToList();
+            duplicates.Count.ShouldEqual(2);
+            var result = duplicates.FirstOrDefault(x => x.Email == "tom@yada.com");
+            result.ShouldNotBeNull();
+            result.Age.ShouldEqual(66);
+            result = duplicates.FirstOrDefault(x => x.Email == "harry@yada.com");
+            result.Age.ShouldEqual(65);
+        }
+
+        [Test]
+        public void should_return_duplicates_of_order_descending()
+        {
+            var duplicates = CreateEntitiesList().Duplicates(x => x.Email, x => x.Age, Order.Descending).ToList();
+            duplicates.Count.ShouldEqual(2);
+            var result = duplicates.FirstOrDefault(x => x.Email == "tom@yada.com");
+            result.ShouldNotBeNull();
+            result.Age.ShouldEqual(33);
+            result = duplicates.FirstOrDefault(x => x.Email == "harry@yada.com");
+            result.Age.ShouldEqual(55);
+        }
+
+        [Test]
         public void Intersect_Test()
         {
             var compare = CreateEntitiesList().Where(x => (x.Name == "Tom" || x.Name == "Dick") && (x.Age == 33 || x.Age == 77)).ToList();
@@ -128,7 +153,8 @@ namespace Tests
             results.Count.ShouldEqual(6);
             results.Count(x => x.Name == "Tom" && x.Age == 66).ShouldEqual(2);
             results.Count(x => x.Name == "Dick" && x.Age == 44).ShouldEqual(2);
-            results.Count(x => x.Name == "Harry" && x.Age == 55).ShouldEqual(2);
+            results.Count(x => x.Name == "Harry" && x.Age == 55).ShouldEqual(1);
+            results.Count(x => x.Name == "Harry" && x.Age == 65).ShouldEqual(1);
         }
     }
 }

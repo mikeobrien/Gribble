@@ -4,6 +4,7 @@ using System.Linq;
 using Gribble;
 using Gribble.Expressions;
 using Gribble.Mapping;
+using Gribble.Model;
 using Gribble.TransactSql;
 using NUnit.Framework;
 using Should;
@@ -251,6 +252,56 @@ namespace Tests
             var results = ((IEnumerable<Entity>)result).ToList();
             results.Count().ShouldEqual(7);
             results.All(x => x.Age > 50).ShouldBeTrue();
+            results.Count(x => x.Name == "Tom").ShouldEqual(3);
+            results.Count(x => x.Name == "Dick").ShouldEqual(2);
+            results.Count(x => x.Name == "Harry").ShouldEqual(2);
+        }
+
+        [Test]
+        public void should_return_duplicates_by_sort()
+        {
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=31 WHERE id = 1", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=64 WHERE id = 2", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=52 WHERE id = 3", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=68 WHERE id = 4", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Dick', age=73 WHERE id = 5", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Dick', age=38 WHERE id = 6", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Dick', age=52 WHERE id = 7", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=85 WHERE id = 8", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=78 WHERE id = 9", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=26 WHERE id = 10", Database.FirstTable.Name);
+            var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);
+            query.Duplicates(x => x.Name, x => x.Age, Order.Ascending);
+            var result = GetResult(query);
+            result.ShouldImplement<IEnumerable<Entity>>();
+            var results = ((IEnumerable<Entity>)result).ToList();
+            results.Count().ShouldEqual(7);
+            results.All(x => x.Age > 50).ShouldBeTrue();
+            results.Count(x => x.Name == "Tom").ShouldEqual(3);
+            results.Count(x => x.Name == "Dick").ShouldEqual(2);
+            results.Count(x => x.Name == "Harry").ShouldEqual(2);
+        }
+
+        [Test]
+        public void should_return_duplicates_by_sort_descending()
+        {
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=31 WHERE id = 1", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=64 WHERE id = 2", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=52 WHERE id = 3", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=88 WHERE id = 4", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Dick', age=83 WHERE id = 5", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Dick', age=38 WHERE id = 6", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Dick', age=52 WHERE id = 7", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=85 WHERE id = 8", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=78 WHERE id = 9", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=26 WHERE id = 10", Database.FirstTable.Name);
+            var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);
+            query.Duplicates(x => x.Name, x => x.Age, Order.Descending);
+            var result = GetResult(query);
+            result.ShouldImplement<IEnumerable<Entity>>();
+            var results = ((IEnumerable<Entity>)result).ToList();
+            results.Count().ShouldEqual(7);
+            results.All(x => x.Age < 80).ShouldBeTrue();
             results.Count(x => x.Name == "Tom").ShouldEqual(3);
             results.Count(x => x.Name == "Dick").ShouldEqual(2);
             results.Count(x => x.Name == "Harry").ShouldEqual(2);

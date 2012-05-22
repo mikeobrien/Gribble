@@ -1,14 +1,14 @@
 ﻿namespace Gribble.Model
 {
+    public enum Order
+    {
+        Ascending,
+        Descending
+    }
+
     public class OrderByProjection
     {
-        public enum Ordering
-        {
-            Ascending,
-            Descending
-        }
-
         public Projection Projection;
-        public Ordering Order;
+        public Order Order;
     }
 }

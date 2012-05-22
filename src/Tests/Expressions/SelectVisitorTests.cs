@@ -342,7 +342,7 @@ namespace Tests.Expressions
             select.OrderBy.ShouldNotBeNull();
             select.HasOrderBy.ShouldEqual(true);
             select.OrderBy.Count.ShouldEqual(2);
-            select.OrderBy.All(x => x.Order == OrderByProjection.Ordering.Ascending).ShouldEqual(true);
+            select.OrderBy.All(x => x.Order == Order.Ascending).ShouldEqual(true);
         }
 
         [Test]
@@ -356,7 +356,7 @@ namespace Tests.Expressions
             select.OrderBy.ShouldNotBeNull();
             select.HasOrderBy.ShouldEqual(true);
             select.OrderBy.Count.ShouldEqual(2);
-            select.OrderBy.All(x => x.Order == OrderByProjection.Ordering.Descending).ShouldEqual(true);
+            select.OrderBy.All(x => x.Order == Order.Descending).ShouldEqual(true);
         }
 
         [Test]

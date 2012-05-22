@@ -2,8 +2,13 @@
 {
     public class Duplicates
     {
-        public Projection Field;
+        public enum DuplicateGrouping { DistinctField, Precedence, OrderField }
+
+        public Projection DistinctField;
         public Operator Precedence;
-        public bool HasPrecedence { get { return Precedence != null; } }
+        public Projection OrderField;
+        public Order Order;
+
+        public DuplicateGrouping Grouping;
     }
 }

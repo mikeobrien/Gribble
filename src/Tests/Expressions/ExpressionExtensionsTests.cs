@@ -29,7 +29,7 @@ namespace Tests.Expressions
         {
             Expression<Action<int>> lambda = x => x.SomeExtensionMethod("oh hai", 5.29);
             var method = lambda.Body as MethodCallExpression;
-            method.FirstArgumentIsOfType<int>().ShouldEqual(true);
+            method.ArgumentIsOfType<int>(1).ShouldEqual(true);
         }
 
         [Test]
@@ -37,7 +37,7 @@ namespace Tests.Expressions
         {
             Expression<Action> lambda = () => 10.SomeExtensionMethod("oh hai", 5.29);
             var method = lambda.Body as MethodCallExpression;
-            method.FirstArgumentIsOfType<int>().ShouldEqual(true);
+            method.ArgumentIsOfType<int>(1).ShouldEqual(true);
         }
 
         [Test]
@@ -45,7 +45,7 @@ namespace Tests.Expressions
         {
             Expression<Action> lambda = () => 10.SomeExtensionMethod("oh hai", 5.29);
             var method = lambda.Body as MethodCallExpression;
-            var argument = method.GetFirstArgument();
+            var argument = method.GetArgument(1);
             argument.ShouldBeType(typeof (ConstantExpression));
             argument.Type.ShouldEqual(typeof(int));
             ((ConstantExpression) argument).Value.ShouldEqual(10);
@@ -56,7 +56,7 @@ namespace Tests.Expressions
         {
             Expression<Action> lambda = () => 10.SomeExtensionMethod("oh hai", 5.29);
             var method = lambda.Body as MethodCallExpression;
-            var argument = method.GetSecondArgument();
+            var argument = method.GetArgument(2);
             argument.ShouldBeType(typeof(ConstantExpression));
             argument.Type.ShouldEqual(typeof(string));
             ((ConstantExpression)argument).Value.ShouldEqual("oh hai");
@@ -67,7 +67,7 @@ namespace Tests.Expressions
         {
             Expression<Action> lambda = () => 10.SomeExtensionMethod("oh hai", 5.29);
             var method = lambda.Body as MethodCallExpression;
-            var argument = method.GetThirdArgument();
+            var argument = method.GetArgument(3);
             argument.ShouldBeType(typeof(ConstantExpression));
             argument.Type.ShouldEqual(typeof(double));
             ((ConstantExpression)argument).Value.ShouldEqual(5.29);
@@ -78,7 +78,7 @@ namespace Tests.Expressions
         {
             Expression<Action> lambda = () => 10.SomeExtensionMethod("oh hai", 5.29);
             var method = lambda.Body as MethodCallExpression;
-            method.GetFirstConstantArgument<int>().ShouldEqual(10);
+            method.GetConstantArgument<int>(1).ShouldEqual(10);
         }
 
         [Test]
@@ -86,7 +86,7 @@ namespace Tests.Expressions
         {
             Expression<Action> lambda = () => 10.SomeExtensionMethod("oh hai", 5.29);
             var method = lambda.Body as MethodCallExpression;
-            method.GetSecondConstantArgument<string>().ShouldEqual("oh hai");
+            method.GetConstantArgument<string>(2).ShouldEqual("oh hai");
         }
 
         [Test]
@@ -94,7 +94,7 @@ namespace Tests.Expressions
         {
             Expression<Action> lambda = () => 10.SomeExtensionMethod("oh hai", 5.29);
             var method = lambda.Body as MethodCallExpression;
-            method.GetThirdConstantArgument<double>().ShouldEqual(5.29);
+            method.GetConstantArgument<double>(3).ShouldEqual(5.29);
         }
 
         [Test]
