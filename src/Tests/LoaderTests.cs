@@ -477,6 +477,35 @@ namespace Tests
         }
 
         [Test]
+        public void should_return_any()
+        {
+            var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);
+            query.Any();
+            var result = GetResult(query);
+            result.ShouldBeType(typeof(bool));
+            ((bool)result).ShouldBeTrue();
+        }
+
+        [Test]
+        public void should_return_any_with_true_predicate()
+        {
+            var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);
+            query.Any(x => x.Id >= 5);
+            var result = GetResult(query);
+            result.ShouldBeType(typeof(bool));
+            ((bool)result).ShouldBeTrue();
+        }
+        [Test]
+        public void should_return_any_with_false_predicate()
+        {
+            var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);
+            query.Any(x => x.Id >= 15);
+            var result = GetResult(query);
+            result.ShouldBeType(typeof(bool));
+            ((bool)result).ShouldBeFalse();
+        }
+
+        [Test]
         public void Select_Skip_Test()
         {
             var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);

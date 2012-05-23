@@ -20,6 +20,8 @@ namespace Gribble.TransactSql
 
             Action<SqlWriter> writeProjection = x => x.Do(projection != null, y => y.FieldList(z => z.Comma.Flush(), projection), y => y.Wildcard.Flush());
 
+            if (select.Any) sql.Select.Cast().Trim().OpenBlock.Trim().Case.When.Exists.OpenBlock.Trim();
+
             if (select.Source.IsTable || select.HasConditions)
             {
                 sql.Select.Flush();
@@ -100,6 +102,8 @@ namespace Gribble.TransactSql
                 }
             }
 
+            if (select.Any) sql.Trim().CloseBlock.Then.Value(1, SqlDbType.Bit).Else.Value(0, SqlDbType.Bit).End.As.Write(DataTypes.Bit.SqlName).Trim().CloseBlock.Flush();
+
             return new Statement(sql.ToString(), Statement.StatementType.Text, GetResultType(select), parameters);
         }
 
@@ -107,7 +111,7 @@ namespace Gribble.TransactSql
         {
             if (select.First) return Statement.ResultType.Single;
             if (select.FirstOrDefault) return Statement.ResultType.SingleOrNone;
-            if (select.Count) return Statement.ResultType.Scalar;
+            if (select.Count || select.Any) return Statement.ResultType.Scalar;
             return Statement.ResultType.Multiple;
         }
 

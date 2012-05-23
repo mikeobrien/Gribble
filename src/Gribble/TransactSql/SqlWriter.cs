@@ -209,6 +209,7 @@ namespace Gribble.TransactSql
         public SqlWriter Length(Action<SqlWriter> value) { return WriteFunction("LEN", value); }
         public SqlWriter ToUpper(Action<SqlWriter> value) { return WriteFunction("UPPER", value); }
         public SqlWriter ToLower(Action<SqlWriter> value) { return WriteFunction("LOWER", value); }
+        public SqlWriter Cast() { return Write("CAST"); }
         public SqlWriter Cast(Action<SqlWriter> value, Type type, int? length, int? scale, int? precision)
             { return Write("CAST").Trim().OpenBlock.Trim().Do(value).As.DataTypeDefinition(type, length, scale, precision).Trim().CloseBlock; }
         public SqlWriter IndexOf(Action<SqlWriter> text, Action<SqlWriter> searchText) 

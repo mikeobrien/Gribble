@@ -21,6 +21,7 @@ namespace Gribble.Model
         public bool First;
         public bool FirstOrDefault;
 
+        public bool Any;
         public bool Count;
 
         public bool Randomize;

@@ -289,6 +289,34 @@ namespace Tests.TransactSql
         }
 
         [Test]
+        public void should_render_any_sql()
+        {
+            var query = MockQueryable<Entity>.Create(TableName1);
+            query.Any();
+            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var statement = SelectWriter<Entity>.CreateStatement(select, Map);
+
+            statement.Result.ShouldEqual(Statement.ResultType.Scalar);
+            statement.Parameters.Count.ShouldEqual(0);
+            statement.Text.ShouldEqual(string.Format("SELECT CAST(CASE WHEN EXISTS (SELECT * FROM [{0}] {1}) THEN 1 ELSE 0 END AS bit)", TableName1, select.Source.Alias));
+        }
+
+        [Test]
+        public void should_render_any_and_where_sql()
+        {
+            var query = MockQueryable<Entity>.Create(TableName1);
+            query.Any(x => x.Age == 44);
+            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var statement = SelectWriter<Entity>.CreateStatement(select, Map);
+
+            statement.Result.ShouldEqual(Statement.ResultType.Scalar);
+            statement.Parameters.Count.ShouldEqual(1);
+            statement.Parameters.First().Value.ShouldEqual(44);
+            statement.Text.ShouldEqual(string.Format("SELECT CAST(CASE WHEN EXISTS (SELECT * FROM [{0}] {1} WHERE ([age] = @{2})) THEN 1 ELSE 0 END AS bit)",
+                TableName1, select.Source.Alias, statement.Parameters.First().Key));
+        }
+
+        [Test]
         public void Select_Count_Test()
         {
             var query = MockQueryable<Entity>.Create(TableName1);
