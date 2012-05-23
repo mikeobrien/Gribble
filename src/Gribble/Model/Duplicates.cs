@@ -1,14 +1,15 @@
-﻿namespace Gribble.Model
+﻿using System.Collections.Generic;
+
+namespace Gribble.Model
 {
     public class Duplicates
     {
-        public enum DuplicateGrouping { DistinctField, Precedence, OrderField }
+        public Duplicates()
+        {
+            OrderBy = new List<OrderBy>();
+        }
 
-        public Projection DistinctField;
-        public Operator Precedence;
-        public Projection OrderField;
-        public Order Order;
-
-        public DuplicateGrouping Grouping;
+        public Projection Distinct;
+        public List<OrderBy> OrderBy;
     }
 }

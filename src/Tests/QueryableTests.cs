@@ -13,7 +13,7 @@ namespace Tests
     {
         public class Entity
         {
-            public Guid Id { get; set; }
+            public int Id { get; set; }
             public string Name { get; set; }
             public string Email { get; set; }
             public DateTime Birthdate { get; set; }
@@ -39,15 +39,15 @@ namespace Tests
         {
             return new List<Entity> 
             { 
-                new Entity { Id = Guid.NewGuid(), Name = "Tom", Email = "tom@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 33, Price = 88.99F, Distance = 34.5, Flag = 3, Active = false },
-                new Entity { Id = Guid.NewGuid(), Name = "Tom", Email = "tom@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 66, Price = 88.99F, Distance = 34.5, Flag = 12, Active = true },
-                new Entity { Id = Guid.NewGuid(), Name = "Tom", Email = "thomas@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 66, Price = 88.99F, Distance = 34.5, Flag = 12, Active = true },
-                new Entity { Id = Guid.NewGuid(), Name = "Dick", Email = "dick@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 44, Price = 88.99F, Distance = 34.5, Flag = 6, Active = true },
-                new Entity { Id = Guid.NewGuid(), Name = "Dick", Email = "richard@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 77, Price = 88.99F, Distance = 34.5, Flag = 15, Active = true },
-                new Entity { Id = Guid.NewGuid(), Name = "Dick", Email = "rich@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 77, Price = 88.99F, Distance = 34.5, Flag = 15, Active = true },
-                new Entity { Id = Guid.NewGuid(), Name = "Dick", Email = "rick@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 44, Price = 88.99F, Distance = 34.5, Flag = 6, Active = true },
-                new Entity { Id = Guid.NewGuid(), Name = "Harry", Email = "harry@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 65, Price = 88.99F, Distance = 34.5, Flag = 9, Active = true },
-                new Entity { Id = Guid.NewGuid(), Name = "Harry", Email = "harry@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 55, Price = 88.99F, Distance = 34.5, Flag = 9, Active = false }
+                new Entity { Id = 1, Name = "Tom", Email = "tom@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 33, Price = 88.99F, Distance = 34.5, Flag = 3, Active = false },
+                new Entity { Id = 2, Name = "Tom", Email = "tom@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 66, Price = 88.99F, Distance = 34.5, Flag = 12, Active = true },
+                new Entity { Id = 3, Name = "Tom", Email = "thomas@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 66, Price = 88.99F, Distance = 34.5, Flag = 12, Active = true },
+                new Entity { Id = 4, Name = "Dick", Email = "dick@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 44, Price = 88.99F, Distance = 34.5, Flag = 6, Active = true },
+                new Entity { Id = 5, Name = "Dick", Email = "richard@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 77, Price = 88.99F, Distance = 34.5, Flag = 15, Active = true },
+                new Entity { Id = 6, Name = "Dick", Email = "rich@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 77, Price = 88.99F, Distance = 34.5, Flag = 15, Active = true },
+                new Entity { Id = 7, Name = "Dick", Email = "rick@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 44, Price = 88.99F, Distance = 34.5, Flag = 6, Active = true },
+                new Entity { Id = 8, Name = "Harry", Email = "harry@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 65, Price = 88.99F, Distance = 34.5, Flag = 9, Active = true },
+                new Entity { Id = 9, Name = "Harry", Email = "harry@yada.com", Birthdate = DateTime.Now, Created = DateTime.Now, Age = 55, Price = 88.99F, Distance = 34.5, Flag = 8, Active = false }
             }.AsQueryable();
         }
 
@@ -82,9 +82,29 @@ namespace Tests
         }
 
         [Test]
-        public void Distinct_Test()
+        public void should_return_distinct()
         {
-            CreateItemsList().Distinct(x => x).Count().ShouldEqual(5);
+            CreateEntitiesList().Distinct(x => x.Name).Count().ShouldEqual(3);
+        }
+
+        [Test]
+        public void should_return_distinct_ordered_ascending()
+        {
+            var results = CreateEntitiesList().Distinct(x => x.Name, x => x.Age, Order.Ascending).ToList();
+            results.Count.ShouldEqual(3);
+            results.Any(x => x.Name == "Tom" && x.Age == 33).ShouldBeTrue();
+            results.Any(x => x.Name == "Dick" && x.Age == 44).ShouldBeTrue();
+            results.Any(x => x.Name == "Harry" && x.Age == 55).ShouldBeTrue();
+        }
+
+        [Test]
+        public void should_return_distinct_ordered_descending()
+        {
+            var results = CreateEntitiesList().Distinct(x => x.Name, x => x.Age, Order.Descending).ToList();
+            results.Count.ShouldEqual(3);
+            results.Any(x => x.Name == "Tom" && x.Age == 66).ShouldBeTrue();
+            results.Any(x => x.Name == "Dick" && x.Age == 77).ShouldBeTrue();
+            results.Any(x => x.Name == "Harry" && x.Age == 65).ShouldBeTrue();
         }
 
         [Test]
@@ -101,7 +121,7 @@ namespace Tests
         [Test]
         public void should_return_duplicates_of_precidence()
         {
-            var duplicates = CreateEntitiesList().Duplicates(x => x.Email, x => x.Active).ToList();
+            var duplicates = CreateEntitiesList().Duplicates(x => x.Email, x => x.Active == true, Order.Ascending).ToList();
             duplicates.Count.ShouldEqual(2);
             var result = duplicates.FirstOrDefault(x => x.Email == "tom@yada.com");
             result.ShouldNotBeNull();
@@ -133,6 +153,30 @@ namespace Tests
             result.Age.ShouldEqual(33);
             result = duplicates.FirstOrDefault(x => x.Email == "harry@yada.com");
             result.Age.ShouldEqual(55);
+        }
+
+        [Test]
+        public void should_return_duplicates_of_double_order()
+        {
+            var duplicates = CreateEntitiesList().Duplicates(x => x.Email, x => x.Distance, Order.Ascending, x => x.Flag, Order.Descending).ToList();
+            duplicates.Count.ShouldEqual(2);
+            var result = duplicates.FirstOrDefault(x => x.Email == "tom@yada.com");
+            result.ShouldNotBeNull();
+            result.Flag.ShouldEqual((byte)3);
+            result = duplicates.FirstOrDefault(x => x.Email == "harry@yada.com");
+            result.Flag.ShouldEqual((byte)8);
+        }
+
+        [Test]
+        public void should_return_duplicates_of_double_order_descending()
+        {
+            var duplicates = CreateEntitiesList().Duplicates(x => x.Email, x => x.Distance, Order.Descending, x => x.Flag, Order.Ascending).ToList();
+            duplicates.Count.ShouldEqual(2);
+            var result = duplicates.FirstOrDefault(x => x.Email == "tom@yada.com");
+            result.ShouldNotBeNull();
+            result.Flag.ShouldEqual((byte)12);
+            result = duplicates.FirstOrDefault(x => x.Email == "harry@yada.com");
+            result.Flag.ShouldEqual((byte)9);
         }
 
         [Test]

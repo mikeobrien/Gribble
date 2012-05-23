@@ -177,7 +177,7 @@ namespace Tests
         public void should_delete_duplicates()
         {
             _database.CreateTables();
-            _identityTable1.DeleteMany(_identityTable1.Duplicates(x => x.Name, x => x.Id != 5));
+            _identityTable1.DeleteMany(_identityTable1.Duplicates(x => x.Name, x => x.Id != 5, Order.Ascending));
             _identityTable1.Count().ShouldEqual(1);
             _identityTable1.First().Id.ShouldEqual(5);
         }

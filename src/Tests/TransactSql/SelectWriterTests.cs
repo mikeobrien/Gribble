@@ -108,35 +108,58 @@ namespace Tests.TransactSql
         }
 
         [Test]
-        public void Select_Distinct_Test()
+        public void should_render_distinct_sql()
         {
             var query = MockQueryable<Entity>.Create(TableName1);
-            query.Distinct(x => x.Name.ToUpper()).Distinct(x => x.Age);
+            query.Distinct(x => x.Age);
             var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
             statement.Parameters.Count.ShouldEqual(0);
-            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY [age], UPPER([name]) ORDER BY [id]) AS [__Partition__] FROM [{0}] {1}) AS {1} WHERE [__Partition__] = 1",
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY [age] ORDER BY [age] ASC) AS [__Partition__] FROM [{0}] {1}) AS {1} WHERE [__Partition__] = 1",
                                                     TableName1, select.Source.Alias));
         }
 
         [Test]
-        public void Select_Distinct_Projection_Test()
+        public void should_render_multi_distinct_sql()
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Distinct(x => x.Name.ToUpper()).Distinct(x => x.Age);
             var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
-            select.Projection = new List<SelectProjection>
-                                    {
-                                        new SelectProjection {Projection = Projection.Create.Field("Name")},
-                                        new SelectProjection {Projection = Projection.Create.Field("Age")}
-                                    };
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
             statement.Parameters.Count.ShouldEqual(0);
-            statement.Text.ShouldEqual(string.Format("SELECT [name], [age] FROM (SELECT [name], [age], ROW_NUMBER() OVER (PARTITION BY [age], UPPER([name]) ORDER BY [name], [age]) AS [__Partition__] FROM [{0}] {1}) AS {1} WHERE [__Partition__] = 1",
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY UPPER([name]), [age] ORDER BY UPPER([name]) ASC, [age] ASC) AS [__Partition__] FROM [{0}] {1}) AS {1} WHERE [__Partition__] = 1",
+                                                    TableName1, select.Source.Alias));
+        }
+
+        [Test]
+        public void should_render_distinct_with_order_ascending_sql()
+        {
+            var query = MockQueryable<Entity>.Create(TableName1);
+            query.Distinct(x => x.Age, x => x.Name, Order.Ascending);
+            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var statement = SelectWriter<Entity>.CreateStatement(select, Map);
+
+            statement.Result.ShouldEqual(Statement.ResultType.Multiple);
+            statement.Parameters.Count.ShouldEqual(0);
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY [age] ORDER BY [name] ASC) AS [__Partition__] FROM [{0}] {1}) AS {1} WHERE [__Partition__] = 1",
+                                                    TableName1, select.Source.Alias));
+        }
+
+        [Test]
+        public void should_render_distinct_with_order_descending_sql()
+        {
+            var query = MockQueryable<Entity>.Create(TableName1);
+            query.Distinct(x => x.Age, x => x.Name, Order.Descending);
+            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var statement = SelectWriter<Entity>.CreateStatement(select, Map);
+
+            statement.Result.ShouldEqual(Statement.ResultType.Multiple);
+            statement.Parameters.Count.ShouldEqual(0);
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY [age] ORDER BY [name] DESC) AS [__Partition__] FROM [{0}] {1}) AS {1} WHERE [__Partition__] = 1",
                                                     TableName1, select.Source.Alias));
         }
 
@@ -144,13 +167,13 @@ namespace Tests.TransactSql
         public void should_render_duplicates_sql()
         {
             var query = MockQueryable<Entity>.Create(TableName1);
-            query.Distinct(x => x.Name.ToUpper()).Duplicates(x => x.Name);
+            query.Duplicates(x => x.Name);
             var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
             statement.Parameters.Count.ShouldEqual(0);
-            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY [name] ORDER BY [name]) AS [__Partition__] FROM [{0}] {1}) AS {1} WHERE [__Partition__] > 1",
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY [name] ORDER BY [name] ASC) AS [__Partition__] FROM [{0}] {1}) AS {1} WHERE [__Partition__] > 1",
                                                     TableName1, select.Source.Alias));
         }
 
@@ -158,14 +181,14 @@ namespace Tests.TransactSql
         public void should_render_duplicates_with_precedence_sql()
         {
             var query = MockQueryable<Entity>.Create(TableName1);
-            query.Distinct(x => x.Name.ToUpper()).Duplicates(x => x.Name, x => x.Age > 50);
+            query.Duplicates(x => x.Name, x => x.Age > 50, Order.Ascending);
             var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
             statement.Parameters.Count.ShouldEqual(1);
             statement.Parameters.First().Value.ShouldEqual(50);
-            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY [name] ORDER BY CASE WHEN ([age] > @{2}) THEN 1 ELSE 0 END) AS [__Partition__] FROM [{0}] {1}) AS {1} WHERE [__Partition__] > 1",
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY [name] ORDER BY CASE WHEN ([age] > @{2}) THEN 1 ELSE 0 END ASC) AS [__Partition__] FROM [{0}] {1}) AS {1} WHERE [__Partition__] > 1",
                                                     TableName1, select.Source.Alias, statement.Parameters.First().Key));
         }
 
@@ -173,13 +196,13 @@ namespace Tests.TransactSql
         public void should_render_duplicates_with_ascending_order_sql()
         {
             var query = MockQueryable<Entity>.Create(TableName1);
-            query.Distinct(x => x.Name.ToUpper()).Duplicates(x => x.Name, x => x.Age, Order.Ascending);
+            query.Duplicates(x => x.Name, x => x.Age, Order.Ascending);
             var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
             statement.Parameters.Count.ShouldEqual(0);
-            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY [name] ORDER BY [age]) AS [__Partition__] FROM [{0}] {1}) AS {1} WHERE [__Partition__] > 1",
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY [name] ORDER BY [age] ASC) AS [__Partition__] FROM [{0}] {1}) AS {1} WHERE [__Partition__] > 1",
                                                     TableName1, select.Source.Alias));
         }
 
@@ -187,13 +210,41 @@ namespace Tests.TransactSql
         public void should_render_duplicates_with_descending_order_sql()
         {
             var query = MockQueryable<Entity>.Create(TableName1);
-            query.Distinct(x => x.Name.ToUpper()).Duplicates(x => x.Name, x => x.Age, Order.Descending);
+            query.Duplicates(x => x.Name, x => x.Age, Order.Descending);
             var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
             statement.Parameters.Count.ShouldEqual(0);
             statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY [name] ORDER BY [age] DESC) AS [__Partition__] FROM [{0}] {1}) AS {1} WHERE [__Partition__] > 1",
+                                                    TableName1, select.Source.Alias));
+        }
+
+        [Test]
+        public void should_render_duplicates_with_double_order_ascending_sql()
+        {
+            var query = MockQueryable<Entity>.Create(TableName1);
+            query.Distinct(x => x.Name.ToUpper()).Duplicates(x => x.Name, x => x.Age, Order.Ascending, x => x.Created, Order.Descending);
+            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var statement = SelectWriter<Entity>.CreateStatement(select, Map);
+
+            statement.Result.ShouldEqual(Statement.ResultType.Multiple);
+            statement.Parameters.Count.ShouldEqual(0);
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY [name] ORDER BY [age] ASC, [created] DESC) AS [__Partition__] FROM [{0}] {1}) AS {1} WHERE [__Partition__] > 1",
+                                                    TableName1, select.Source.Alias));
+        }
+
+        [Test]
+        public void should_render_duplicates_with_double_order_descending_sql()
+        {
+            var query = MockQueryable<Entity>.Create(TableName1);
+            query.Duplicates(x => x.Name, x => x.Age, Order.Descending, x => x.Created, Order.Ascending);
+            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var statement = SelectWriter<Entity>.CreateStatement(select, Map);
+
+            statement.Result.ShouldEqual(Statement.ResultType.Multiple);
+            statement.Parameters.Count.ShouldEqual(0);
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY [name] ORDER BY [age] DESC, [created] ASC) AS [__Partition__] FROM [{0}] {1}) AS {1} WHERE [__Partition__] > 1",
                                                     TableName1, select.Source.Alias));
         }
 
@@ -207,7 +258,7 @@ namespace Tests.TransactSql
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
             statement.Parameters.Count.ShouldEqual(0);
-            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY [id]) AS [__RowNumber__] FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY [age], UPPER([name]) ORDER BY [id]) AS [__Partition__] FROM [{0}] {1}) AS {1} WHERE [__Partition__] = 1) AS {1} WHERE [__RowNumber__] BETWEEN 11 AND 20", 
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY [id]) AS [__RowNumber__] FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY UPPER([name]), [age] ORDER BY UPPER([name]) ASC, [age] ASC) AS [__Partition__] FROM [{0}] {1}) AS {1} WHERE [__Partition__] = 1) AS {1} WHERE [__RowNumber__] BETWEEN 11 AND 20", 
                                                     TableName1, select.Source.Alias));
         }
 

@@ -19,57 +19,82 @@ namespace Gribble
         public static IQueryable<TSource> Randomize<TSource>(this IQueryable<TSource> source)
         {
             if (source == null) throw new ArgumentNullException("source");
-            return source.Provider.CreateQuery<TSource>(Expression.Call(null, ((MethodInfo) MethodBase.GetCurrentMethod()).MakeGenericMethod(new [] { typeof(TSource) }), new [] { source.Expression }));
+            return source.Provider.CreateQuery<TSource>(Expression.Call(null, 
+                ((MethodInfo) MethodBase.GetCurrentMethod()).MakeGenericMethod(new [] { typeof(TSource) }), new [] { source.Expression }));
         }
 
         public static IQueryable<TSource> TakePercent<TSource>(this IQueryable<TSource> source, int percent)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (percent < 0 || percent > 100) throw new ArgumentOutOfRangeException("percent", "Percent must be between 0 and 100.");
-            return source.Provider.CreateQuery<TSource>(Expression.Call(null, ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new [] { typeof(TSource) }), new [] { source.Expression, Expression.Constant(percent) }));
+            return source.Provider.CreateQuery<TSource>(Expression.Call(null, 
+                ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new [] { typeof(TSource) }), new [] { source.Expression, Expression.Constant(percent) }));
         }
 
         public static IQueryable<TSource> CopyTo<TSource>(this IQueryable<TSource> source, string target)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (target == null) throw new ArgumentNullException("target");
-            return source.Provider.Execute<IQueryable<TSource>>(Expression.Call(null, ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource) }), new[] { source.Expression, Expression.Constant(target) }));
+            return source.Provider.Execute<IQueryable<TSource>>(Expression.Call(null, 
+                ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource) }), new[] { source.Expression, Expression.Constant(target) }));
         }
 
         public static IQueryable<TSource> CopyTo<TSource>(this IQueryable<TSource> source, IQueryable<TSource> target)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (target == null) throw new ArgumentNullException("target");
-            return source.Provider.Execute<IQueryable<TSource>>(Expression.Call(null, ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new [] { typeof(TSource) }), new [] { source.Expression, GetSourceExpression(target) }));
+            return source.Provider.Execute<IQueryable<TSource>>(Expression.Call(null, 
+                ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new [] { typeof(TSource) }), new [] { source.Expression, GetSourceExpression(target) }));
         }
 
         public static IQueryable<TSource> Distinct<TSource, TKey>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (selector == null) throw new ArgumentNullException("selector");
-            return source.Provider.CreateQuery<TSource>(Expression.Call(null, ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TKey) }), new[] { source.Expression, Expression.Quote(selector) }));
+            return source.Provider.CreateQuery<TSource>(Expression.Call(null, 
+                ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TKey) }), new[] { source.Expression, Expression.Quote(selector) }));
+        }
+
+        public static IQueryable<TSource> Distinct<TSource, TKey, TOrder>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector,
+            Expression<Func<TSource, TOrder>> orderSelector, Order order)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (selector == null) throw new ArgumentNullException("selector");
+            if (selector == null) throw new ArgumentNullException("orderSelector");
+            return source.Provider.CreateQuery<TSource>(Expression.Call(null,
+                ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TKey), typeof(TOrder) }), 
+                new[] { source.Expression, Expression.Quote(selector), Expression.Quote(orderSelector), Expression.Constant(order) }));
         }
 
         public static IQueryable<TSource> Duplicates<TSource, TKey>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (selector == null) throw new ArgumentNullException("selector");
-            return source.Provider.CreateQuery<TSource>(Expression.Call(null, ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TKey) }), new[] { source.Expression, Expression.Quote(selector) }));
+            return source.Provider.CreateQuery<TSource>(Expression.Call(null, 
+                ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TKey) }), new[] { source.Expression, Expression.Quote(selector) }));
         }
 
-        public static IQueryable<TSource> Duplicates<TSource, TKey>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector, Expression<Func<TSource, bool>> precedence)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            if (selector == null) throw new ArgumentNullException("selector");
-            return source.Provider.CreateQuery<TSource>(Expression.Call(null, ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TKey) }), new[] { source.Expression, Expression.Quote(selector), Expression.Quote(precedence) }));
-        }
-
-        public static IQueryable<TSource> Duplicates<TSource, TKey, TOrder>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector, Expression<Func<TSource, TOrder>> orderSelector, Order order)
+        public static IQueryable<TSource> Duplicates<TSource, TKey, TOrder>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector, 
+            Expression<Func<TSource, TOrder>> orderSelector, Order order)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (selector == null) throw new ArgumentNullException("selector");
             if (selector == null) throw new ArgumentNullException("orderSelector");
-            return source.Provider.CreateQuery<TSource>(Expression.Call(null, ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TKey), typeof(TOrder) }), new[] { source.Expression, Expression.Quote(selector), Expression.Quote(orderSelector), Expression.Constant(order) }));
+            return source.Provider.CreateQuery<TSource>(Expression.Call(null, 
+                ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TKey), typeof(TOrder) }), 
+                new[] { source.Expression, Expression.Quote(selector), Expression.Quote(orderSelector), Expression.Constant(order) }));
+        }
+
+        public static IQueryable<TSource> Duplicates<TSource, TKey, TOrder1, TOrder2>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector, 
+            Expression<Func<TSource, TOrder1>> orderSelector1, Order order1, Expression<Func<TSource, TOrder2>> orderSelector2, Order order2)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (selector == null) throw new ArgumentNullException("selector");
+            if (selector == null) throw new ArgumentNullException("orderSelector1");
+            if (selector == null) throw new ArgumentNullException("orderSelector2");
+            return source.Provider.CreateQuery<TSource>(Expression.Call(null, 
+                ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TKey), typeof(TOrder1), typeof(TOrder2) }), 
+                new[] { source.Expression, Expression.Quote(selector), Expression.Quote(orderSelector1), Expression.Constant(order1), Expression.Quote(orderSelector2), Expression.Constant(order2) }));
         }
 
         public static IQueryable<TSource> Intersect<TSource>(this IQueryable<TSource> source, IQueryable<TSource> compare, params Expression<Func<TSource, object>>[] selectors)
@@ -139,7 +164,15 @@ namespace Gribble
         {
             if (source == null) throw new ArgumentNullException("source");
             if (selector == null) throw new ArgumentNullException("selector");
-            return source.Distinct(LambdaComparer<TSource, TKey>.Create(selector));
+            return source.GroupBy(selector).SelectMany(x => x.Take(1));
+        }
+
+        public static IEnumerable<TSource> Distinct<TSource, TKey, TOrder>(this IEnumerable<TSource> source, Func<TSource, TKey> selector, Func<TSource, TOrder> orderSelector, Order order)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (selector == null) throw new ArgumentNullException("selector");
+            if (selector == null) throw new ArgumentNullException("orderSelector");
+            return source.GroupBy(selector).SelectMany(x => (order == Order.Ascending ? x.OrderBy(orderSelector) : x.OrderByDescending(orderSelector)).Take(1));
         }
 
         public static IEnumerable<TSource> Duplicates<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> selector)
@@ -149,19 +182,32 @@ namespace Gribble
             return source.GroupBy(selector).Where(x => x.Count() > 1).SelectMany(x => x.Skip(1));
         }
 
-        public static IEnumerable<TSource> Duplicates<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> selector, Func<TSource, bool> precedence)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            if (selector == null) throw new ArgumentNullException("selector");
-            return source.GroupBy(selector).Where(x => x.Count() > 1).SelectMany(x => x.OrderBy(precedence).Skip(1));
-        }
-
         public static IEnumerable<TSource> Duplicates<TSource, TKey, TOrder>(this IEnumerable<TSource> source, Func<TSource, TKey> selector, Func<TSource, TOrder> orderSelector, Order order)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (selector == null) throw new ArgumentNullException("selector");
             if (selector == null) throw new ArgumentNullException("orderSelector");
             return source.GroupBy(selector).Where(x => x.Count() > 1).SelectMany(x => (order == Order.Ascending ? x.OrderBy(orderSelector) : x.OrderByDescending(orderSelector)).Skip(1));
+        }
+
+        public static IEnumerable<TSource> Duplicates<TSource, TKey, TOrder1, TOrder2>(this IEnumerable<TSource> source, Func<TSource, TKey> selector, 
+            Func<TSource, TOrder1> orderSelector1, Order order1, Func<TSource, TOrder2> orderSelector2, Order order2)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (selector == null) throw new ArgumentNullException("selector");
+            if (selector == null) throw new ArgumentNullException("orderSelector1");
+            if (selector == null) throw new ArgumentNullException("orderSelector2");
+            return source.GroupBy(selector).Where(x => x.Count() > 1).SelectMany(x => 
+                x.When(order1 == Order.Ascending, y => y.OrderBy(orderSelector1), y => y.OrderByDescending(orderSelector1))
+                .When(order2 == Order.Ascending, y => ((IOrderedEnumerable<TSource>)y).ThenBy(orderSelector2), 
+                                                y => ((IOrderedEnumerable<TSource>)y).ThenByDescending(orderSelector2)).Skip(1));
+        }
+
+        internal static IEnumerable<TTarget> When<TSource, TTarget>(this IEnumerable<TSource> source, bool predicate,
+            Func<IEnumerable<TSource>, IEnumerable<TTarget>> trueCondition,
+            Func<IEnumerable<TSource>, IEnumerable<TTarget>> falseCondition)
+        {
+            return predicate ? trueCondition(source) : falseCondition(source);
         }
 
         public static IEnumerable<TSource> Intersect<TSource>(this IEnumerable<TSource> source, IEnumerable<TSource> compare, params Func<TSource, object>[] selectors)
@@ -180,32 +226,6 @@ namespace Gribble
             if (selectors == null) throw new ArgumentNullException("selectors");
             if (selectors.Length == 0) return Enumerable.Except(source, compare);
             return Enumerable.Except(source, source.Intersect(compare, selectors));
-        }
-
-        public class LambdaComparer<T, TValue> : IEqualityComparer<T>
-        {
-            private readonly IList<Func<T, TValue>> _values;
-
-            public LambdaComparer(IList<Func<T, TValue>> values)
-            {
-                _values = values;
-            }
-
-            public static LambdaComparer<T, TValue> Create(params Func<T, TValue>[] values)
-            {
-                return new LambdaComparer<T, TValue>(new List<Func<T, TValue>>(values));
-            }
-
-            public int GetHashCode(T target)
-            {
-                // Bernstein hash
-                return _values.Aggregate(17, (current, value) => unchecked(current * 31 + value(target).GetHashCode()));
-            }
-
-            public bool Equals(T target1, T target2)
-            {
-                return _values.All(x => x(target1).Equals(x(target2)));
-            }
         }
     }
 }

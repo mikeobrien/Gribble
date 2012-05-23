@@ -30,6 +30,16 @@ namespace Gribble.Expressions
             return projection;
         }
 
+        public static bool IsProjection(Expression expression)
+        {
+            return expression.NodeType == ExpressionType.Coalesce ||
+                   expression.NodeType == ExpressionType.Convert ||
+                   expression.NodeType == ExpressionType.Quote ||
+                   expression is MemberExpression ||
+                   expression is MethodCallExpression ||
+                   expression is ConstantExpression;
+        }
+
         protected override void VisitBinary(Context context, BinaryExpression node)
         {
             switch (node.NodeType)
@@ -68,7 +78,7 @@ namespace Gribble.Expressions
                 var projection = Projection.Create.Function(Function.Create.StartsWith());
                 context.State(projection);
                 var argumentsState = new Dictionary<Expression, Action<Projection>>
-                    { {node.GetArgument(1), x => projection.Function.StartsWith.Value = x} };
+                    { {node.ArgumentAt(1), x => projection.Function.StartsWith.Value = x} };
                 VisitMethodCall(node, x => projection.Function.StartsWith.Text = x, argumentsState, true, true);
             }
             else if (node.MatchesMethodSignature<string>(x => x.Contains(string.Empty)))
@@ -76,7 +86,7 @@ namespace Gribble.Expressions
                 var projection = Projection.Create.Function(Function.Create.Contains());
                 context.State(projection);
                 var argumentsState = new Dictionary<Expression, Action<Projection>> 
-                    { { node.GetArgument(1), x => projection.Function.Contains.Value = x } };
+                    { { node.ArgumentAt(1), x => projection.Function.Contains.Value = x } };
                 VisitMethodCall(node, x => projection.Function.Contains.Text = x, argumentsState, true, true);
             }
             else if (node.MatchesMethodSignature<string>(x => x.EndsWith(string.Empty)))
@@ -84,7 +94,7 @@ namespace Gribble.Expressions
                 var projection = Projection.Create.Function(Function.Create.EndsWith());
                 context.State(projection);
                 var argumentsState = new Dictionary<Expression, Action<Projection>> 
-                    { { node.GetArgument(1), x => projection.Function.EndsWith.Value = x } };
+                    { { node.ArgumentAt(1), x => projection.Function.EndsWith.Value = x } };
                 VisitMethodCall(node, x => projection.Function.EndsWith.Text = x, argumentsState, true, true);
             }
             else if (node.MatchesMethodSignature<string>(x => x.ToLower()))
@@ -128,7 +138,7 @@ namespace Gribble.Expressions
                 var projection = Projection.Create.Function(Function.Create.Substring());
                 context.State(projection);
                 var argumentsState = new Dictionary<Expression, Action<Projection>> 
-                    { { node.GetArgument(1), x => projection.Function.Substring.Start = x } };
+                    { { node.ArgumentAt(1), x => projection.Function.Substring.Start = x } };
                 VisitMethodCall(node, x => projection.Function.Substring.Text = x, argumentsState, true, true);
             }
             else if (node.MatchesMethodSignature<string>(x => x.Substring(0, 0)))
@@ -136,8 +146,8 @@ namespace Gribble.Expressions
                 var projection = Projection.Create.Function(Function.Create.SubstringFixed());
                 context.State(projection);
                 var argumentsState = new Dictionary<Expression, Action<Projection>> 
-                    { { node.GetArgument(1), x => projection.Function.SubstringFixed.Start = x },
-                      { node.GetArgument(2), x => projection.Function.SubstringFixed.Length = x }};
+                    { { node.ArgumentAt(1), x => projection.Function.SubstringFixed.Start = x },
+                      { node.ArgumentAt(2), x => projection.Function.SubstringFixed.Length = x }};
                 VisitMethodCall(node, x => projection.Function.SubstringFixed.Text = x, argumentsState, true, true);
             }
             else if (node.MatchesMethodSignature<string>(x => x.Replace(string.Empty, string.Empty)))
@@ -145,8 +155,8 @@ namespace Gribble.Expressions
                 var projection = Projection.Create.Function(Function.Create.Replace());
                 context.State(projection);
                 var argumentsState = new Dictionary<Expression, Action<Projection>> 
-                    { { node.GetArgument(1), x => projection.Function.Replace.SearchValue = x },
-                      { node.GetArgument(2), x => projection.Function.Replace.ReplaceValue = x }};
+                    { { node.ArgumentAt(1), x => projection.Function.Replace.SearchValue = x },
+                      { node.ArgumentAt(2), x => projection.Function.Replace.ReplaceValue = x }};
                 VisitMethodCall(node, x => projection.Function.Replace.Text = x, argumentsState, true, true);
             }
             else if (node.MatchesMethodSignature<string>(x => x.Insert(0, string.Empty)))
@@ -154,8 +164,8 @@ namespace Gribble.Expressions
                 var projection = Projection.Create.Function(Function.Create.Insert());
                 context.State(projection);
                 var argumentsState = new Dictionary<Expression, Action<Projection>> 
-                    { { node.GetArgument(1), x => projection.Function.Insert.Start = x },
-                      { node.GetArgument(2), x => projection.Function.Insert.Value = x }};
+                    { { node.ArgumentAt(1), x => projection.Function.Insert.Start = x },
+                      { node.ArgumentAt(2), x => projection.Function.Insert.Value = x }};
                 VisitMethodCall(node, x => projection.Function.Insert.Text = x, argumentsState, true, true);
             }
             else if (node.MatchesMethodSignature<string>(x => x.IndexOf(string.Empty)))
@@ -163,7 +173,7 @@ namespace Gribble.Expressions
                 var projection = Projection.Create.Function(Function.Create.IndexOf());
                 context.State(projection);
                 var argumentsState = new Dictionary<Expression, Action<Projection>> 
-                    { { node.GetArgument(1), x => projection.Function.IndexOf.Value = x } };
+                    { { node.ArgumentAt(1), x => projection.Function.IndexOf.Value = x } };
                 VisitMethodCall(node, x => projection.Function.IndexOf.Text = x, argumentsState, true, true);
             }
             else if (node.MatchesMethodSignature<string>(x => x.IndexOf(string.Empty, 0)))
@@ -171,26 +181,26 @@ namespace Gribble.Expressions
                 var projection = Projection.Create.Function(Function.Create.IndexOfAt());
                 context.State(projection);
                 var argumentsState = new Dictionary<Expression, Action<Projection>> 
-                    { { node.GetArgument(1), x => projection.Function.IndexOfAt.Value = x },
-                      { node.GetArgument(2), x => projection.Function.IndexOfAt.Start = x }};
+                    { { node.ArgumentAt(1), x => projection.Function.IndexOfAt.Value = x },
+                      { node.ArgumentAt(2), x => projection.Function.IndexOfAt.Start = x }};
                 VisitMethodCall(node, x => projection.Function.IndexOfAt.Text = x, argumentsState, true, true);
             }
             else if (node.MatchesMethodSignature<string>(x => x.Hash(EntityExtensions.HashAlgorithim.Md5)))
             {
-                var projection = Projection.Create.Function(Function.Create.Hash(node.GetConstantArgument<EntityExtensions.HashAlgorithim>(2) == EntityExtensions.HashAlgorithim.Md5 ? 
+                var projection = Projection.Create.Function(Function.Create.Hash(node.ConstantArgumentAt<EntityExtensions.HashAlgorithim>(2) == EntityExtensions.HashAlgorithim.Md5 ? 
                                                                                  Function.HashParameters.HashType.Md5 : 
                                                                                  Function.HashParameters.HashType.Sha1));
                 context.State(projection);
                 var argumentsState = new Dictionary<Expression, Action<Projection>> 
-                    { { node.GetArgument(1), x => projection.Function.Hash.Value = x } };
-                VisitMethodCall(node, argumentsState, true, node.GetArgument(2));
+                    { { node.ArgumentAt(1), x => projection.Function.Hash.Value = x } };
+                VisitMethodCall(node, argumentsState, true, node.ArgumentAt(2));
             }
             else if (node.MatchesMethodSignature<byte[]>(x => x.ToHex()))
             {
                 var projection = Projection.Create.Function(Function.Create.ToHex());
                 context.State(projection); 
                 var argumentsState = new Dictionary<Expression, Action<Projection>> 
-                    { { node.GetArgument(1), x => projection.Function.ToHex.Value = x }};
+                    { { node.ArgumentAt(1), x => projection.Function.ToHex.Value = x }};
                 VisitMethodCall(node, argumentsState, true);
             }
             else if (node.Object != null && node.Object.NodeType == ExpressionType.MemberAccess && 

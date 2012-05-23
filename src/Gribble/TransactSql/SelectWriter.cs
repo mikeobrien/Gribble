@@ -16,7 +16,7 @@ namespace Gribble.TransactSql
 
             var projection = projectionOverride ?? BuildProjection(select, mapping, parameters);
             var whereClause = BuildWhereClause(select, mapping, parameters);
-            var orderByClause = BuildOrderByClause(select, mapping, parameters);
+            var orderByClause = select.HasOrderBy ? BuildOrderBy(select.OrderBy, mapping, parameters) : null;
 
             Action<SqlWriter> writeProjection = x => x.Do(projection != null, y => y.FieldList(z => z.Comma.Flush(), projection), y => y.Wildcard.Flush());
 
@@ -43,26 +43,21 @@ namespace Gribble.TransactSql
 
                 if (select.HasDuplicates)
                 {
-                    var duplicateProjection = BuildProjection(select.Duplicates.DistinctField, mapping, parameters);
+                    var duplicateProjection = BuildProjection(select.Duplicates.Distinct, mapping, parameters);
                     sql.OpenBlock.Trim().Select.Do(writeProjection).Trim().Comma.
-                        RowNumber().Over.OpenBlock.Trim().Partition.By.Write(duplicateProjection).OrderBy.Flush();
-                    if (select.Duplicates.Grouping == Duplicates.DuplicateGrouping.Precedence)
-                    {
-                        var duplicatePrecedence = BuildOperators(select.Duplicates.Precedence, mapping, parameters);
-                        sql.Case.When.Write(duplicatePrecedence).Then.Value(1, SqlDbType.Int).Else.Value(0, SqlDbType.Int).End.Flush();
-                    }
-                    else if (select.Duplicates.Grouping == Duplicates.DuplicateGrouping.OrderField)
-                        sql.Write(BuildProjection(select.Duplicates.OrderField, mapping, parameters)).
-                            Do(select.Duplicates.Order == Order.Descending, x => x.Descending.Flush());
-                    else sql.Write(duplicateProjection);
-                    sql.Trim().CloseBlock.As.PartitionAlias.From.Flush();
+                        RowNumber().Over.OpenBlock.Trim().Partition.By.Write(duplicateProjection).OrderBy.Write(BuildOrderBy(select.Duplicates.OrderBy, mapping, parameters)).
+                        Trim().CloseBlock.As.PartitionAlias.From.Flush();
                 } 
                 else if (select.HasDistinct)
                 {
-                    var distinctProjection = BuildProjections(select.Distinct, mapping, parameters);
+                    var distinctProjection = BuildProjections(select.Distinct.Select(x => x.Projection), mapping, parameters);
                     sql.OpenBlock.Trim().Select.Do(writeProjection).Trim().Comma.
                         RowNumber().Over.OpenBlock.Trim().Partition.By.ExpressionList(z => z.Comma.Flush(), distinctProjection).OrderBy.
-                        Do(select.HasOrderBy, x => x.Write(orderByClause), x => x.Do(projection != null, writeProjection, y => y.QuotedName(mapping.Key.GetColumnName()))).Trim().
+                        Write(BuildOrderBy(select.Distinct.Any(x => x.HasOrder) ? select.Distinct.Where(x => x.HasOrder).Select(x => x.Order) : 
+                            select.Distinct.Select(x => new OrderBy { 
+                                            Type = OrderBy.SourceType.Projection, 
+                                            Projection = x.Projection, 
+                                            Order = Order.Ascending }), mapping, parameters)).Trim().
                         CloseBlock.As.PartitionAlias.From.Flush();
                 }
             }
@@ -166,15 +161,19 @@ namespace Gribble.TransactSql
             return writer.ToString();
         }
 
-        private static string BuildOrderByClause(Select select, IEntityMapping mapping, IDictionary<string, object> parameters)
+        private static string BuildOrderBy(IEnumerable<OrderBy> orderBy, IEntityMapping mapping, IDictionary<string, object> parameters)
         {
-            if (!select.HasOrderBy) return null;
-
-            var projections = select.OrderBy.Select(x => new { Statement = ProjectionWriter<TEntity>.CreateStatement(x.Projection, mapping), x.Order });
-            parameters.AddRange(projections.SelectMany(x => x.Statement.Parameters));
-            Func<string, Order, Action<SqlWriter>> writeOrderByExpression = 
-                (text, order) => y => y.Write(text).Do(order == Order.Ascending, z => z.Ascending.Flush(), z => z.Descending.Flush());
-            return SqlWriter.CreateWriter().ExpressionList(x => x.Comma.Flush(), projections.Select(x => writeOrderByExpression(x.Statement.Text, x.Order))).ToString();
+            if (orderBy == null || !orderBy.Any()) return "";
+            var writer = new SqlWriter();
+            orderBy.Select((x, i) => new { Last = i == orderBy.Count() - 1, OrderBy = x }).ToList().ForEach(x =>
+                {
+                    if (x.OrderBy.Type == OrderBy.SourceType.Operator)
+                        writer.Case.When.Write(BuildOperators(x.OrderBy.Operator, mapping, parameters)).Then
+                            .Value(1, SqlDbType.Int).Else.Value(0, SqlDbType.Int).End.Flush();
+                    else writer.Write(BuildProjection(x.OrderBy.Projection, mapping, parameters));
+                    writer.Do(x.OrderBy.Order == Order.Descending, y => y.Descending.Flush(), y => y.Ascending.Flush()).Do(!x.Last, y => y.Trim().Comma.Flush());
+                });
+            return writer.ToString();
         }
     }
 }

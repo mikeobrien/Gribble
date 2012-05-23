@@ -397,29 +397,29 @@ namespace Tests.Expressions
             select.HasDistinct.ShouldEqual(true);
             select.Distinct.Count.ShouldEqual(2);
 
-            select.Distinct[0].ShouldNotBeNull();
-            select.Distinct[0].Type.ShouldEqual(Projection.ProjectionType.Field);
-            select.Distinct[0].Field.ShouldNotBeNull();
-            select.Distinct[0].Field.Name.ShouldEqual("Age");
+            select.Distinct[0].Projection.Type.ShouldEqual(Projection.ProjectionType.Function);
+            select.Distinct[0].Projection.Function.ShouldNotBeNull();
+            select.Distinct[0].Projection.Function.Type.ShouldEqual(Function.FunctionType.SubstringFixed);
 
-            select.Distinct[1].Type.ShouldEqual(Projection.ProjectionType.Function);
-            select.Distinct[1].Function.ShouldNotBeNull();
-            select.Distinct[1].Function.Type.ShouldEqual(Function.FunctionType.SubstringFixed);
+            select.Distinct[0].Projection.Function.SubstringFixed.Text.ShouldNotBeNull();
+            select.Distinct[0].Projection.Function.SubstringFixed.Text.Type.ShouldEqual(Projection.ProjectionType.Field);
+            select.Distinct[0].Projection.Function.SubstringFixed.Text.Field.ShouldNotBeNull();
+            select.Distinct[0].Projection.Function.SubstringFixed.Text.Field.Name.ShouldEqual("Name");
 
-            select.Distinct[1].Function.SubstringFixed.Text.ShouldNotBeNull();
-            select.Distinct[1].Function.SubstringFixed.Text.Type.ShouldEqual(Projection.ProjectionType.Field);
-            select.Distinct[1].Function.SubstringFixed.Text.Field.ShouldNotBeNull();
-            select.Distinct[1].Function.SubstringFixed.Text.Field.Name.ShouldEqual("Name");
+            select.Distinct[0].Projection.Function.SubstringFixed.Start.ShouldNotBeNull();
+            select.Distinct[0].Projection.Function.SubstringFixed.Start.Type.ShouldEqual(Projection.ProjectionType.Constant);
+            select.Distinct[0].Projection.Function.SubstringFixed.Start.Constant.ShouldNotBeNull();
+            select.Distinct[0].Projection.Function.SubstringFixed.Start.Constant.Value.ShouldEqual(0);
 
-            select.Distinct[1].Function.SubstringFixed.Start.ShouldNotBeNull();
-            select.Distinct[1].Function.SubstringFixed.Start.Type.ShouldEqual(Projection.ProjectionType.Constant);
-            select.Distinct[1].Function.SubstringFixed.Start.Constant.ShouldNotBeNull();
-            select.Distinct[1].Function.SubstringFixed.Start.Constant.Value.ShouldEqual(0);
+            select.Distinct[0].Projection.Function.SubstringFixed.Length.ShouldNotBeNull();
+            select.Distinct[0].Projection.Function.SubstringFixed.Length.Type.ShouldEqual(Projection.ProjectionType.Constant);
+            select.Distinct[0].Projection.Function.SubstringFixed.Length.Constant.ShouldNotBeNull();
+            select.Distinct[0].Projection.Function.SubstringFixed.Length.Constant.Value.ShouldEqual(5);
 
-            select.Distinct[1].Function.SubstringFixed.Length.ShouldNotBeNull();
-            select.Distinct[1].Function.SubstringFixed.Length.Type.ShouldEqual(Projection.ProjectionType.Constant);
-            select.Distinct[1].Function.SubstringFixed.Length.Constant.ShouldNotBeNull();
-            select.Distinct[1].Function.SubstringFixed.Length.Constant.Value.ShouldEqual(5);
+            select.Distinct[1].ShouldNotBeNull();
+            select.Distinct[1].Projection.Type.ShouldEqual(Projection.ProjectionType.Field);
+            select.Distinct[1].Projection.Field.ShouldNotBeNull();
+            select.Distinct[1].Projection.Field.Name.ShouldEqual("Age");
         }
 
         [Test]

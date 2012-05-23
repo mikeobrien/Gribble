@@ -21,25 +21,25 @@ namespace Gribble.Expressions
 
         public static bool ArgumentIsOfType<T>(this MethodCallExpression method, int index)
         {
-            return TypesAreAssignable(method.GetArgument(index).Type, typeof(T));
+            return TypesAreAssignable(method.ArgumentAt(index).Type, typeof(T));
         }
 
         public static bool HasArguments(this MethodCallExpression method, int index)
         {
-            return method.Arguments.Count == index;
+            return method.Arguments.Count >= index;
         }
 
-        public static Expression GetArgument(this MethodCallExpression method, int index)
+        public static Expression ArgumentAt(this MethodCallExpression method, int index)
         {
             return method.Arguments[index - 1];
         }
 
-        public static T GetArgument<T>(this MethodCallExpression method, int index) where T : Expression
+        public static T ArgumentAt<T>(this MethodCallExpression method, int index) where T : Expression
         {
-            return (T)method.GetArgument(index);
+            return (T)method.ArgumentAt(index);
         }
 
-        public static T GetConstantArgument<T>(this MethodCallExpression method, int index)
+        public static T ConstantArgumentAt<T>(this MethodCallExpression method, int index)
         {
             return (T)((ConstantExpression)method.Arguments[index - 1]).Value;
         }
@@ -89,7 +89,18 @@ namespace Gribble.Expressions
                    (rightType.IsInterface && rightType.IsAssignableFrom(leftType));
         }
 
-        private static Expression StripConversion(this Expression expression)
+        public static Expression GetLambdaBody(this Expression expression)
+        {
+            while (expression.NodeType == ExpressionType.Convert ||
+                   expression.NodeType == ExpressionType.Quote ||
+                   expression.NodeType == ExpressionType.Lambda)  
+                   expression = expression.NodeType == ExpressionType.Lambda ?
+                                   ((LambdaExpression)expression).Body : 
+                                   ((UnaryExpression)expression).Operand;
+            return expression;
+        }
+
+        public static Expression StripConversion(this Expression expression)
         {
             while (expression.NodeType == ExpressionType.Convert) expression = ((UnaryExpression)expression).Operand;
             return expression;

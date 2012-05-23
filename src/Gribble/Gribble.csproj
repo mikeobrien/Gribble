@@ -73,8 +73,10 @@
     <Compile Include="Mapping\IClassMap.cs" />
     <Compile Include="Mapping\IEntityMapping.cs" />
     <Compile Include="Mapping\PrimaryKeyType.cs" />
+    <Compile Include="Model\Distinct.cs" />
     <Compile Include="Model\Duplicates.cs" />
     <Compile Include="Model\Index.cs" />
+    <Compile Include="Model\OrderBy.cs" />
     <Compile Include="ObjectExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Queryable.cs" />
@@ -88,7 +90,6 @@
     <Compile Include="Model\Insert.cs" />
     <Compile Include="Model\Operand.cs" />
     <Compile Include="Model\Operator.cs" />
-    <Compile Include="Model\OrderByProjection.cs" />
     <Compile Include="Model\Projection.cs" />
     <Compile Include="Model\Select.cs" />
     <Compile Include="Model\SelectProjection.cs" />

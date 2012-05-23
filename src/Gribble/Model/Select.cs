@@ -37,10 +37,10 @@ namespace Gribble.Model
         public Duplicates Duplicates;
         public bool HasDuplicates { get { return Duplicates != null; } }
 
-        public IList<Projection> Distinct;
+        public IList<Distinct> Distinct;
         public bool HasDistinct { get { return Distinct != null && Distinct.Any(); } }
 
-        public IList<OrderByProjection> OrderBy;
+        public IList<OrderBy> OrderBy;
         public bool HasOrderBy { get { return OrderBy != null && OrderBy.Any(); } }
 
         public IList<SetOperation> SetOperatons;

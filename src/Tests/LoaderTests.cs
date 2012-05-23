@@ -146,7 +146,7 @@ namespace Tests
         }
 
         [Test]
-        public void Select_Distinct_Test()
+        public void should_return_distinct_results()
         {
             Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=31 WHERE id = 1", Database.FirstTable.Name);
             Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=31 WHERE id = 2", Database.FirstTable.Name);
@@ -179,7 +179,7 @@ namespace Tests
         }
 
         [Test]
-        public void Select_Distinct_Skip_Take_Test()
+        public void should_return_distinct_results_with_take_and_skip()
         {
             Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=31 WHERE id = 1", Database.FirstTable.Name);
             Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=31 WHERE id = 2", Database.FirstTable.Name);
@@ -206,6 +206,58 @@ namespace Tests
             results.Exists(x => x.Name == "Dick" && x.Age == 22).ShouldEqual(true);
             results.Exists(x => x.Name == "Harry" && x.Age == 55).ShouldEqual(true);
             results.Exists(x => x.Name == "Harry" && x.Age == 66).ShouldEqual(true);
+        }
+
+        [Test]
+        public void should_return_distinct_results_with_order_field_ascending()
+        {
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=31 WHERE id = 1", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=31 WHERE id = 2", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=22 WHERE id = 3", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=22 WHERE id = 4", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Dick', age=33 WHERE id = 5", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Dick', age=33 WHERE id = 6", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Dick', age=22 WHERE id = 7", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=55 WHERE id = 8", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=55 WHERE id = 9", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=66 WHERE id = 10", Database.FirstTable.Name);
+            var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);
+            query.Distinct(x => x.Name).Distinct(x => x.Age, x => x.Id, Order.Ascending);
+            var results = ((IEnumerable<Entity>)GetResult(query)).ToList();
+            results.Count().ShouldEqual(6);
+
+            results.Exists(x => x.Name == "Tom" && x.Age == 31 && x.Id == 1).ShouldEqual(true);
+            results.Exists(x => x.Name == "Tom" && x.Age == 22 && x.Id == 3).ShouldEqual(true);
+            results.Exists(x => x.Name == "Dick" && x.Age == 33 && x.Id == 5).ShouldEqual(true);
+            results.Exists(x => x.Name == "Dick" && x.Age == 22 && x.Id == 7).ShouldEqual(true);
+            results.Exists(x => x.Name == "Harry" && x.Age == 55 && x.Id == 8).ShouldEqual(true);
+            results.Exists(x => x.Name == "Harry" && x.Age == 66 && x.Id == 10).ShouldEqual(true);
+        }
+
+        [Test]
+        public void should_return_distinct_results_with_order_field_descending()
+        {
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=31 WHERE id = 1", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=31 WHERE id = 2", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=22 WHERE id = 3", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=22 WHERE id = 4", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Dick', age=33 WHERE id = 5", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Dick', age=33 WHERE id = 6", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Dick', age=22 WHERE id = 7", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=55 WHERE id = 8", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=55 WHERE id = 9", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=66 WHERE id = 10", Database.FirstTable.Name);
+            var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);
+            query.Distinct(x => x.Name).Distinct(x => x.Age, x => x.Id, Order.Descending);
+            var results = ((IEnumerable<Entity>)GetResult(query)).ToList();
+            results.Count().ShouldEqual(6);
+
+            results.Exists(x => x.Name == "Tom" && x.Age == 31 && x.Id == 2).ShouldEqual(true);
+            results.Exists(x => x.Name == "Tom" && x.Age == 22 && x.Id == 4).ShouldEqual(true);
+            results.Exists(x => x.Name == "Dick" && x.Age == 33 && x.Id == 6).ShouldEqual(true);
+            results.Exists(x => x.Name == "Dick" && x.Age == 22 && x.Id == 7).ShouldEqual(true);
+            results.Exists(x => x.Name == "Harry" && x.Age == 55 && x.Id == 9).ShouldEqual(true);
+            results.Exists(x => x.Name == "Harry" && x.Age == 66 && x.Id == 10).ShouldEqual(true);
         }
 
         [Test]
@@ -246,7 +298,7 @@ namespace Tests
             Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=78 WHERE id = 9", Database.FirstTable.Name);
             Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=26 WHERE id = 10", Database.FirstTable.Name);
             var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);
-            query.Duplicates(x => x.Name, x => x.Age > 50);
+            query.Duplicates(x => x.Name, x => x.Age > 50, Order.Ascending);
             var result = GetResult(query);
             result.ShouldImplement<IEnumerable<Entity>>();
             var results = ((IEnumerable<Entity>)result).ToList();
@@ -305,6 +357,82 @@ namespace Tests
             results.Count(x => x.Name == "Tom").ShouldEqual(3);
             results.Count(x => x.Name == "Dick").ShouldEqual(2);
             results.Count(x => x.Name == "Harry").ShouldEqual(2);
+        }
+
+        [Test]
+        public void should_return_duplicates_by_double_sort()
+        {
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=84 WHERE id = 1", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=84 WHERE id = 2", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=42 WHERE id = 3", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=42 WHERE id = 4", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Dick', age=83 WHERE id = 5", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Dick', age=43 WHERE id = 6", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=85 WHERE id = 7", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=85 WHERE id = 8", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=48 WHERE id = 9", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=48 WHERE id = 10", Database.FirstTable.Name);
+            var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);
+            query.Duplicates(x => x.Name, x => x.Age, Order.Ascending, x => x.Id, Order.Descending);
+            var result = GetResult(query);
+            result.ShouldImplement<IEnumerable<Entity>>();
+            var results = ((IEnumerable<Entity>)result).ToList();
+            results.Count().ShouldEqual(7);
+            results.Count(x => x.Name == "Dick").ShouldEqual(1);
+            var subResults = results.Where(x => x.Name == "Tom").ToList();
+            subResults.Count().ShouldEqual(3);
+            subResults[0].Age.ShouldEqual(42);
+            subResults[0].Id.ShouldEqual(3);
+            subResults[1].Age.ShouldEqual(84);
+            subResults[1].Id.ShouldEqual(2);
+            subResults[2].Age.ShouldEqual(84);
+            subResults[2].Id.ShouldEqual(1);
+            subResults = results.Where(x => x.Name == "Harry").ToList();
+            subResults.Count().ShouldEqual(3);
+            subResults[0].Age.ShouldEqual(48);
+            subResults[0].Id.ShouldEqual(9);
+            subResults[1].Age.ShouldEqual(85);
+            subResults[1].Id.ShouldEqual(8);
+            subResults[2].Age.ShouldEqual(85);
+            subResults[2].Id.ShouldEqual(7);
+        }
+
+        [Test]
+        public void should_return_duplicates_by_double_sort_descending()
+        {
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=84 WHERE id = 1", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=84 WHERE id = 2", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=42 WHERE id = 3", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Tom', age=42 WHERE id = 4", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Dick', age=83 WHERE id = 5", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Dick', age=43 WHERE id = 6", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=85 WHERE id = 7", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=85 WHERE id = 8", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=48 WHERE id = 9", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("UPDATE [{0}] SET name='Harry', age=48 WHERE id = 10", Database.FirstTable.Name);
+            var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);
+            query.Duplicates(x => x.Name, x => x.Age, Order.Descending, x => x.Id, Order.Ascending);
+            var result = GetResult(query);
+            result.ShouldImplement<IEnumerable<Entity>>();
+            var results = ((IEnumerable<Entity>)result).ToList();
+            results.Count().ShouldEqual(7);
+            results.Count(x => x.Name == "Dick").ShouldEqual(1);
+            var subResults = results.Where(x => x.Name == "Tom").ToList();
+            subResults.Count().ShouldEqual(3);
+            subResults[0].Age.ShouldEqual(84);
+            subResults[0].Id.ShouldEqual(2);
+            subResults[1].Age.ShouldEqual(42);
+            subResults[1].Id.ShouldEqual(3);
+            subResults[2].Age.ShouldEqual(42);
+            subResults[2].Id.ShouldEqual(4);
+            subResults = results.Where(x => x.Name == "Harry").ToList();
+            subResults.Count().ShouldEqual(3);
+            subResults[0].Age.ShouldEqual(85);
+            subResults[0].Id.ShouldEqual(8);
+            subResults[1].Age.ShouldEqual(48);
+            subResults[1].Id.ShouldEqual(9);
+            subResults[2].Age.ShouldEqual(48);
+            subResults[2].Id.ShouldEqual(10);
         }
 
         [Test]
