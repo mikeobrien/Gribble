@@ -7,7 +7,7 @@ using Gribble.Model;
 
 namespace Gribble.Expressions
 {
-    public class SelectVisitor<T> : ExpressionVisitorBase<Select>
+    public class QueryVisitor<T> : ExpressionVisitorBase<Query>
     {
         public class QueryOperatorNotSupportedException : Exception
         {
@@ -18,18 +18,18 @@ namespace Gribble.Expressions
 
         private readonly Func<IQueryable<T>, string> _getTableName;
 
-        public SelectVisitor() {}
+        public QueryVisitor() {}
 
-        public SelectVisitor(Func<IQueryable<T>, string> getTableName)
+        public QueryVisitor(Func<IQueryable<T>, string> getTableName)
         {
             _getTableName = getTableName;
         }
 
-        public static Select CreateModel(Expression expression, Func<IQueryable<T>, string> getTableName)
+        public static Query CreateModel(Expression expression, Func<IQueryable<T>, string> getTableName)
         {
-            var select = new Select();
-            new SelectVisitor<T>(getTableName).Visit(expression, select);
-            return select;
+            var query = new Query {Select = new Select()};
+            new QueryVisitor<T>(getTableName).Visit(expression, query);
+            return query;
         }
 
         protected override void VisitConstant(Context context, ConstantExpression node)
@@ -40,80 +40,86 @@ namespace Gribble.Expressions
 
         protected override void VisitMethodCall(Context context, MethodCallExpression node)
         {
-            var emptyObject = new object();
-            var select = context.State;
+            var query = context.State;
 
             if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Union(Enumerable.Empty<T>())))
-                AddSourceQuery(select, CreateModel(node.ArgumentAt(2), _getTableName));
-            else 
+                AddSourceQuery(query.Select, CreateModel(node.ArgumentAt(2), _getTableName).Select);
+            else if (query.Select.From.HasQueries)
+            {
+                // If we have unions we need to nest subsequent query operators otherwise they would apply to the 
+                // net result of the union. This is consistent with the behavior of linq to objects.
+                AddSourceQuery(query.Select, CreateModel(node, _getTableName).Select);
+                return;
+            }
+            else
             {        
-                // If we have unions we need to nest the following query operators as they apply to the net result of the 
-                // union. This is consistent with the behavior of linq to objects.
-                if (select.Source.HasQueries) select = CreateSubQuery(select);
-
-                if (node.MatchesMethodSignature<IQueryable<T>>(x => x.CopyTo(string.Empty)) || 
-                    node.MatchesMethodSignature<IQueryable<T>>(x => x.CopyTo(Queryable.Empty<T>())))
-                    HandleSelectInto(select, node);
+                if (node.MatchesMethodSignature<IQueryable<T>>(x => x.CopyTo(Queryable.Empty<T>())))
+                    HandleSelectInto(query, node);
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Where(y => true))) 
-                    HandleWhere(select, node);
-                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Distinct(y => emptyObject)))
-                    HandleDistinct(select, node);
-                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Distinct(y => emptyObject, y => emptyObject, Order.Ascending)))
-                    HandleDistinct(select, node);
-                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Duplicates(y => emptyObject)))
-                    HandleDuplicates(select, node);
-                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Duplicates(y => emptyObject, y => emptyObject, Order.Ascending)))
-                    HandleDuplicates(select, node);
-                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Duplicates(y => emptyObject, y => emptyObject, Order.Ascending, y => emptyObject, Order.Ascending)))
-                    HandleDuplicates(select, node);
-                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.OrderBy(y => emptyObject))) 
-                    HandleOrderBy(select, node, false);
-                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.OrderByDescending(y => emptyObject))) 
-                    HandleOrderBy(select, node, true);
+                    HandleWhere(query.Select, node);
+                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Distinct(y => y)))
+                    HandleDistinct(query.Select, node);
+                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Distinct(y => y, y => y, Order.Ascending)))
+                    HandleDistinct(query.Select, node);
+                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Duplicates(y => y)))
+                    HandleDuplicates(query.Select, node);
+                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Duplicates(y => y, y => y, Order.Ascending)))
+                    HandleDuplicates(query.Select, node);
+                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Duplicates(y => y, y => y, Order.Ascending, y => y, Order.Ascending)))
+                    HandleDuplicates(query.Select, node);
+                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.OrderBy(y => y))) 
+                    HandleOrderBy(query.Select, node, false);
+                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.OrderByDescending(y => y))) 
+                    HandleOrderBy(query.Select, node, true);
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Take(0)))
-                    { select.Top = node.ConstantArgumentAt<int>(2); select.TopType = Select.TopValueType.Count; }
+                    { query.Select.Top = node.ConstantArgumentAt<int>(2); query.Select.TopType = Select.TopValueType.Count; }
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.TakePercent(0)))
-                    { select.Top = node.ConstantArgumentAt<int>(2); select.TopType = Select.TopValueType.Percent; }
+                    { query.Select.Top = node.ConstantArgumentAt<int>(2); query.Select.TopType = Select.TopValueType.Percent; }
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Skip(0))) 
-                    select.Start = node.ConstantArgumentAt<int>(2) + 1;
+                    query.Select.Start = node.ConstantArgumentAt<int>(2) + 1;
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.First())) 
-                    select.First = true;
+                    query.Select.First = true;
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.First(y => true)))
-                    { select.First = true; HandleWhere(select, node); }
+                    { query.Select.First = true; HandleWhere(query.Select, node); }
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.FirstOrDefault())) 
-                    select.FirstOrDefault = true;
+                    query.Select.FirstOrDefault = true;
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.FirstOrDefault(y => true))) 
-                    { select.FirstOrDefault = true; HandleWhere(select, node); }
+                    { query.Select.FirstOrDefault = true; HandleWhere(query.Select, node); }
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Any())) 
-                    select.Any = true;
+                    query.Select.Any = true;
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Any(y => true)))
-                    { select.Any = true; HandleWhere(select, node); }
+                    { query.Select.Any = true; HandleWhere(query.Select, node); }
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Count())) 
-                    select.Count = true;
+                    query.Select.Count = true;
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Count(y => true)))
-                    { select.Count = true; HandleWhere(select, node); }
+                    { query.Select.Count = true; HandleWhere(query.Select, node); }
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Randomize())) 
-                    select.Randomize = true;
-                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Intersect(Queryable.Empty<T>(), new Expression<Func<T, object>>[] { })))
-                    HandleSetOperation(select, node, true, _getTableName);
-                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Except(Queryable.Empty<T>(), new Expression<Func<T, object>>[] { })))
-                    HandleSetOperation(select, node, false, _getTableName);
+                    query.Select.Randomize = true;
+                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Intersect(
+                    Queryable.Empty<T>(), new Expression<Func<T, object>>[] { })))
+                    HandleSetOperation(query.Select, node, true, _getTableName);
+                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Except(
+                    Queryable.Empty<T>(), new Expression<Func<T, object>>[] { })))
+                    HandleSetOperation(query.Select, node, false, _getTableName);
+                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.SyncWith(Queryable.Empty<T>(), y => y, 
+                    SyncFields.Exclude, new Expression<Func<T, object>>[] { })))
+                    HandleSync(query, node);
                 else throw new QueryOperatorNotSupportedException(node.Method);
             }
 
-            VisitMethodCall(node, select, select, true, true, node.Arguments.Skip(1).ToArray());
+            VisitMethodCall(node, query, query, true, true, node.Arguments.Skip(1).ToArray());
         }
 
-        private static void HandleQuery(Select select, object value, Func<IQueryable<T>, string> getTableName)
+        private static void HandleQuery(Query query, object value, Func<IQueryable<T>, string> getTableName)
         {
             if (getTableName == null || !(value is IQueryable<T>)) return;
 
             // If we have unions we need to nest the source table as an additional source query.
-            if (select.Source.HasQueries) select = CreateSubQuery(select);
+            var select = query.Select.From.HasQueries ? CreateSubQuery(query.Select) : query.Select;
 
-            select.Source.Type = Data.DataType.Table;
-            if (select.Source.Table == null) select.Source.Table = new Table();
-            select.Source.Table.Name = getTableName((IQueryable<T>)value);
+            select.From.Type = Data.DataType.Table;
+            if (select.From.Table == null) select.From.Table = new Table();
+            select.From.Table.Name = getTableName((IQueryable<T>)value);
         }
 
         private static Select CreateSubQuery(Select select)
@@ -123,23 +129,45 @@ namespace Gribble.Expressions
             return subQuery;
         }
 
-        private static void HandleSelectInto(Select select, MethodCallExpression expression)
+        private static void AddSourceQuery(Select select, Select query)
         {
-            if (select.Target.Table == null) select.Target.Table = new Table();
-            select.Target.Type = Data.DataType.Table;
-            if (expression.ArgumentAt(2).Type == typeof(string))
-                select.Target.Table.Name = expression.ConstantArgumentAt<string>(2);
-            else
+            if (select.From.Queries == null) select.From.Queries = new List<Select>();
+            select.From.Type = Data.DataType.Query;
+            select.From.Queries.Add(query);
+        }
+
+        private static void HandleSelectInto(Query query, MethodCallExpression expression)
+        {
+            query.Operation = Query.OperationType.CopyTo;
+            query.CopyTo = new Insert { Type = Insert.SetType.Query, Query = query.Select, Into = new Table() };
+            var target = expression.ConstantArgumentAt<IQueryable<T>>(2);
+            if (target is INamedQueryable) query.CopyTo.Into.Name = ((INamedQueryable)target).Name;
+            else throw new Exception("Provider only supports SelectInto type Table<T>.");
+        }
+
+        private void HandleSync(Query target, MethodCallExpression expression)
+        {
+            target.Operation = Query.OperationType.SyncWith;
+            var fields = expression.ArgumentAt<NewArrayExpression>(5).Expressions;
+            var exclude = expression.ConstantArgumentAt<SyncFields>(4) == SyncFields.Exclude;
+            var source = CreateModel(expression.ArgumentAt(2), _getTableName).Select;
+            if (!exclude)
             {
-                var target = expression.ConstantArgumentAt<IQueryable<T>>(2);
-                if (target is INamedQueryable) select.Target.Table.Name = ((INamedQueryable)target).Name;
-                else throw new Exception("Provider only supports SelectInto type Table<T>.");
+                source.Projection = fields.Select(x => new SelectProjection { Projection = ProjectionVisitor<T>.CreateModel(x, source.From.Alias)}).ToList();
+                target.Select.Projection = fields.Select(x => new SelectProjection { Projection = ProjectionVisitor<T>.CreateModel(x, target.Select.From.Alias)}).ToList();
             }
+            target.SyncWith = new Sync {
+                Target = target.Select,
+                Source = source,
+                SourceKey = ProjectionVisitor<T>.CreateModel(expression.ArgumentAt(3), source.From.Alias),
+                TargetKey = ProjectionVisitor<T>.CreateModel(expression.ArgumentAt(3), target.Select.From.Alias),
+                ExcludedFields = exclude ? fields.Select(x => ProjectionVisitor<T>.CreateModel(x).Field).ToList() : new List<Field>()
+            };
         }
 
         private static void HandleWhere(Select select, MethodCallExpression expression)
         {
-            var where = WhereVisitor<T>.CreateModel(expression.ArgumentAt(2));
+            var where = WhereVisitor<T>.CreateModel(expression.ArgumentAt(2), select.From.Alias);
             if (!select.HasWhere) select.Where = where;
             else
             {
@@ -153,7 +181,7 @@ namespace Gribble.Expressions
         private static void HandleDistinct(Select select, MethodCallExpression expression)
         {
             if (select.Distinct == null) select.Distinct = new List<Distinct>();
-            select.Distinct.Insert(0, new Distinct { 
+            select.Distinct.Insert(0, new Distinct {
                 Projection = ProjectionVisitor<T>.CreateModel(expression.ArgumentAt(2)),
                 Order = expression.HasArguments(4) ? new OrderBy {
                             Type = OrderBy.SourceType.Projection,
@@ -176,22 +204,15 @@ namespace Gribble.Expressions
                     .ToList().ForEach(x => select.Duplicates.OrderBy.Add(new OrderBy {
                                 Type = x.IsProjection ? OrderBy.SourceType.Projection : OrderBy.SourceType.Operator,
                                 Projection = x.IsProjection ? ProjectionVisitor<T>.CreateModel(expression.ArgumentAt(x.Index)) : null,
-                                Operator = !x.IsProjection ? WhereVisitor<T>.CreateModel(expression.ArgumentAt(x.Index)) : null,
+                                Operator = !x.IsProjection ? WhereVisitor<T>.CreateModel(expression.ArgumentAt(x.Index), select.From.Alias) : null,
                                 Order = expression.ConstantArgumentAt<Order>(x.Index + 1)
                             }));
-        }
-
-        private static void AddSourceQuery(Select select, Select query)
-        {
-            if (select.Source.Queries == null) select.Source.Queries = new List<Select>();
-            select.Source.Type = Data.DataType.Query;
-            select.Source.Queries.Add(query);
         }
 
         private static void HandleSetOperation(Select select, MethodCallExpression expression, bool intersect, Func<IQueryable<T>, string> getTableName)
         {
             if (select.SetOperatons == null) select.SetOperatons = new List<SetOperation>();
-            var setOperationSource = CreateModel(expression.ArgumentAt(2), getTableName);
+            var setOperationSource = CreateModel(expression.ArgumentAt(2), getTableName).Select;
             setOperationSource.Top = 1;
             setOperationSource.TopType = Select.TopValueType.Count;
             var operatorExpressions = expression.ArgumentAt<NewArrayExpression>(3).
@@ -200,7 +221,7 @@ namespace Gribble.Expressions
                                                                        Select(x => ((LambdaExpression)x).Body).
                                                                        Select(x => x.NodeType == ExpressionType.Convert ? ((UnaryExpression)x).Operand : x);
             var operators = operatorExpressions.Select(x => Operator.Create.Equal(Operand.Create.Projection(ProjectionVisitor<T>.CreateModel(x)), 
-                                                                                  Operand.Create.Projection(ProjectionVisitor<T>.CreateModel(x, select.Source.Alias))));
+                                                                                  Operand.Create.Projection(ProjectionVisitor<T>.CreateModel(x, select.From.Alias))));
             foreach (var @operator in operators)
                 setOperationSource.Where = setOperationSource.HasWhere ? Operator.Create.Operators(setOperationSource.Where, Operator.OperatorType.And, @operator) : @operator;
             setOperationSource.Projection = operatorExpressions.Select(x => SelectProjection.Create(ProjectionVisitor<T>.CreateModel(x))).ToList();

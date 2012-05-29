@@ -86,6 +86,17 @@ namespace Gribble
         private TResult Load<TEntity, TResult>(Command command)
         { return (TResult)new Loader<TEntity>(command, _mappingCollection.GetEntityMapping<TEntity>()).Execute(_connectionManager); }
 
+        public void CreateTable(string tableName, string modelTable)
+        {
+            throw new NotImplementedException();
+            //var columns = GetColumns(SchemaWriter.CreateCreateTableColumnsStatement(select)).ToList();
+            //database.CreateTable(select.Target.Table.Name, columns.ToArray());
+            //var indexes = database.GetIndexes(select.GetSourceTables().First().Source.Table.Name).Where(x => !x.PrimaryKey && !x.Clustered).ToList();
+            //if (indexes.Any()) indexes.ForEach(x => database.AddNonClusteredIndex(select.Target.Table.Name, x.Columns.ToArray()));
+            //return columns.Where(x => !hasIdentityKey || !x.Name.Equals(keyColumnName, StringComparison.OrdinalIgnoreCase)).
+            //               Select(x => x.Name);
+        }
+
         public bool TableExists(string tableName)
         { return Command.Create(SchemaWriter.CreateTableExistsStatement(tableName), _profiler).ExecuteScalar<bool>(_connectionManager); }
 

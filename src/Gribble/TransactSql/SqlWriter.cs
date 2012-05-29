@@ -165,6 +165,8 @@ namespace Gribble.TransactSql
         public SqlWriter FieldList(Action<SqlWriter> seperator, IEnumerable<string> fields) 
             { return WriteList(seperator, fields.Select<string, Action<SqlWriter>>(x => y => QuotedName(x))); }
 
+        public SqlWriter ExpressionList<T>(Action<SqlWriter> seperator, IEnumerable<T> values, Action<T, SqlWriter> expression)
+            { return ExpressionList(seperator, values.Select<T, Action<SqlWriter>>(x => y => expression(x, y))); }
         public SqlWriter ExpressionList(Action<SqlWriter> seperator, params Action<SqlWriter>[] expressions)
             { return ExpressionList(seperator, (IEnumerable<Action<SqlWriter>>)expressions); }
         public SqlWriter ExpressionList(Action<SqlWriter> seperator, IEnumerable<string> expressions)

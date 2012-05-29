@@ -12,16 +12,16 @@ namespace Gribble.TransactSql
             var writer = new SqlWriter();
             IDictionary<string, object> parameters = null;
 
-            writer.InsertInto.QuotedName(insert.Table.Name);
-            writer.OpenBlock.Trim().FieldList(x => x.Comma.Flush(), insert.Assignment.Keys).Trim().CloseBlock.Flush();
+            writer.InsertInto.QuotedName(insert.Into.Name);
 
             var resultType = Statement.ResultType.None;
 
             switch (insert.Type)
             {
-                case Insert.InsertType.Record:
+                case Insert.SetType.Values:
+                    writer.OpenBlock.Trim().FieldList(x => x.Comma.Flush(), insert.Values.Keys).Trim().CloseBlock.Flush();
                     parameters = new Dictionary<string, object>();
-                    writer.Values.OpenBlock.Trim().ParameterList(x => x.Comma.Flush(), insert.Assignment.Values.Select(x => parameters.AddWithRandomlyNamedKey(x))).
+                    writer.Values.OpenBlock.Trim().ParameterList(x => x.Comma.Flush(), insert.Values.Values.Select(x => parameters.AddWithRandomlyNamedKey(x))).
                                   Trim().CloseBlock.Flush();
                     if (insert.HasIdentityKey)
                     {
@@ -29,9 +29,10 @@ namespace Gribble.TransactSql
                         resultType = Statement.ResultType.Scalar;
                     }
                     break;
-                case Insert.InsertType.Query:
+                case Insert.SetType.Query:
                     var select = SelectWriter<TEntity>.CreateStatement(insert.Query, mapping);
                     parameters = select.Parameters;
+                    writer.OpenBlock.Trim().FieldList(x => x.Comma.Flush(), SelectWriter<TEntity>.BuildProjection(insert.Query, mapping, parameters)).Trim().CloseBlock.Flush();
                     writer.Write(select.Text);
                     break;
             }

@@ -62,7 +62,7 @@ namespace Tests
 
         private static object GetResult(MockQueryable<Entity> query)
         {
-            var statement = SelectWriter<Entity>.CreateStatement(SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name), Map);
+            var statement = SelectWriter<Entity>.CreateStatement(QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select, Map);
             var command = Command.Create(statement, Profiler);
             var loader = new Loader<Entity>(command, Map);
             return loader.Execute(new ConnectionManager(Database.Connection, TimeSpan.FromMinutes(5)));

@@ -37,5 +37,11 @@ namespace Gribble.TransactSql
         public StatementType Type;
         public ResultType Result;
         public IDictionary<string, object> Parameters;
+
+        public Statement MergeParameters(IDictionary<string, object> parameters)
+        {
+            parameters.AddRange(Parameters);
+            return this;
+        }
     }
 }

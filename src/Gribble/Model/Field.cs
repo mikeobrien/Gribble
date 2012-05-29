@@ -1,4 +1,5 @@
 ﻿using System;
+using Gribble.Mapping;
 
 namespace Gribble.Model
 {
@@ -12,5 +13,10 @@ namespace Gribble.Model
         public string Key;
         public string TableAlias;
         public bool HasTableAlias { get { return !string.IsNullOrEmpty(TableAlias); } }
+
+        public string Map(IEntityMapping mapping)
+        {
+            return HasKey ? mapping.DynamicProperty.GetColumnName(Key) : mapping.StaticProperty.GetColumnName(Name);
+        }
     }
 }

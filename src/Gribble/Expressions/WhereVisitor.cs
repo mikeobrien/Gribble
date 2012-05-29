@@ -6,12 +6,19 @@ namespace Gribble.Expressions
 {
     public class WhereVisitor<T> : ExpressionVisitorBase<Action<Operand>>
     {
-        public static Operator CreateModel(Expression expression)
+        private readonly string _tableAlias;
+
+        public static Operator CreateModel(Expression expression, string tableAlias = null)
         {
-            var visitor = new WhereVisitor<T>();
+            var visitor = new WhereVisitor<T>(tableAlias);
             Operator where = null;
             visitor.Visit(expression, x => where = x.Operator);
             return where;
+        }
+
+        public WhereVisitor(string tableAlias)
+        {
+            _tableAlias = tableAlias;
         }
 
         protected override void VisitUnary(Context context, UnaryExpression node)
@@ -91,18 +98,18 @@ namespace Gribble.Expressions
             HandleExpression(context, node);
         }
 
-        private static void HandleExpression(Context context, Expression expression)
+        private void HandleExpression(Context context, Expression expression)
         {
             Operand operand;
             if (!context.HasParent || context.Parent.IsBinaryLogicalOperator())
                 operand = Operand.Create.Operator(
                            Operator.Create.Equal(
-                                 Operand.Create.Projection(ProjectionVisitor<T>.CreateModel(expression)),
+                                 Operand.Create.Projection(ProjectionVisitor<T>.CreateModel(expression, _tableAlias)),
                                  Operand.Create.Projection(Projection.Create.Constant(true)
                                )
                            )
                        );    
-            else operand = Operand.Create.Projection(ProjectionVisitor<T>.CreateModel(expression));
+            else operand = Operand.Create.Projection(ProjectionVisitor<T>.CreateModel(expression, _tableAlias));
             
             context.State(operand);
         }

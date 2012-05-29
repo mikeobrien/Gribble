@@ -73,7 +73,7 @@
     <Compile Include="QueryableTests.cs" />
     <Compile Include="Expressions\ExpressionExtensionsTests.cs" />
     <Compile Include="Expressions\ProjectionVisitorTests.cs" />
-    <Compile Include="Expressions\SelectVisitorTests.cs" />
+    <Compile Include="Expressions\QueryVisitorTests.cs" />
     <Compile Include="Expressions\WhereVisitorTests.cs" />
     <Compile Include="LoaderTests.cs" />
     <Compile Include="MockQueryable.cs" />
@@ -81,6 +81,7 @@
     <Compile Include="TableTests.cs" />
     <Compile Include="TestDatabase.cs" />
     <Compile Include="TestTable.cs" />
+    <Compile Include="TransactSql\SyncWriterTests.cs" />
     <Compile Include="TransactSql\DeleteWriterTests.cs" />
     <Compile Include="TransactSql\DictionaryExtensionTests.cs" />
     <Compile Include="TransactSql\InsertWriterTests.cs" />

@@ -5,11 +5,7 @@ namespace Gribble.Model
 {
     public class Select
     {
-        public enum TopValueType
-        {
-            Count,
-            Percent
-        }
+        public enum TopValueType { Count, Percent }
 
         public int Top;
         public TopValueType TopType;
@@ -29,8 +25,7 @@ namespace Gribble.Model
         public bool HasProjection { get { return Projection != null && Projection.Any(); } }
         public IList<SelectProjection> Projection;
 
-        public Data Source = new Data { Type = Data.DataType.Table };
-        public Data Target = new Data { Type = Data.DataType.Query };
+        public Data From = new Data { Type = Data.DataType.Table };
 
         public Operator Where;
         public bool HasWhere { get { return Where != null; } }
@@ -61,8 +56,8 @@ namespace Gribble.Model
         private static IEnumerable<Select> GetSourceTables(Select select)
         {
             var tables = new List<Select>();
-            if (select.Source.Type == Data.DataType.Table) tables.Add(select);
-            else if (select.Source.HasQueries) tables.AddRange(select.Source.Queries.SelectMany(GetSourceTables));
+            if (select.From.Type == Data.DataType.Table) tables.Add(select);
+            else if (select.From.HasQueries) tables.AddRange(select.From.Queries.SelectMany(GetSourceTables));
             return tables;
         }   
     }

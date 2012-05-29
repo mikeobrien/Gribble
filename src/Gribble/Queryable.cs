@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Gribble.Expressions;
 using Gribble.Model;
 
 namespace Gribble
 {
+    public enum SyncFields { Include, Exclude }
+
     public static class Queryable
     {
         // -------------------- Queryable -----------------------
@@ -31,20 +34,24 @@ namespace Gribble
                 ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new [] { typeof(TSource) }), new [] { source.Expression, Expression.Constant(percent) }));
         }
 
-        public static IQueryable<TSource> CopyTo<TSource>(this IQueryable<TSource> source, string target)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            if (target == null) throw new ArgumentNullException("target");
-            return source.Provider.Execute<IQueryable<TSource>>(Expression.Call(null, 
-                ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource) }), new[] { source.Expression, Expression.Constant(target) }));
-        }
-
         public static IQueryable<TSource> CopyTo<TSource>(this IQueryable<TSource> source, IQueryable<TSource> target)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (target == null) throw new ArgumentNullException("target");
             return source.Provider.Execute<IQueryable<TSource>>(Expression.Call(null, 
-                ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new [] { typeof(TSource) }), new [] { source.Expression, GetSourceExpression(target) }));
+                ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new [] { typeof(TSource) }), new [] { source.Expression, target.Expression }));
+        }
+
+        public static IQueryable<TTarget> SyncWith<TTarget, TKey>(this IQueryable<TTarget> target, IQueryable<TTarget> source, Expression<Func<TTarget, TKey>> keySelector,
+            SyncFields syncFields, params Expression<Func<TTarget, object>>[] syncSelectors)
+        {
+            if (target == null) throw new ArgumentNullException("target");
+            if (source == null) throw new ArgumentNullException("source");
+            if (keySelector == null) throw new ArgumentNullException("keySelector");
+            return target.Provider.Execute<IQueryable<TTarget>>(Expression.Call(null,
+                ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TTarget), typeof(TKey) }),
+                new[] { target.Expression, source.Expression, Expression.Quote(keySelector), Expression.Constant(syncFields), 
+                    Expression.NewArrayInit(typeof(Expression<Func<TTarget, object>>), syncSelectors) }));
         }
 
         public static IQueryable<TSource> Distinct<TSource, TKey>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector)
@@ -115,14 +122,8 @@ namespace Gribble
             if (selectors.Length == 0) throw new ArgumentException("No selectors specified.", "selectors");
             return source.Provider.CreateQuery<TSource>(Expression.Call(null, ((MethodInfo)methodBase).MakeGenericMethod(new[] { typeof(TSource) }),
                                                                         new[] { source.Expression, 
-                                                                                GetSourceExpression(compare), 
+                                                                                compare.Expression, 
                                                                                 Expression.NewArrayInit(typeof(Expression<Func<TSource, object>>), selectors) }));
-        }
-
-        private static Expression GetSourceExpression<TSource>(IEnumerable<TSource> source)
-        {
-            var queryable = source as IQueryable<TSource>;
-            return queryable != null ? queryable.Expression : Expression.Constant(source, typeof(IEnumerable<TSource>));
         }
 
         // -------------------- Enumerable -----------------------
@@ -138,13 +139,6 @@ namespace Gribble
             if (source == null) throw new ArgumentNullException("source");
             if (percent < 0 || percent > 100) throw new ArgumentOutOfRangeException("percent", "Percent must be between 0 and 100.");
             return source.Take(Convert.ToInt32((percent / 100.0) * source.Count()));
-        }
-
-        public static IQueryable<TSource> CopyTo<TSource>(this IEnumerable<TSource> source, string target)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            if (target == null) throw new ArgumentNullException("target");
-            return new List<TSource>(source).AsQueryable();
         }
 
         public static IQueryable<TSource> CopyTo<TSource>(this IEnumerable<TSource> source, IEnumerable<TSource> target)
@@ -201,6 +195,20 @@ namespace Gribble
                 x.When(order1 == Order.Ascending, y => y.OrderBy(orderSelector1), y => y.OrderByDescending(orderSelector1))
                 .When(order2 == Order.Ascending, y => ((IOrderedEnumerable<TSource>)y).ThenBy(orderSelector2), 
                                                 y => ((IOrderedEnumerable<TSource>)y).ThenByDescending(orderSelector2)).Skip(1));
+        }
+
+        public static IQueryable<TSource> SyncWith<TSource, TKey>(this IEnumerable<TSource> target, IEnumerable<TSource> source, Func<TSource, TKey> keySelector,
+            SyncFields fieldSelectionType, params Expression<Func<TSource, object>>[] syncSelectors)
+        {
+            if (target == null) throw new ArgumentNullException("target");
+            if (source == null) throw new ArgumentNullException("source");
+            if (keySelector == null) throw new ArgumentNullException("keySelector");
+            var results = target.Join(source, keySelector, keySelector, (t, s) => new { Target = t, Source = s }).ToList();
+            var syncProperties = syncSelectors.Select(x => x.GetPropertyInfo()).ToList();
+            var properties = fieldSelectionType == SyncFields.Include ? syncProperties : 
+                typeof (TSource).GetCachedProperties().Where(x => !syncProperties.Contains(x)).ToList();
+            results.ForEach(x => properties.ForEach(y => y.SetValue(x.Target, y.GetValue(x.Source, null), null)));
+            return target.AsQueryable();
         }
 
         internal static IEnumerable<TTarget> When<TSource, TTarget>(this IEnumerable<TSource> source, bool predicate,

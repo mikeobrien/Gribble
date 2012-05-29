@@ -252,51 +252,6 @@ namespace Tests
         }
 
         [Test]
-        public void Copy_Into_New_Test()
-        {
-            const string newTable = "some_new_table";
-            _gribbleDatabase.AddNonClusteredIndex(_database.FirstTable.Name, new Index.Column("name"), new Index.Column("hide"));
-            _gribbleDatabase.AddNonClusteredIndex(_database.FirstTable.Name, new Index.Column("upc"));
-            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", _database.FirstTable.Name).ShouldEqual(10);
-            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", _database.ThirdTable.Name).ShouldEqual(5);
-            _identityTable1.Take(7).Union(_identityTable2).CopyTo(newTable).Count().ShouldEqual(12);
-            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", _database.FirstTable.Name).ShouldEqual(10);
-            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", _database.ThirdTable.Name).ShouldEqual(5);
-            var columns = _gribbleDatabase.GetColumns(newTable).ToList();
-            columns.Count.ShouldEqual(5);
-            columns.Count(x => x.Name == "id").ShouldEqual(1);
-            columns.Count(x => x.Name == "name").ShouldEqual(1);
-            columns.Count(x => x.Name == "hide").ShouldEqual(1);
-            columns.Count(x => x.Name == "upc").ShouldEqual(1);
-            columns.Count(x => x.Name == "code").ShouldEqual(1);
-
-            var indexes = _gribbleDatabase.GetIndexes(newTable).ToList();
-            indexes.Count.ShouldEqual(2);
-
-            var index = indexes[1];
-            index.Clustered.ShouldBeFalse();
-            index.Columns.Count().ShouldEqual(1);
-            index.Columns.First().Name.ShouldEqual("upc");
-            index.Columns.First().Descending.ShouldBeFalse();
-            index.Name.ShouldStartWith("IX_");
-            index.Name.ShouldContain("_upc");
-            index.PrimaryKey.ShouldBeFalse();
-            index.Unique.ShouldBeFalse();
-
-            index = indexes[0];
-            index.Clustered.ShouldBeFalse();
-            index.Columns.Count().ShouldEqual(2);
-            index.Columns.First().Name.ShouldEqual("name");
-            index.Columns.First().Descending.ShouldBeFalse();
-            index.Columns.Last().Name.ShouldEqual("hide");
-            index.Columns.Last().Descending.ShouldBeFalse();
-            index.Name.ShouldStartWith("IX_");
-            index.Name.ShouldContain("_name_hide");
-            index.PrimaryKey.ShouldBeFalse();
-            index.Unique.ShouldBeFalse();
-        }
-
-        [Test]
         public void Copy_Into_Narrowing_Test()
         {
             Assert.Throws<StringColumnNarrowingException>(() => _identityTable1.Take(7).CopyTo(_identityTable3));

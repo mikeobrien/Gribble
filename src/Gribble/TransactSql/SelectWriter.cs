@@ -22,7 +22,7 @@ namespace Gribble.TransactSql
 
             if (select.Any) sql.Select.Cast().Trim().OpenBlock.Trim().Case.When.Exists.OpenBlock.Trim();
 
-            if (select.Source.IsTable || select.HasConditions)
+            if (select.From.IsTable || select.HasConditions)
             {
                 sql.Select.Flush();
 
@@ -64,23 +64,23 @@ namespace Gribble.TransactSql
                 }
             }
 
-            switch (select.Source.Type)
+            switch (select.From.Type)
             {
-                case Data.DataType.Table: sql.QuotedName(select.Source.Table.Name).Write(select.Source.Alias); break;
+                case Data.DataType.Table: sql.QuotedName(select.From.Table.Name).Write(select.From.Alias); break;
                 case Data.DataType.Query:
                     var first = true;
                     if (select.HasConditions) sql.OpenBlock.Trim().Flush();
-                    foreach (var subQuery in select.Source.Queries.Select(x => CreateStatement(x, mapping, projection)))
+                    foreach (var subQuery in select.From.Queries.Select(x => CreateStatement(x, mapping, projection)))
                     {
                         sql.Do(!first, x => x.Union.Flush()).Write(subQuery.Text).Flush();
                         parameters.AddRange(subQuery.Parameters);
                         first = false;
                     }
-                    if (select.HasConditions) sql.Trim().CloseBlock.As.Write(select.Source.Alias).Flush();
+                    if (select.HasConditions) sql.Trim().CloseBlock.As.Write(select.From.Alias).Flush();
                     break;
             }
 
-            if (select.Source.IsTable || select.HasConditions)
+            if (select.From.IsTable || select.HasConditions)
             {
                 if (select.HasWhere || select.HasSetOperations) sql.Where.Write(whereClause).Flush();
 
@@ -90,13 +90,13 @@ namespace Gribble.TransactSql
                 else if (select.HasOrderBy && !select.HasStart && !select.HasDistinct) sql.OrderBy.Write(orderByClause);
 
                 if (select.HasDuplicates)
-                    sql.Trim().CloseBlock.As.Write(select.Source.Alias).Where.PartitionAlias.GreaterThan.Value(1, SqlDbType.Int).Flush();
+                    sql.Trim().CloseBlock.As.Write(select.From.Alias).Where.PartitionAlias.GreaterThan.Value(1, SqlDbType.Int).Flush();
                 else if (select.HasDistinct) 
-                    sql.Trim().CloseBlock.As.Write(select.Source.Alias).Where.PartitionAlias.Equal.Value(1, SqlDbType.Int).Flush();
+                    sql.Trim().CloseBlock.As.Write(select.From.Alias).Where.PartitionAlias.Equal.Value(1, SqlDbType.Int).Flush();
 
                 if (select.HasStart)
                 {
-                    sql.Trim().CloseBlock.As.Write(select.Source.Alias).Where.RowNumberAlias.Flush();
+                    sql.Trim().CloseBlock.As.Write(select.From.Alias).Where.RowNumberAlias.Flush();
                     if (select.HasTop && select.HasStart) sql.Between(select.Start, select.Start + (select.Top - 1));
                     else sql.GreaterThanOrEqual.Value(select.Start, SqlDbType.Int);
                 }
@@ -115,7 +115,7 @@ namespace Gribble.TransactSql
             return Statement.ResultType.Multiple;
         }
 
-        private static IEnumerable<string> BuildProjection(Select select, IEntityMapping mapping, IDictionary<string, object> parameters)
+        public static IEnumerable<string> BuildProjection(Select select, IEntityMapping mapping, IDictionary<string, object> parameters)
         {
             if (!select.HasProjection) return null;
             return BuildProjections(select.Projection.Select(x => x.Projection), mapping, parameters);

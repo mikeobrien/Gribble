@@ -17,6 +17,7 @@ namespace Gribble
         IEnumerable<TEntity> CallProcedureMany<TEntity>(string name, Dictionary<string, object> parameters);
 
         void CreateTable(string tableName, params Column[] columns);
+        void CreateTable(string tableName, string modelTable);
         bool TableExists(string tableName);
         void DeleteTable(string tableName);
 

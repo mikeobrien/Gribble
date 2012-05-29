@@ -89,6 +89,11 @@ namespace Gribble.Expressions
                    (rightType.IsInterface && rightType.IsAssignableFrom(leftType));
         }
 
+        public static PropertyInfo GetPropertyInfo(this Expression expression)
+        {
+            return (PropertyInfo)((MemberExpression)expression.GetLambdaBody()).Member;
+        }
+
         public static Expression GetLambdaBody(this Expression expression)
         {
             while (expression.NodeType == ExpressionType.Convert ||

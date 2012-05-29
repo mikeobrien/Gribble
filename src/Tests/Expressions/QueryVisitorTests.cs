@@ -10,7 +10,7 @@ using Should;
 namespace Tests.Expressions
 {
     [TestFixture]
-    public class SelectVisitorTests
+    public class QueryVisitorTests
     {
         public class Entity
         {
@@ -37,11 +37,11 @@ namespace Tests.Expressions
         public void Tablename_Test()
         {
             var query = MockQueryable<Entity>.Create(TableName1);
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
             
-            select.Source.Table.Name.ShouldEqual(TableName1);
+            select.From.Table.Name.ShouldEqual(TableName1);
         }
 
         [Test]
@@ -49,7 +49,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Take(5);
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
             select.HasTop.ShouldEqual(true);
@@ -62,7 +62,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.TakePercent(5);
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
             select.HasTop.ShouldEqual(true);
@@ -75,7 +75,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Skip(15);
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
             select.HasStart.ShouldEqual(true);
@@ -87,7 +87,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.First();
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
             select.First.ShouldEqual(true);
@@ -98,7 +98,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.FirstOrDefault();
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
             select.FirstOrDefault.ShouldEqual(true);
@@ -109,7 +109,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Count();
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
             select.Count.ShouldEqual(true);
@@ -120,7 +120,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Randomize();
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
             select.Randomize.ShouldEqual(true);
@@ -134,26 +134,26 @@ namespace Tests.Expressions
             query.Union(MockQueryable<Entity>.Create(TableName2)).
                   Union(MockQueryable<Entity>.Create(TableName3)).
                   Union(MockQueryable<Entity>.Create(TableName4));
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
             select.HasConditions.ShouldEqual(false);
 
-            select.Source.Type.ShouldEqual(Data.DataType.Query);
-            select.Source.HasQueries.ShouldEqual(true);
-            select.Source.Queries.Count.ShouldEqual(4);
+            select.From.Type.ShouldEqual(Data.DataType.Query);
+            select.From.HasQueries.ShouldEqual(true);
+            select.From.Queries.Count.ShouldEqual(4);
 
-            select.Source.Queries[0].Source.Table.ShouldNotBeNull();
-            select.Source.Queries[0].Source.Table.Name.ShouldEqual(TableName4);
+            select.From.Queries[0].From.Table.ShouldNotBeNull();
+            select.From.Queries[0].From.Table.Name.ShouldEqual(TableName4);
 
-            select.Source.Queries[1].Source.Table.ShouldNotBeNull();
-            select.Source.Queries[1].Source.Table.Name.ShouldEqual(TableName3);
+            select.From.Queries[1].From.Table.ShouldNotBeNull();
+            select.From.Queries[1].From.Table.Name.ShouldEqual(TableName3);
 
-            select.Source.Queries[2].Source.Table.ShouldNotBeNull();
-            select.Source.Queries[2].Source.Table.Name.ShouldEqual(TableName2);
+            select.From.Queries[2].From.Table.ShouldNotBeNull();
+            select.From.Queries[2].From.Table.Name.ShouldEqual(TableName2);
 
-            select.Source.Queries[3].Source.Table.ShouldNotBeNull();
-            select.Source.Queries[3].Source.Table.Name.ShouldEqual(TableName1);
+            select.From.Queries[3].From.Table.ShouldNotBeNull();
+            select.From.Queries[3].From.Table.Name.ShouldEqual(TableName1);
         }
 
         [Test]
@@ -164,27 +164,27 @@ namespace Tests.Expressions
             query.Union(MockQueryable<Entity>.Create(TableName2)).
                   Union(MockQueryable<Entity>.Create(TableName3)).
                   Union(MockQueryable<Entity>.Create(TableName4)).Take(5);
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
 
             select.Top.ShouldEqual(5);
 
-            select.Source.Type.ShouldEqual(Data.DataType.Query);
-            select.Source.HasQueries.ShouldEqual(true);
-            select.Source.Queries.Count.ShouldEqual(4);
+            select.From.Type.ShouldEqual(Data.DataType.Query);
+            select.From.HasQueries.ShouldEqual(true);
+            select.From.Queries.Count.ShouldEqual(4);
 
-            select.Source.Queries[0].Source.Table.ShouldNotBeNull();
-            select.Source.Queries[0].Source.Table.Name.ShouldEqual(TableName4);
+            select.From.Queries[0].From.Table.ShouldNotBeNull();
+            select.From.Queries[0].From.Table.Name.ShouldEqual(TableName4);
 
-            select.Source.Queries[1].Source.Table.ShouldNotBeNull();
-            select.Source.Queries[1].Source.Table.Name.ShouldEqual(TableName3);
+            select.From.Queries[1].From.Table.ShouldNotBeNull();
+            select.From.Queries[1].From.Table.Name.ShouldEqual(TableName3);
 
-            select.Source.Queries[2].Source.Table.ShouldNotBeNull();
-            select.Source.Queries[2].Source.Table.Name.ShouldEqual(TableName2);
+            select.From.Queries[2].From.Table.ShouldNotBeNull();
+            select.From.Queries[2].From.Table.Name.ShouldEqual(TableName2);
 
-            select.Source.Queries[3].Source.Table.ShouldNotBeNull();
-            select.Source.Queries[3].Source.Table.Name.ShouldEqual(TableName1);
+            select.From.Queries[3].From.Table.ShouldNotBeNull();
+            select.From.Queries[3].From.Table.Name.ShouldEqual(TableName1);
         }
 
         [Test]
@@ -195,37 +195,37 @@ namespace Tests.Expressions
             query.Where(x => x.Age == 33).Union(MockQueryable<Entity>.Create(TableName2).
                                                     Union(MockQueryable<Entity>.Create(TableName3).Where(x => x.Active))).
                   Union(MockQueryable<Entity>.Create(TableName4).Take(5)).Take(6);
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
             select.Top.ShouldEqual(6);
-            select.Source.Type.ShouldEqual(Data.DataType.Query);
-            select.Source.HasQueries.ShouldEqual(true);
-            select.Source.Queries.Count.ShouldEqual(3);
+            select.From.Type.ShouldEqual(Data.DataType.Query);
+            select.From.HasQueries.ShouldEqual(true);
+            select.From.Queries.Count.ShouldEqual(3);
 
-            select.Source.Queries[0].Source.Table.ShouldNotBeNull();
-            select.Source.Queries[0].Source.Type.ShouldEqual(Data.DataType.Table);
-            select.Source.Queries[0].Source.Table.Name.ShouldEqual(TableName4);
-            select.Source.Queries[0].Top.ShouldEqual(5);
+            select.From.Queries[0].From.Table.ShouldNotBeNull();
+            select.From.Queries[0].From.Type.ShouldEqual(Data.DataType.Table);
+            select.From.Queries[0].From.Table.Name.ShouldEqual(TableName4);
+            select.From.Queries[0].Top.ShouldEqual(5);
 
-            select.Source.Queries[1].Source.Type.ShouldEqual(Data.DataType.Query);
-            select.Source.Queries[1].Source.HasQueries.ShouldEqual(true);
-            select.Source.Queries[1].Source.Queries.Count.ShouldEqual(2);
+            select.From.Queries[1].From.Type.ShouldEqual(Data.DataType.Query);
+            select.From.Queries[1].From.HasQueries.ShouldEqual(true);
+            select.From.Queries[1].From.Queries.Count.ShouldEqual(2);
 
-            select.Source.Queries[1].Source.Queries[0].Source.Table.ShouldNotBeNull();
-            select.Source.Queries[1].Source.Queries[0].Source.Type.ShouldEqual(Data.DataType.Table);
-            select.Source.Queries[1].Source.Queries[0].Source.Table.Name.ShouldEqual(TableName3);
-            select.Source.Queries[1].Source.Queries[0].Where.Type.ShouldEqual(Operator.OperatorType.Equal);
+            select.From.Queries[1].From.Queries[0].From.Table.ShouldNotBeNull();
+            select.From.Queries[1].From.Queries[0].From.Type.ShouldEqual(Data.DataType.Table);
+            select.From.Queries[1].From.Queries[0].From.Table.Name.ShouldEqual(TableName3);
+            select.From.Queries[1].From.Queries[0].Where.Type.ShouldEqual(Operator.OperatorType.Equal);
 
-            select.Source.Queries[1].Source.Queries[1].HasConditions.ShouldEqual(false);
-            select.Source.Queries[1].Source.Queries[1].Source.Table.ShouldNotBeNull();
-            select.Source.Queries[1].Source.Queries[1].Source.Type.ShouldEqual(Data.DataType.Table);
-            select.Source.Queries[1].Source.Queries[1].Source.Table.Name.ShouldEqual(TableName2);
+            select.From.Queries[1].From.Queries[1].HasConditions.ShouldEqual(false);
+            select.From.Queries[1].From.Queries[1].From.Table.ShouldNotBeNull();
+            select.From.Queries[1].From.Queries[1].From.Type.ShouldEqual(Data.DataType.Table);
+            select.From.Queries[1].From.Queries[1].From.Table.Name.ShouldEqual(TableName2);
 
-            select.Source.Queries[2].Source.Table.ShouldNotBeNull();
-            select.Source.Queries[2].Source.Type.ShouldEqual(Data.DataType.Table);
-            select.Source.Queries[2].Source.Table.Name.ShouldEqual(TableName1);
-            select.Source.Queries[2].Where.Type.ShouldEqual(Operator.OperatorType.Equal);
+            select.From.Queries[2].From.Table.ShouldNotBeNull();
+            select.From.Queries[2].From.Type.ShouldEqual(Data.DataType.Table);
+            select.From.Queries[2].From.Table.Name.ShouldEqual(TableName1);
+            select.From.Queries[2].Where.Type.ShouldEqual(Operator.OperatorType.Equal);
         }
 
         [Test]
@@ -234,33 +234,33 @@ namespace Tests.Expressions
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Union(MockQueryable<Entity>.Create(TableName2).Take(1).Union(MockQueryable<Entity>.Create(TableName3)).Take(3)).Take(5);
 
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
             select.Top.ShouldEqual(5);
-            select.Source.Type.ShouldEqual(Data.DataType.Query);
-            select.Source.HasQueries.ShouldEqual(true);
-            select.Source.Queries.Count.ShouldEqual(2);
+            select.From.Type.ShouldEqual(Data.DataType.Query);
+            select.From.HasQueries.ShouldEqual(true);
+            select.From.Queries.Count.ShouldEqual(2);
 
-            select.Source.Queries[0].Source.Type.ShouldEqual(Data.DataType.Query);
-            select.Source.Queries[0].Source.HasQueries.ShouldEqual(true);
-            select.Source.Queries[0].Source.Queries.Count.ShouldEqual(2);
-            select.Source.Queries[0].Top.ShouldEqual(3);
+            select.From.Queries[0].From.Type.ShouldEqual(Data.DataType.Query);
+            select.From.Queries[0].From.HasQueries.ShouldEqual(true);
+            select.From.Queries[0].From.Queries.Count.ShouldEqual(2);
+            select.From.Queries[0].Top.ShouldEqual(3);
 
-            select.Source.Queries[0].Source.Queries[0].HasConditions.ShouldEqual(false);
-            select.Source.Queries[0].Source.Queries[0].Source.Table.ShouldNotBeNull();
-            select.Source.Queries[0].Source.Queries[0].Source.Type.ShouldEqual(Data.DataType.Table);
-            select.Source.Queries[0].Source.Queries[0].Source.Table.Name.ShouldEqual(TableName3);
+            select.From.Queries[0].From.Queries[0].HasConditions.ShouldEqual(false);
+            select.From.Queries[0].From.Queries[0].From.Table.ShouldNotBeNull();
+            select.From.Queries[0].From.Queries[0].From.Type.ShouldEqual(Data.DataType.Table);
+            select.From.Queries[0].From.Queries[0].From.Table.Name.ShouldEqual(TableName3);
 
-            select.Source.Queries[0].Source.Queries[1].Source.Table.ShouldNotBeNull();
-            select.Source.Queries[0].Source.Queries[1].Source.Type.ShouldEqual(Data.DataType.Table);
-            select.Source.Queries[0].Source.Queries[1].Source.Table.Name.ShouldEqual(TableName2);
-            select.Source.Queries[0].Source.Queries[1].Top.ShouldEqual(1);
+            select.From.Queries[0].From.Queries[1].From.Table.ShouldNotBeNull();
+            select.From.Queries[0].From.Queries[1].From.Type.ShouldEqual(Data.DataType.Table);
+            select.From.Queries[0].From.Queries[1].From.Table.Name.ShouldEqual(TableName2);
+            select.From.Queries[0].From.Queries[1].Top.ShouldEqual(1);
 
-            select.Source.Queries[1].HasConditions.ShouldEqual(false);
-            select.Source.Queries[1].Source.Table.ShouldNotBeNull();
-            select.Source.Queries[1].Source.Type.ShouldEqual(Data.DataType.Table);
-            select.Source.Queries[1].Source.Table.Name.ShouldEqual(TableName1);
+            select.From.Queries[1].HasConditions.ShouldEqual(false);
+            select.From.Queries[1].From.Table.ShouldNotBeNull();
+            select.From.Queries[1].From.Type.ShouldEqual(Data.DataType.Table);
+            select.From.Queries[1].From.Table.Name.ShouldEqual(TableName1);
         }
 
         [Test]
@@ -268,7 +268,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Where(x => x.Age == 33 && (bool)x.Values["opt_out"] || x.Name.StartsWith("yada"));
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
             select.Where.ShouldNotBeNull();
@@ -280,7 +280,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.First(x => x.Age == 33 && (bool)x.Values["opt_out"] || x.Name.StartsWith("yada"));
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
             select.First.ShouldEqual(true);
@@ -293,7 +293,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.FirstOrDefault(x => x.Age == 33 && (bool)x.Values["opt_out"] || x.Name.StartsWith("yada"));
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
             select.FirstOrDefault.ShouldEqual(true);
@@ -307,7 +307,7 @@ namespace Tests.Expressions
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Where(x => x.Age == 33).
                   First(x => x.Age != 5);
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
             select.First.ShouldEqual(true);
@@ -325,7 +325,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Take(10);
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
             select.HasWhere.ShouldEqual(false);
@@ -336,7 +336,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.OrderBy(x => x.Name.Substring(0, 5)).OrderBy(x => x.Age);
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
             select.OrderBy.ShouldNotBeNull();
@@ -350,7 +350,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.OrderByDescending(x => x.Name.Substring(0, 5)).OrderByDescending(x => x.Age);
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
             select.OrderBy.ShouldNotBeNull();
@@ -362,27 +362,16 @@ namespace Tests.Expressions
         [Test]
         public void Copy_To_Query_Test()
         {
-            var query = MockQueryable<Entity>.Create(TableName1);
-            query.CopyTo(MockQueryable<Entity>.Create(TableName2));
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var query1 = MockQueryable<Entity>.Create(TableName1);
+            query1.CopyTo(MockQueryable<Entity>.Create(TableName2));
+            var query2 = QueryVisitor<Entity>.CreateModel(query1.Expression, x => ((MockQueryable<Entity>)x).Name);
 
-            select.ShouldNotBeNull();
-            select.Target.Type.ShouldEqual(Data.DataType.Table);
-            select.Target.Table.ShouldNotBeNull();
-            select.Target.Table.Name.ShouldEqual(TableName2);
-        }
-
-        [Test]
-        public void Copy_To_Table_Name_Test()
-        {
-            var query = MockQueryable<Entity>.Create(TableName1);
-            query.CopyTo(TableName2);
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
-
-            select.ShouldNotBeNull();
-            select.Target.Type.ShouldEqual(Data.DataType.Table);
-            select.Target.Table.ShouldNotBeNull();
-            select.Target.Table.Name.ShouldEqual(TableName2);
+            query2.ShouldNotBeNull();
+            query2.CopyTo.Into.ShouldNotBeNull();
+            query2.CopyTo.Into.Name.ShouldEqual(TableName2);
+            query2.CopyTo.Query.From.Type.ShouldEqual(Data.DataType.Table);
+            query2.CopyTo.Query.From.Table.ShouldNotBeNull();
+            query2.CopyTo.Query.From.Table.Name.ShouldEqual(TableName1);
         }
 
         [Test]
@@ -390,7 +379,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Distinct(x => x.Name.Substring(0, 5)).Distinct(x => x.Age);
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
             select.Distinct.ShouldNotBeNull();
@@ -430,17 +419,17 @@ namespace Tests.Expressions
             query.Where(x => x.Age == 33).Intersect(MockQueryable<Entity>.Create(TableName2).
                                                     Intersect(MockQueryable<Entity>.Create(TableName3).Where(x => x.Active), x => x.Id), x => x.Name, x => x.Length).
                   Intersect(MockQueryable<Entity>.Create(TableName4).Take(5), x => x.Age);
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
-            select.Source.Type.ShouldEqual(Data.DataType.Table);
-            select.Source.Table.Name.ShouldEqual(TableName1);
+            select.From.Type.ShouldEqual(Data.DataType.Table);
+            select.From.Table.Name.ShouldEqual(TableName1);
             select.HasIntersections.ShouldEqual(true);
             select.SetOperatons.Count.ShouldEqual(2);
 
             select.SetOperatons[0].Type.ShouldEqual(SetOperation.OperationType.Intersect);
-            select.SetOperatons[0].Select.Source.Table.ShouldNotBeNull();
-            select.SetOperatons[0].Select.Source.Table.Name.ShouldEqual(TableName4);
+            select.SetOperatons[0].Select.From.Table.ShouldNotBeNull();
+            select.SetOperatons[0].Select.From.Table.Name.ShouldEqual(TableName4);
             select.SetOperatons[0].Select.HasWhere.ShouldEqual(true);
             select.SetOperatons[0].Select.Where.LeftOperand.Type.ShouldEqual(Operand.OperandType.Projection);
             select.SetOperatons[0].Select.Where.LeftOperand.Projection.Type.ShouldEqual(Projection.ProjectionType.Field);
@@ -450,11 +439,11 @@ namespace Tests.Expressions
             select.SetOperatons[0].Select.Where.RightOperand.Type.ShouldEqual(Operand.OperandType.Projection);
             select.SetOperatons[0].Select.Where.RightOperand.Projection.Type.ShouldEqual(Projection.ProjectionType.Field);
             select.SetOperatons[0].Select.Where.RightOperand.Projection.Field.Name.ShouldEqual("Age");
-            select.SetOperatons[0].Select.Where.RightOperand.Projection.Field.TableAlias.ShouldEqual(select.Source.Alias);
+            select.SetOperatons[0].Select.Where.RightOperand.Projection.Field.TableAlias.ShouldEqual(select.From.Alias);
 
             select.SetOperatons[1].Type.ShouldEqual(SetOperation.OperationType.Intersect);
-            select.SetOperatons[1].Select.Source.Table.ShouldNotBeNull();
-            select.SetOperatons[1].Select.Source.Table.Name.ShouldEqual(TableName2);
+            select.SetOperatons[1].Select.From.Table.ShouldNotBeNull();
+            select.SetOperatons[1].Select.From.Table.Name.ShouldEqual(TableName2);
             select.SetOperatons[1].Select.HasWhere.ShouldEqual(true);
             select.SetOperatons[1].Select.Where.LeftOperand.Type.ShouldEqual(Operand.OperandType.Operator);
             select.SetOperatons[1].Select.Where.LeftOperand.Operator.LeftOperand.Type.ShouldEqual(Operand.OperandType.Projection);
@@ -465,7 +454,7 @@ namespace Tests.Expressions
             select.SetOperatons[1].Select.Where.LeftOperand.Operator.RightOperand.Type.ShouldEqual(Operand.OperandType.Projection);
             select.SetOperatons[1].Select.Where.LeftOperand.Operator.RightOperand.Projection.Type.ShouldEqual(Projection.ProjectionType.Field);
             select.SetOperatons[1].Select.Where.LeftOperand.Operator.RightOperand.Projection.Field.Name.ShouldEqual("Name");
-            select.SetOperatons[1].Select.Where.LeftOperand.Operator.RightOperand.Projection.Field.TableAlias.ShouldEqual(select.Source.Alias);
+            select.SetOperatons[1].Select.Where.LeftOperand.Operator.RightOperand.Projection.Field.TableAlias.ShouldEqual(select.From.Alias);
             select.SetOperatons[1].Select.Where.Type.ShouldEqual(Operator.OperatorType.And);
             select.SetOperatons[1].Select.Where.RightOperand.Type.ShouldEqual(Operand.OperandType.Operator);
             select.SetOperatons[1].Select.Where.RightOperand.Operator.LeftOperand.Type.ShouldEqual(Operand.OperandType.Projection);
@@ -476,14 +465,14 @@ namespace Tests.Expressions
             select.SetOperatons[1].Select.Where.RightOperand.Operator.RightOperand.Type.ShouldEqual(Operand.OperandType.Projection);
             select.SetOperatons[1].Select.Where.RightOperand.Operator.RightOperand.Projection.Type.ShouldEqual(Projection.ProjectionType.Field);
             select.SetOperatons[1].Select.Where.RightOperand.Operator.RightOperand.Projection.Field.Name.ShouldEqual("Length");
-            select.SetOperatons[1].Select.Where.RightOperand.Operator.RightOperand.Projection.Field.TableAlias.ShouldEqual(select.Source.Alias);
+            select.SetOperatons[1].Select.Where.RightOperand.Operator.RightOperand.Projection.Field.TableAlias.ShouldEqual(select.From.Alias);
 
             select.SetOperatons[1].Select.HasIntersections.ShouldEqual(true);
             select.SetOperatons[1].Select.SetOperatons.Count.ShouldEqual(1);
 
             select.SetOperatons[1].Select.SetOperatons[0].Type.ShouldEqual(SetOperation.OperationType.Intersect);
-            select.SetOperatons[1].Select.SetOperatons[0].Select.Source.Table.ShouldNotBeNull();
-            select.SetOperatons[1].Select.SetOperatons[0].Select.Source.Table.Name.ShouldEqual(TableName3);
+            select.SetOperatons[1].Select.SetOperatons[0].Select.From.Table.ShouldNotBeNull();
+            select.SetOperatons[1].Select.SetOperatons[0].Select.From.Table.Name.ShouldEqual(TableName3);
 
             select.SetOperatons[1].Select.SetOperatons[0].Select.HasWhere.ShouldEqual(true);
 
@@ -506,7 +495,7 @@ namespace Tests.Expressions
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.RightOperand.Operator.RightOperand.Type.ShouldEqual(Operand.OperandType.Projection);
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.RightOperand.Operator.RightOperand.Projection.Type.ShouldEqual(Projection.ProjectionType.Field);
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.RightOperand.Operator.RightOperand.Projection.Field.Name.ShouldEqual("Id");
-            select.SetOperatons[1].Select.SetOperatons[0].Select.Where.RightOperand.Operator.RightOperand.Projection.Field.TableAlias.ShouldEqual(select.SetOperatons[1].Select.Source.Alias);
+            select.SetOperatons[1].Select.SetOperatons[0].Select.Where.RightOperand.Operator.RightOperand.Projection.Field.TableAlias.ShouldEqual(select.SetOperatons[1].Select.From.Alias);
         }
 
         [Test]
@@ -517,17 +506,17 @@ namespace Tests.Expressions
             query.Where(x => x.Age == 33).Except(MockQueryable<Entity>.Create(TableName2).
                                                     Except(MockQueryable<Entity>.Create(TableName3).Where(x => x.Active), x => x.Id), x => x.Name, x => x.Length).
                   Except(MockQueryable<Entity>.Create(TableName4).Take(5), x => x.Age);
-            var select = SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
 
             select.ShouldNotBeNull();
-            select.Source.Type.ShouldEqual(Data.DataType.Table);
-            select.Source.Table.Name.ShouldEqual(TableName1);
+            select.From.Type.ShouldEqual(Data.DataType.Table);
+            select.From.Table.Name.ShouldEqual(TableName1);
             select.HasCompliments.ShouldEqual(true);
             select.SetOperatons.Count.ShouldEqual(2);
 
             select.SetOperatons[0].Type.ShouldEqual(SetOperation.OperationType.Compliment);
-            select.SetOperatons[0].Select.Source.Table.ShouldNotBeNull();
-            select.SetOperatons[0].Select.Source.Table.Name.ShouldEqual(TableName4);
+            select.SetOperatons[0].Select.From.Table.ShouldNotBeNull();
+            select.SetOperatons[0].Select.From.Table.Name.ShouldEqual(TableName4);
             select.SetOperatons[0].Select.HasWhere.ShouldEqual(true);
             select.SetOperatons[0].Select.Where.LeftOperand.Type.ShouldEqual(Operand.OperandType.Projection);
             select.SetOperatons[0].Select.Where.LeftOperand.Projection.Type.ShouldEqual(Projection.ProjectionType.Field);
@@ -537,11 +526,11 @@ namespace Tests.Expressions
             select.SetOperatons[0].Select.Where.RightOperand.Type.ShouldEqual(Operand.OperandType.Projection);
             select.SetOperatons[0].Select.Where.RightOperand.Projection.Type.ShouldEqual(Projection.ProjectionType.Field);
             select.SetOperatons[0].Select.Where.RightOperand.Projection.Field.Name.ShouldEqual("Age");
-            select.SetOperatons[0].Select.Where.RightOperand.Projection.Field.TableAlias.ShouldEqual(select.Source.Alias);
+            select.SetOperatons[0].Select.Where.RightOperand.Projection.Field.TableAlias.ShouldEqual(select.From.Alias);
 
             select.SetOperatons[1].Type.ShouldEqual(SetOperation.OperationType.Compliment);
-            select.SetOperatons[1].Select.Source.Table.ShouldNotBeNull();
-            select.SetOperatons[1].Select.Source.Table.Name.ShouldEqual(TableName2);
+            select.SetOperatons[1].Select.From.Table.ShouldNotBeNull();
+            select.SetOperatons[1].Select.From.Table.Name.ShouldEqual(TableName2);
             select.SetOperatons[1].Select.HasWhere.ShouldEqual(true);
             select.SetOperatons[1].Select.Where.LeftOperand.Type.ShouldEqual(Operand.OperandType.Operator);
             select.SetOperatons[1].Select.Where.LeftOperand.Operator.LeftOperand.Type.ShouldEqual(Operand.OperandType.Projection);
@@ -552,7 +541,7 @@ namespace Tests.Expressions
             select.SetOperatons[1].Select.Where.LeftOperand.Operator.RightOperand.Type.ShouldEqual(Operand.OperandType.Projection);
             select.SetOperatons[1].Select.Where.LeftOperand.Operator.RightOperand.Projection.Type.ShouldEqual(Projection.ProjectionType.Field);
             select.SetOperatons[1].Select.Where.LeftOperand.Operator.RightOperand.Projection.Field.Name.ShouldEqual("Name");
-            select.SetOperatons[1].Select.Where.LeftOperand.Operator.RightOperand.Projection.Field.TableAlias.ShouldEqual(select.Source.Alias);
+            select.SetOperatons[1].Select.Where.LeftOperand.Operator.RightOperand.Projection.Field.TableAlias.ShouldEqual(select.From.Alias);
             select.SetOperatons[1].Select.Where.Type.ShouldEqual(Operator.OperatorType.And);
             select.SetOperatons[1].Select.Where.RightOperand.Type.ShouldEqual(Operand.OperandType.Operator);
             select.SetOperatons[1].Select.Where.RightOperand.Operator.LeftOperand.Type.ShouldEqual(Operand.OperandType.Projection);
@@ -563,14 +552,14 @@ namespace Tests.Expressions
             select.SetOperatons[1].Select.Where.RightOperand.Operator.RightOperand.Type.ShouldEqual(Operand.OperandType.Projection);
             select.SetOperatons[1].Select.Where.RightOperand.Operator.RightOperand.Projection.Type.ShouldEqual(Projection.ProjectionType.Field);
             select.SetOperatons[1].Select.Where.RightOperand.Operator.RightOperand.Projection.Field.Name.ShouldEqual("Length");
-            select.SetOperatons[1].Select.Where.RightOperand.Operator.RightOperand.Projection.Field.TableAlias.ShouldEqual(select.Source.Alias);
+            select.SetOperatons[1].Select.Where.RightOperand.Operator.RightOperand.Projection.Field.TableAlias.ShouldEqual(select.From.Alias);
 
             select.SetOperatons[1].Select.HasCompliments.ShouldEqual(true);
             select.SetOperatons[1].Select.SetOperatons.Count.ShouldEqual(1);
 
             select.SetOperatons[1].Select.SetOperatons[0].Type.ShouldEqual(SetOperation.OperationType.Compliment);
-            select.SetOperatons[1].Select.SetOperatons[0].Select.Source.Table.ShouldNotBeNull();
-            select.SetOperatons[1].Select.SetOperatons[0].Select.Source.Table.Name.ShouldEqual(TableName3);
+            select.SetOperatons[1].Select.SetOperatons[0].Select.From.Table.ShouldNotBeNull();
+            select.SetOperatons[1].Select.SetOperatons[0].Select.From.Table.Name.ShouldEqual(TableName3);
 
             select.SetOperatons[1].Select.SetOperatons[0].Select.HasWhere.ShouldEqual(true);
 
@@ -593,7 +582,7 @@ namespace Tests.Expressions
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.RightOperand.Operator.RightOperand.Type.ShouldEqual(Operand.OperandType.Projection);
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.RightOperand.Operator.RightOperand.Projection.Type.ShouldEqual(Projection.ProjectionType.Field);
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.RightOperand.Operator.RightOperand.Projection.Field.Name.ShouldEqual("Id");
-            select.SetOperatons[1].Select.SetOperatons[0].Select.Where.RightOperand.Operator.RightOperand.Projection.Field.TableAlias.ShouldEqual(select.SetOperatons[1].Select.Source.Alias);
+            select.SetOperatons[1].Select.SetOperatons[0].Select.Where.RightOperand.Operator.RightOperand.Projection.Field.TableAlias.ShouldEqual(select.SetOperatons[1].Select.From.Alias);
         }
     }
 }

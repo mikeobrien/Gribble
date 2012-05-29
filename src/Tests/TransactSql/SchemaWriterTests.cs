@@ -133,10 +133,8 @@ namespace Tests.TransactSql
         [Test]
         public void should_generate_proper_create_table_columns_sql()
         {
-            var select = new Select { Target = { Type = Data.DataType.Table, 
-                                                 Table = new Table { Name = TableName }},
-                                      Source = { Type = Data.DataType.Query, 
-                                                 Queries = new List<Select> { new Select { Source = { Type = Data.DataType.Table, 
+            var select = new Select { From = { Type = Data.DataType.Query, 
+                                                 Queries = new List<Select> { new Select { From = { Type = Data.DataType.Table, 
                                                                                                       Table = new Table { Name = TableName1 }}} }}};
             var statement = SchemaWriter.CreateCreateTableColumnsStatement(select);
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -177,7 +175,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Union(MockQueryable<Entity>.Create(TableName2).Take(5).Union(MockQueryable<Entity>.Create(TableName3).Skip(4).OrderBy(x => x.Active)));
-            var statement = SchemaWriter.CreateUnionColumnsStatement(SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name));
+            var statement = SchemaWriter.CreateUnionColumnsStatement(QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select);
 
             statement.Parameters.Count().ShouldEqual(0);
             statement.Text.ShouldEqual("SELECT [name], CASE [system_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [system_type_id] END AS [system_type_id], CASE [user_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [user_type_id] END AS [user_type_id] FROM [sys].[columns] WHERE [object_id] = OBJECT_ID(N'XLIST_1') INTERSECT " +
@@ -190,7 +188,8 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Union(MockQueryable<Entity>.Create(TableName2).Take(5).Union(MockQueryable<Entity>.Create(TableName3).Skip(4).OrderBy(x => x.Active))).CopyTo(MockQueryable<Entity>.Create(TableName4));
-            var statement = SchemaWriter.CreateSelectIntoColumnsStatement(SelectVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name));
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>) x).Name);
+            var statement = SchemaWriter.CreateSelectIntoColumnsStatement(select.CopyTo.Query, select.CopyTo.Into);
 
             statement.Parameters.Count().ShouldEqual(0);
             statement.Text.ShouldEqual("SELECT [__SubQuery__].[name], " + 

@@ -60,7 +60,7 @@ namespace Tests.TransactSql
         public void Insert_Guid_Entity_Test()
         {
             var assignment = new Dictionary<string, object> {{"id", Guid.NewGuid()}, {"name", "bob"}, {"created", DateTime.MaxValue}, {"companyname", "Dunder Miflin"}, {"optout", true}};
-            var insert = new Insert(assignment, false, TableName1);
+            var insert = new Insert {HasIdentityKey = false, Type = Insert.SetType.Values, Values = assignment, Into = new Table { Name = TableName1 }};
             var statement = InsertWriter<GuidEntity>.CreateStatement(insert, GuidMap);
 
             statement.Result.ShouldEqual(Statement.ResultType.None);
@@ -83,7 +83,7 @@ namespace Tests.TransactSql
         public void Insert_Identity_Entity_Test()
         {
             var assignment = new Dictionary<string, object> { { "name", "bob" }, { "created", DateTime.MaxValue }, { "companyname", "Dunder Miflin" }, { "optout", true } };
-            var insert = new Insert(assignment, true, TableName1);
+            var insert = new Insert { HasIdentityKey = true, Type = Insert.SetType.Values, Values = assignment, Into = new Table { Name = TableName1 } };
             var statement = InsertWriter<IdentityEntity>.CreateStatement(insert, IdentityMap);
 
             statement.Result.ShouldEqual(Statement.ResultType.Scalar);
@@ -103,18 +103,17 @@ namespace Tests.TransactSql
         [Test]
         public void Insert_Into_Test()
         {
-            var fields = new List<string> { "name", "created", "companyname", "optout" };
             var properties = new List<string> { "Name", "Created", "CompanyName", "OptOut" };
             var select = new Select { Projection = properties.Select(x => new SelectProjection { Projection = Projection.Create.Field(x, x == "CompanyName" || x == "OptOut")}).ToList(),
-                                      Source = { Type = Data.DataType.Table,
+                                      From = { Type = Data.DataType.Table,
                                                  Table = new Table { Name = TableName2}} };
-            var insert = new Insert(select, fields, TableName1);
+            var insert = new Insert { Type = Insert.SetType.Query, Into = new Table { Name = TableName1 }, Query = select };
             var statement = InsertWriter<IdentityEntity>.CreateStatement(insert, IdentityMap);
 
             statement.Result.ShouldEqual(Statement.ResultType.None);
             statement.Parameters.Count.ShouldEqual(0);
             statement.Text.ShouldEqual(string.Format("INSERT INTO [{0}] ([name], [created], [companyname], [optout]) SELECT [name], [created], [companyname], [optout] FROM [{1}] {2}", 
-                                                    TableName1, TableName2, select.Source.Alias));
+                                                    TableName1, TableName2, select.From.Alias));
         }
     }
 }

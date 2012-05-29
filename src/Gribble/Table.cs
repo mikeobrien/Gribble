@@ -61,10 +61,13 @@ namespace Gribble
 
         public override TResult ExecuteQuery<TResult>(Expression expression)
         {
-            var select = SelectVisitor<TEntity>.CreateModel(expression, x => ((Table<TEntity>) x).Name);
-            return select.Target.Type == Data.DataType.Query ? 
-                ExecuteQuery<TResult>(select) : 
-                (TResult)CopyInto(select);
+            var query = QueryVisitor<TEntity>.CreateModel(expression, x => ((Table<TEntity>) x).Name);
+            switch (query.Operation) {
+                case Query.OperationType.Query: return ExecuteQuery<TResult>(query.Select);
+                case Query.OperationType.CopyTo: return (TResult)CopyInto(query.CopyTo);
+                case Query.OperationType.SyncWith: return (TResult)SyncWith(query.SyncWith);
+                default: throw new NotImplementedException();
+            }
         }
 
         public void Insert(TEntity entity)
@@ -73,8 +76,9 @@ namespace Gribble
             var hasIdentityKey = _map.Key.KeyType == PrimaryKeyType.IdentitySeed;
             var keyColumnName = _map.Key.GetColumnName();
             if (_map.Key.KeyType == PrimaryKeyType.GuidClientGenerated) adapter.Key = _map.Key.GenerateGuidKey();
-            var values = adapter.GetValues().Where(x => !hasIdentityKey || (x.Key != keyColumnName));
-            var command = Command.Create(InsertWriter<TEntity>.CreateStatement(new Insert(values, hasIdentityKey, _table), _map), _profiler);
+            var values = adapter.GetValues().Where(x => !hasIdentityKey || (x.Key != keyColumnName)).ToDictionary(x => x.Key, x => x.Value);
+            var insert = new Insert { HasIdentityKey = hasIdentityKey, Type = Model.Insert.SetType.Values, Into = new Table {Name = _table}, Values = values};
+            var command = Command.Create(InsertWriter<TEntity>.CreateStatement(insert, _map), _profiler);
 
             if (command.Statement.Result == Statement.ResultType.None) command.ExecuteNonQuery(_connectionManager);
             else adapter.Key = command.ExecuteScalar(_connectionManager);
@@ -84,7 +88,7 @@ namespace Gribble
         {
             var select = new Select {
                 Top = 1,
-                Source = { Type = Data.DataType.Table, Table = new Table { Name = _table } },
+                From = { Type = Data.DataType.Table, Table = new Table { Name = _table } },
                 Where = CreateKeyFilter(id) };
             return ExecuteQuery<IEnumerable<TEntity>>(select).FirstOrDefault();
         }
@@ -120,9 +124,9 @@ namespace Gribble
 
         public void DeleteMany(IQueryable<TEntity> source)
         {
-            var select = SelectVisitor<TEntity>.CreateModel(source.Expression, x => ((Table<TEntity>) x).Name);
+            var query = QueryVisitor<TEntity>.CreateModel(source.Expression, x => ((Table<TEntity>) x).Name);
             Command.Create(DeleteWriter<TEntity>.CreateStatement(
-                new Delete(_table, select, true), _map), _profiler).
+                new Delete(_table, query.Select, true), _map), _profiler).
                     ExecuteNonQuery(_connectionManager);
         }
 
@@ -149,7 +153,7 @@ namespace Gribble
         private TResult ExecuteQuery<TResult>(Select select)
         {
             IEnumerable<string> columns = null;
-            if (select.Source.HasQueries)
+            if (select.From.HasQueries)
             {
                 var columnsStatement = SchemaWriter.CreateUnionColumnsStatement(select);
                 columns = Command.Create(columnsStatement, _profiler).ExecuteEnumerable<string>(_connectionManager);
@@ -158,48 +162,24 @@ namespace Gribble
             return (TResult)(new Loader<TEntity>(Command.Create(selectStatement, _profiler), _map).Execute(_connectionManager));
         }
 
-        private IQueryable<TEntity> CopyInto(Select select)
+        private IQueryable<TEntity> CopyInto(Insert insert)
         {
             var hasIdentityKey = _map.Key.KeyType == PrimaryKeyType.IdentitySeed;
             var keyColumnName = _map.Key.GetColumnName();
-            var database = new Database(_connectionManager, null, _profiler);
-
-            var columns = database.TableExists(select.Target.Table.Name) ?
-                              GetColumnNames(select, hasIdentityKey, keyColumnName) :
-                              CreateTable(database, select, hasIdentityKey, keyColumnName);
-            select.Projection = columns.Select(x => new SelectProjection
-            {
-                Projection = Projection.Create.Field(_map.Column.GetPropertyName(x),
-                                                     !_map.Column.HasStaticPropertyMapping(x))
-            }).ToList();
-            var statement = InsertWriter<TEntity>.CreateStatement(new Insert(select, columns, select.Target.Table.Name), _map);
-            Command.Create(statement, _profiler).ExecuteNonQuery(_connectionManager);
-
-            return new Table<TEntity>(_connectionManager, select.Target.Table.Name, _map, _profiler);
-        }
-
-        private static IEnumerable<string> CreateTable(Database database, Select select, bool hasIdentityKey, string keyColumnName)
-        {
-            var columns = database.GetColumns(SchemaWriter.CreateCreateTableColumnsStatement(select)).ToList();
-            database.CreateTable(select.Target.Table.Name, columns.ToArray());
-            var indexes = database.GetIndexes(select.GetSourceTables().First().Source.Table.Name).Where(x => !x.PrimaryKey && !x.Clustered).ToList();
-            if (indexes.Any()) indexes.ForEach(x => database.AddNonClusteredIndex(select.Target.Table.Name, x.Columns.ToArray()));
-            return columns.Where(x => !hasIdentityKey || !x.Name.Equals(keyColumnName, StringComparison.OrdinalIgnoreCase)).
-                           Select(x => x.Name);
-        }
-
-        private IEnumerable<string> GetColumnNames(Select select, bool hasIdentityKey, string keyColumnName)
-        {
-            var columns = Command.Create(SchemaWriter.CreateSelectIntoColumnsStatement(select), _profiler).
+            var columns = Command.Create(SchemaWriter.CreateSelectIntoColumnsStatement(insert.Query, insert.Into), _profiler).
                                   ExecuteEnumerable<string, bool>(_connectionManager).
                                   Where(x => !hasIdentityKey || !x.Item1.Equals(keyColumnName, StringComparison.OrdinalIgnoreCase));
             if (columns.Any(x => x.Item2)) throw new StringColumnNarrowingException(columns.Select(x => x.Item1));
-            select.Projection = columns.Select(x => new SelectProjection
-            {
-                Projection = Projection.Create.Field(_map.Column.GetPropertyName(x.Item1),
-                                                     !_map.Column.HasStaticPropertyMapping(x.Item1))
-            }).ToList();
-            return columns.Select(x => x.Item1);
+            insert.Query.Projection = columns.Select(x => x.Item1).Select(x => new SelectProjection {
+                Projection = Projection.Create.Field(_map.Column.GetPropertyName(x), !_map.Column.HasStaticPropertyMapping(x)) }).ToList();
+            var statement = InsertWriter<TEntity>.CreateStatement(insert, _map);
+            Command.Create(statement, _profiler).ExecuteNonQuery(_connectionManager);
+            return new Table<TEntity>(_connectionManager, insert.Into.Name, _map, _profiler);
+        }
+
+        private IQueryable<TEntity> SyncWith(Sync sync)
+        {
+            throw new NotImplementedException();
         }
     }
 }

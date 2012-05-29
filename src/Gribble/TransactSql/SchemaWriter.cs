@@ -10,14 +10,14 @@ namespace Gribble.TransactSql
     {
         public static Statement CreateUnionColumnsStatement(Select select)
         {
-            return CreateColumnsIntersectionStatement(select.GetSourceTables().Select(x => x.Source.Table.Name));
+            return CreateColumnsIntersectionStatement(select.GetSourceTables().Select(x => x.From.Table.Name));
         }
 
-        public static Statement CreateSelectIntoColumnsStatement(Select select)
+        public static Statement CreateSelectIntoColumnsStatement(Select source, Table target)
         {
             var sql = new SqlWriter();
-            var sourceTables = select.GetSourceTables().Select(x => x.Source.Table.Name);
-            var statement = CreateColumnsIntersectionStatement(sourceTables.Concat(new[] { select.Target.Table.Name }));
+            var sourceTables = source.GetSourceTables().Select(x => x.From.Table.Name);
+            var statement = CreateColumnsIntersectionStatement(sourceTables.Concat(new[] { target.Name }));
 
             sql.Select.SubQueryColumn(System.Columns.Name).Trim().Comma.
                     Cast(z => z.Case.When.Write(System.Columns.Aliased.SystemTypeId).LessThan.OpenBlock.Trim().
@@ -34,14 +34,14 @@ namespace Gribble.TransactSql
                     From.OpenBlock.Trim().Write(statement.Text).Trim().CloseBlock.SubQueryAlias.
                     Join.Write(System.Columns.TableName).Write(System.Columns.TableAlias).On.
                     SubQueryColumn(System.Columns.Name).Equal.Write(System.Columns.Aliased.Name).And.
-                    Write(System.Columns.Aliased.ObjectId).Equal.ObjectId(select.Target.Table.Name);
+                    Write(System.Columns.Aliased.ObjectId).Equal.ObjectId(target.Name);
             statement.Text = sql.ToString();
             return statement;
         }
 
         public static Statement CreateCreateTableColumnsStatement(Select select)
         {
-            var sourceTables = select.GetSourceTables().Select(x => x.Source.Table.Name);
+            var sourceTables = select.GetSourceTables().Select(x => x.From.Table.Name);
             var statement = CreateColumnsIntersectionStatement(sourceTables);
 
             var writer = WriteSelectColumns(SqlWriter.CreateWriter()).

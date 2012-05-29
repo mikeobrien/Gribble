@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Gribble.Mapping;
 using Gribble.Model;
 
@@ -21,11 +22,27 @@ namespace Gribble.TransactSql
             return writer.Write(projection);
         }
 
+        public static Statement CreateStatement(Field field, IEntityMapping mapping)
+        {
+            var writer = new ProjectionWriter<TEntity>(mapping);
+            return writer.Write(field);
+        }
+
         public Statement Write(Projection projection)
+        {
+            return Write(() => VisitProjection(projection));
+        }
+
+        public Statement Write(Field field)
+        {
+            return Write(() => VisitField(field));
+        }
+
+        private Statement Write(Action write)
         {
             _sql = SqlWriter.CreateWriter();
             _parameters = new Dictionary<string, object>();
-            VisitProjection(projection);
+            write();
             return new Statement(_sql.ToString(), Statement.StatementType.Text, _parameters);
         }
 
@@ -122,8 +139,7 @@ namespace Gribble.TransactSql
         private void VisitField(Field field)
         {
             if (field.HasTableAlias) _sql.QuotedName(field.TableAlias).Trim().Period.Trim();
-            _sql.QuotedName(field.HasKey ? _mapping.DynamicProperty.GetColumnName(field.Key) : 
-                                          _mapping.StaticProperty.GetColumnName(field.Name));
+            _sql.QuotedName(field.Map(_mapping));
         }
     }
 }
