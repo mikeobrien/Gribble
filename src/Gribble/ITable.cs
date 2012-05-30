@@ -12,7 +12,7 @@ namespace Gribble
         void Delete<T>(T id);
         void Delete(TEntity entity);
         void Delete(Expression<Func<TEntity, bool>> filter);
-        void DeleteMany(Expression<Func<TEntity, bool>> filter);
-        void DeleteMany(IQueryable<TEntity> source);
+        int DeleteMany(Expression<Func<TEntity, bool>> filter);
+        int DeleteMany(IQueryable<TEntity> source);
     }
 }

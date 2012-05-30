@@ -83,8 +83,10 @@ namespace Gribble
             return ExecuteEnumerable(connectionManager, x => new Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8>>((T1) x[0], (T2) x[1], (T3) x[2], (T4) x[3], (T5) x[4], (T6) x[5], (T7) x[6], new Tuple<T8>((T8) x[7])));
         }
 
-        public void ExecuteNonQuery(IConnectionManager connectionManager)
-        { Execute(() => CreateCommand(connectionManager).ExecuteNonQuery()); }
+        public int ExecuteNonQuery(IConnectionManager connectionManager)
+        {
+            return Execute(() => CreateCommand(connectionManager).ExecuteNonQuery());
+        }
 
         private IDbCommand CreateCommand(IConnectionManager connectionManager)
         {

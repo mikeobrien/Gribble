@@ -117,22 +117,22 @@ namespace Gribble
             Delete(WhereVisitor<TEntity>.CreateModel(filter), false);
         }
 
-        public void DeleteMany(Expression<Func<TEntity, bool>> filter) 
+        public int DeleteMany(Expression<Func<TEntity, bool>> filter) 
         {
-            Delete(WhereVisitor<TEntity>.CreateModel(filter), true); 
+            return Delete(WhereVisitor<TEntity>.CreateModel(filter), true); 
         }
 
-        public void DeleteMany(IQueryable<TEntity> source)
+        public int DeleteMany(IQueryable<TEntity> source)
         {
             var query = QueryVisitor<TEntity>.CreateModel(source.Expression, x => ((Table<TEntity>) x).Name);
-            Command.Create(DeleteWriter<TEntity>.CreateStatement(
+            return Command.Create(DeleteWriter<TEntity>.CreateStatement(
                 new Delete(_table, query.Select, true), _map), _profiler).
                     ExecuteNonQuery(_connectionManager);
         }
 
-        private void Delete(Operator filter, bool multiDelete)
+        private int Delete(Operator filter, bool multiDelete)
         {
-            Command.Create(DeleteWriter<TEntity>.CreateStatement(
+            return Command.Create(DeleteWriter<TEntity>.CreateStatement(
                 new Delete(_table, filter, multiDelete), _map), _profiler).
                     ExecuteNonQuery(_connectionManager);
         }

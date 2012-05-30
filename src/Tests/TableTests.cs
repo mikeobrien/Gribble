@@ -155,7 +155,7 @@ namespace Tests
             _database.CreateTables();
             var totalCount = _identityTable1.Count();
             var setCount = _identityTable1.Count(x => x.Id > 8);
-            _identityTable1.DeleteMany(x => x.Id > 8);
+            _identityTable1.DeleteMany(x => x.Id > 8).ShouldEqual(2);
             _identityTable1.Count(x => x.Id > 8).ShouldEqual(0);
             _identityTable1.Count().ShouldEqual(totalCount - setCount);
         }
@@ -166,7 +166,7 @@ namespace Tests
             _database.CreateTables();
             var totalCount = _identityTable1.Count();
             var setCount = _identityTable1.Count(x => x.Id > 8);
-            _identityTable1.DeleteMany(_identityTable1.Where(x => x.Id > 8));
+            _identityTable1.DeleteMany(_identityTable1.Where(x => x.Id > 8)).ShouldEqual(2);
             _identityTable1.Count(x => x.Id > 8).ShouldEqual(0);
             _identityTable1.Count().ShouldEqual(totalCount - setCount);
         }
@@ -175,7 +175,7 @@ namespace Tests
         public void should_delete_duplicates()
         {
             _database.CreateTables();
-            _identityTable1.DeleteMany(_identityTable1.Duplicates(x => x.Name, x => x.Id != 5, Order.Ascending));
+            _identityTable1.DeleteMany(_identityTable1.Duplicates(x => x.Name, x => x.Id != 5, Order.Ascending)).ShouldEqual(9);
             _identityTable1.Count().ShouldEqual(1);
             _identityTable1.First().Id.ShouldEqual(5);
         }
