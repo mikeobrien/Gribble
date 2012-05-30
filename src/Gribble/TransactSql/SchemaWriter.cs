@@ -13,7 +13,7 @@ namespace Gribble.TransactSql
             return CreateColumnsIntersectionStatement(select.GetSourceTables().Select(x => x.From.Table.Name));
         }
 
-        public static Statement CreateSelectIntoColumnsStatement(Select source, Table target)
+        public static Statement CreateSharedColumnsStatement(Select source, Table target)
         {
             var sql = new SqlWriter();
             var sourceTables = source.GetSourceTables().Select(x => x.From.Table.Name);

@@ -164,31 +164,35 @@ namespace Gribble
 
         private IQueryable<TEntity> CopyInto(Insert insert)
         {
-            var hasIdentityKey = _map.Key.KeyType == PrimaryKeyType.IdentitySeed;
-            var keyColumnName = _map.Key.GetColumnName();
-            var columns = Command.Create(SchemaWriter.CreateSelectIntoColumnsStatement(insert.Query, insert.Into), _profiler).
-                                  ExecuteEnumerable<string, bool>(_connectionManager).
-                                  Where(x => !hasIdentityKey || !x.Item1.Equals(keyColumnName, StringComparison.OrdinalIgnoreCase));
-            if (columns.Any(x => x.Item2)) throw new StringColumnNarrowingException(columns.Select(x => x.Item1));
-            insert.Query.Projection = columns.Select(x => x.Item1).Select(x => new SelectProjection {
-                Projection = Projection.Create.Field(_map.Column.GetPropertyName(x), !_map.Column.HasStaticPropertyMapping(x)) }).ToList();
+            insert.Query.Projection = GetSharedColumns(insert.Query, insert.Into);
             var statement = InsertWriter<TEntity>.CreateStatement(insert, _map);
             Command.Create(statement, _profiler).ExecuteNonQuery(_connectionManager);
             return new Table<TEntity>(_connectionManager, insert.Into.Name, _map, _profiler);
         }
 
+        private IList<SelectProjection> GetSharedColumns(Select source, Table target)
+        {
+            var hasIdentityKey = _map.Key.KeyType == PrimaryKeyType.IdentitySeed;
+            var keyColumnName = _map.Key.GetColumnName();
+            var columns = Command.Create(SchemaWriter.CreateSharedColumnsStatement(source, target), _profiler).
+                                  ExecuteEnumerable<string, bool>(_connectionManager).
+                                  Where(x => !hasIdentityKey || !x.Item1.Equals(keyColumnName, StringComparison.OrdinalIgnoreCase));
+            if (columns.Any(x => x.Item2)) throw new StringColumnNarrowingException(columns.Select(x => x.Item1));
+            return columns.Select(x => x.Item1).Select(x => new SelectProjection {
+                Projection = Projection.Create.Field(_map.Column.GetPropertyName(x), !_map.Column.HasStaticPropertyMapping(x))}).ToList();
+        } 
+
         private IQueryable<TEntity> SyncWith(Sync sync)
         {
             if (!sync.Target.HasProjection)
             {
-                var columns = Database.Create(_connectionManager).GetColumns(sync.Target.From.Table.Name)
-                    .Select(x => new { Name = _map.Column.HasDynamicPropertyMapping(x.Name) ? 
-                                            _map.Column.GetDynamicPropertyName(x.Name) : _map.Column.GetPropertyName(x.Name), 
-                                       Dynamic = _map.Column.HasDynamicPropertyMapping(x.Name)}).ToList();
-                Func<string, IList<SelectProjection>> createProjection = alias => columns.Select(x => new SelectProjection { 
+                var fields = GetSharedColumns(sync.Source, sync.Target.From.Table);
+                Func<string, IList<SelectProjection>> createProjection = alias => fields.Select(x => new SelectProjection { 
                     Projection = new Projection { Type = Projection.ProjectionType.Field, 
-                        Field = new Field { Name = x.Dynamic ? _map.DynamicProperty.GetPropertyName() : x.Name, 
-                                            Key = x.Dynamic ? x.Name : null, HasKey = x.Dynamic, TableAlias = alias } } }).ToList();
+                        Field = new Field { Name = x.Projection.Field.Name,
+                                            Key = x.Projection.Field.Key,
+                                            HasKey = x.Projection.Field.HasKey,
+                                            TableAlias = alias }}}).ToList();
                 sync.Target.Projection = createProjection(sync.Target.From.Alias);
                 sync.Source.Projection = createProjection(sync.Source.From.Alias);
             }

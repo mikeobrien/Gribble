@@ -189,7 +189,7 @@ namespace Tests.TransactSql
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Union(MockQueryable<Entity>.Create(TableName2).Take(5).Union(MockQueryable<Entity>.Create(TableName3).Skip(4).OrderBy(x => x.Active))).CopyTo(MockQueryable<Entity>.Create(TableName4));
             var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>) x).Name);
-            var statement = SchemaWriter.CreateSelectIntoColumnsStatement(select.CopyTo.Query, select.CopyTo.Into);
+            var statement = SchemaWriter.CreateSharedColumnsStatement(select.CopyTo.Query, select.CopyTo.Into);
 
             statement.Parameters.Count().ShouldEqual(0);
             statement.Text.ShouldEqual("SELECT [__SubQuery__].[name], " + 
