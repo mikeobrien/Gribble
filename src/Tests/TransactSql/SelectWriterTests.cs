@@ -188,7 +188,7 @@ namespace Tests.TransactSql
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
             statement.Parameters.Count.ShouldEqual(1);
             statement.Parameters.First().Value.ShouldEqual(50);
-            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY [name] ORDER BY CASE WHEN ([age] > @{2}) THEN 1 ELSE 0 END ASC) AS [__Partition__] FROM [{0}] {1}) AS {1} WHERE [__Partition__] > 1",
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY [name] ORDER BY CASE WHEN ([{1}].[age] > @{2}) THEN 1 ELSE 0 END ASC) AS [__Partition__] FROM [{0}] {1}) AS {1} WHERE [__Partition__] > 1",
                                                     TableName1, select.From.Alias, statement.Parameters.First().Key));
         }
 
@@ -312,7 +312,7 @@ namespace Tests.TransactSql
             statement.Result.ShouldEqual(Statement.ResultType.Scalar);
             statement.Parameters.Count.ShouldEqual(1);
             statement.Parameters.First().Value.ShouldEqual(44);
-            statement.Text.ShouldEqual(string.Format("SELECT CAST(CASE WHEN EXISTS (SELECT * FROM [{0}] {1} WHERE ([age] = @{2})) THEN 1 ELSE 0 END AS bit)",
+            statement.Text.ShouldEqual(string.Format("SELECT CAST(CASE WHEN EXISTS (SELECT * FROM [{0}] {1} WHERE ([{1}].[age] = @{2})) THEN 1 ELSE 0 END AS bit)",
                 TableName1, select.From.Alias, statement.Parameters.First().Key));
         }
 
@@ -387,7 +387,7 @@ namespace Tests.TransactSql
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
             statement.Parameters.Count.ShouldEqual(1);
             statement.Parameters.First().Value.ShouldEqual(true);
-            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY [id]) AS [__RowNumber__] FROM [{0}] {1} WHERE ([active] = @{2})) AS {1} WHERE [__RowNumber__] BETWEEN 11 AND 20",
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY [id]) AS [__RowNumber__] FROM [{0}] {1} WHERE ([{1}].[active] = @{2})) AS {1} WHERE [__RowNumber__] BETWEEN 11 AND 20",
                                                     TableName1, select.From.Alias, statement.Parameters.First().Key));
         }
 
@@ -402,7 +402,7 @@ namespace Tests.TransactSql
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
             statement.Parameters.Count.ShouldEqual(1);
             statement.Parameters.First().Value.ShouldEqual("hello");
-            statement.Text.ShouldEqual(string.Format("SELECT * FROM [{0}] {1} WHERE ([name] = @{2})", TableName1, select.From.Alias, statement.Parameters.First().Key));
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM [{0}] {1} WHERE ([{1}].[name] = @{2})", TableName1, select.From.Alias, statement.Parameters.First().Key));
         }
 
         [Test]
@@ -435,7 +435,7 @@ namespace Tests.TransactSql
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
             statement.Parameters.Count.ShouldEqual(1);
             statement.Parameters.First().Value.ShouldEqual(true);
-            statement.Text.ShouldEqual(string.Format("SELECT * FROM [{0}] {1} WHERE ([active] = @{3}) AND EXISTS (SELECT TOP (1) [UPPER([name])], [age] FROM [{2}] {4} WHERE ((UPPER([name]) = UPPER([{1}].[name])) AND ([age] = [{1}].[age])))",
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM [{0}] {1} WHERE ([{1}].[active] = @{3}) AND EXISTS (SELECT TOP (1) [UPPER([name])], [age] FROM [{2}] {4} WHERE ((UPPER([name]) = UPPER([{1}].[name])) AND ([age] = [{1}].[age])))",
                                                     TableName1,
                                                     select.From.Alias,
                                                     TableName2,
@@ -473,7 +473,7 @@ namespace Tests.TransactSql
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
             statement.Parameters.Count.ShouldEqual(1);
             statement.Parameters.First().Value.ShouldEqual(true);
-            statement.Text.ShouldEqual(string.Format("SELECT * FROM [{0}] {1} WHERE ([active] = @{3}) AND NOT EXISTS (SELECT TOP (1) [UPPER([name])], [age] FROM [{2}] {4} WHERE ((UPPER([name]) = UPPER([{1}].[name])) AND ([age] = [{1}].[age])))",
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM [{0}] {1} WHERE ([{1}].[active] = @{3}) AND NOT EXISTS (SELECT TOP (1) [UPPER([name])], [age] FROM [{2}] {4} WHERE ((UPPER([name]) = UPPER([{1}].[name])) AND ([age] = [{1}].[age])))",
                                                     TableName1,
                                                     select.From.Alias,
                                                     TableName2,
@@ -492,7 +492,7 @@ namespace Tests.TransactSql
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
             statement.Parameters.Count.ShouldEqual(1);
             statement.Parameters.First().Value.ShouldEqual("hello");
-            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY [id]) AS [__RowNumber__] FROM [{0}] {1} WHERE ([name] = @{2})) AS {1} WHERE [__RowNumber__] BETWEEN 11 AND 20",
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY [id]) AS [__RowNumber__] FROM [{0}] {1} WHERE ([{1}].[name] = @{2})) AS {1} WHERE [__RowNumber__] BETWEEN 11 AND 20",
                 TableName1, select.From.Alias, statement.Parameters.First().Key));
         }
 

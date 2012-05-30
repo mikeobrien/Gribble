@@ -148,7 +148,7 @@ namespace Gribble.Expressions
         private void HandleSync(Query target, MethodCallExpression expression)
         {
             target.Operation = Query.OperationType.SyncWith;
-            var fields = expression.ArgumentAt<NewArrayExpression>(5).Expressions;
+            var fields = expression.ArgumentAt<NewArrayExpression>(5).Expressions.Select(x => x.GetLambdaBody().StripConversion());
             var exclude = expression.ConstantArgumentAt<SyncFields>(4) == SyncFields.Exclude;
             var source = CreateModel(expression.ArgumentAt(2), _getTableName).Select;
             if (!exclude)

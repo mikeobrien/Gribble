@@ -480,7 +480,7 @@ namespace Tests.Expressions
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.LeftOperand.Operator.LeftOperand.Type.ShouldEqual(Operand.OperandType.Projection);
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.LeftOperand.Operator.LeftOperand.Projection.Type.ShouldEqual(Projection.ProjectionType.Field);
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.LeftOperand.Operator.LeftOperand.Projection.Field.Name.ShouldEqual("Active");
-            select.SetOperatons[1].Select.SetOperatons[0].Select.Where.LeftOperand.Operator.LeftOperand.Projection.Field.TableAlias.ShouldEqual(null);
+            select.SetOperatons[1].Select.SetOperatons[0].Select.Where.LeftOperand.Operator.LeftOperand.Projection.Field.TableAlias.ShouldEqual(select.SetOperatons[1].Select.SetOperatons[0].Select.From.Alias);
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.LeftOperand.Operator.Type.ShouldEqual(Operator.OperatorType.Equal);
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.LeftOperand.Operator.RightOperand.Type.ShouldEqual(Operand.OperandType.Projection);
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.LeftOperand.Operator.RightOperand.Projection.Type.ShouldEqual(Projection.ProjectionType.Constant);
@@ -567,7 +567,7 @@ namespace Tests.Expressions
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.LeftOperand.Operator.LeftOperand.Type.ShouldEqual(Operand.OperandType.Projection);
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.LeftOperand.Operator.LeftOperand.Projection.Type.ShouldEqual(Projection.ProjectionType.Field);
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.LeftOperand.Operator.LeftOperand.Projection.Field.Name.ShouldEqual("Active");
-            select.SetOperatons[1].Select.SetOperatons[0].Select.Where.LeftOperand.Operator.LeftOperand.Projection.Field.TableAlias.ShouldEqual(null);
+            select.SetOperatons[1].Select.SetOperatons[0].Select.Where.LeftOperand.Operator.LeftOperand.Projection.Field.TableAlias.ShouldEqual(select.SetOperatons[1].Select.SetOperatons[0].Select.From.Alias);
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.LeftOperand.Operator.Type.ShouldEqual(Operator.OperatorType.Equal);
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.LeftOperand.Operator.RightOperand.Type.ShouldEqual(Operand.OperandType.Projection);
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.LeftOperand.Operator.RightOperand.Projection.Type.ShouldEqual(Projection.ProjectionType.Constant);
@@ -577,7 +577,7 @@ namespace Tests.Expressions
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.RightOperand.Operator.LeftOperand.Type.ShouldEqual(Operand.OperandType.Projection);
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.RightOperand.Operator.LeftOperand.Projection.Type.ShouldEqual(Projection.ProjectionType.Field);
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.RightOperand.Operator.LeftOperand.Projection.Field.Name.ShouldEqual("Id");
-            select.SetOperatons[1].Select.SetOperatons[0].Select.Where.RightOperand.Operator.LeftOperand.Projection.Field.TableAlias.ShouldEqual(null);
+            select.SetOperatons[1].Select.SetOperatons[0].Select.Where.RightOperand.Operator.LeftOperand.Projection.Field.TableAlias.ShouldBeNull();
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.RightOperand.Operator.Type.ShouldEqual(Operator.OperatorType.Equal);
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.RightOperand.Operator.RightOperand.Type.ShouldEqual(Operand.OperandType.Projection);
             select.SetOperatons[1].Select.SetOperatons[0].Select.Where.RightOperand.Operator.RightOperand.Projection.Type.ShouldEqual(Projection.ProjectionType.Field);

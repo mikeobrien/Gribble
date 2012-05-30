@@ -179,7 +179,23 @@ namespace Gribble
 
         private IQueryable<TEntity> SyncWith(Sync sync)
         {
-            throw new NotImplementedException();
+            if (!sync.Target.HasProjection)
+            {
+                var columns = Database.Create(_connectionManager).GetColumns(sync.Target.From.Table.Name)
+                    .Select(x => new { Name = _map.Column.HasDynamicPropertyMapping(x.Name) ? 
+                                            _map.Column.GetDynamicPropertyName(x.Name) : _map.Column.GetPropertyName(x.Name), 
+                                       Dynamic = _map.Column.HasDynamicPropertyMapping(x.Name)}).ToList();
+                Func<string, IList<SelectProjection>> createProjection = alias => columns.Select(x => new SelectProjection { 
+                    Projection = new Projection { Type = Projection.ProjectionType.Field, 
+                        Field = new Field { Name = x.Dynamic ? _map.DynamicProperty.GetPropertyName() : x.Name, 
+                                            Key = x.Dynamic ? x.Name : null, HasKey = x.Dynamic, TableAlias = alias } } }).ToList();
+                sync.Target.Projection = createProjection(sync.Target.From.Alias);
+                sync.Source.Projection = createProjection(sync.Source.From.Alias);
+            }
+            
+            var statement = SyncWriter<TEntity>.CreateStatement(sync, _map);
+            Command.Create(statement, _profiler).ExecuteNonQuery(_connectionManager);
+            return new Table<TEntity>(_connectionManager, sync.Target.From.Table.Name, _map, _profiler);
         }
     }
 }
