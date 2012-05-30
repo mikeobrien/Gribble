@@ -22,8 +22,8 @@ namespace Gribble.TransactSql
                     .QuotedName(sync.Source.From.Table.Name).QuotedName(sync.Source.From.Alias)
                     .On.Write(ProjectionWriter<TEntity>.CreateStatement(sync.TargetKey, mapping).MergeParameters(parameters).Text).Equal
                        .Write(ProjectionWriter<TEntity>.CreateStatement(sync.SourceKey, mapping).MergeParameters(parameters).Text)
-                    .And.Write(WhereWriter<TEntity>.CreateStatement(sync.Source.Where, mapping).MergeParameters(parameters).Text)
-                .Where.Write(WhereWriter<TEntity>.CreateStatement(sync.Target.Where, mapping).MergeParameters(parameters).Text);
+                    .Do(sync.Source.HasWhere, x => x.And.Write(WhereWriter<TEntity>.CreateStatement(sync.Source.Where, mapping).MergeParameters(parameters).Text))
+                .Do(sync.Target.HasWhere, x => x.Where.Write(WhereWriter<TEntity>.CreateStatement(sync.Target.Where, mapping).MergeParameters(parameters).Text));
 
             return new Statement(writer.ToString(), Statement.StatementType.Text, Statement.ResultType.None, parameters);
         }

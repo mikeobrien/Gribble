@@ -315,32 +315,31 @@ namespace Tests
         public void should_sync_excluding_fields_from_different_table()
         {
             _identityTable1.CopyTo(_identityTable2);
-            var importId = (object)Guid.NewGuid();
-            _database.ExecuteNonQuery("UPDATE {0} SET name='ed', code=11, hide=1, upc=NULL WHERE id=1", _database.FirstTable.Name);
-            _database.ExecuteNonQuery("UPDATE {0} SET name='don', code=22, hide=0, upc=NULL WHERE id=2", _database.FirstTable.Name);
-            _database.ExecuteNonQuery("UPDATE {0} SET name='tomas', code=33, hide=1, upc='{1}' WHERE id=3", _database.FirstTable.Name, Guid.Empty);
-            _database.ExecuteNonQuery("UPDATE {0} SET name='hector', code=44, hide=0, upc='{1}' WHERE id=4", _database.FirstTable.Name, Guid.Empty);
-            _database.ExecuteNonQuery("UPDATE {0} SET name='eduardo', code=55, hide=1, upc='{1}' WHERE id=5", _database.FirstTable.Name, Guid.Empty);
+            _database.ExecuteNonQuery("UPDATE {0} SET name='ed', code=11, hide=1 WHERE id=1", _database.FirstTable.Name);
+            _database.ExecuteNonQuery("UPDATE {0} SET name='don', code=22, hide=0 WHERE id=2", _database.FirstTable.Name);
+            _database.ExecuteNonQuery("UPDATE {0} SET name='tomas', code=33, hide=1 WHERE id=3", _database.FirstTable.Name);
+            _database.ExecuteNonQuery("UPDATE {0} SET name='hector', code=44, hide=0 WHERE id=4", _database.FirstTable.Name);
+            _database.ExecuteNonQuery("UPDATE {0} SET name='eduardo', code=55, hide=1 WHERE id=5", _database.FirstTable.Name);
             
-            _database.ExecuteNonQuery("UPDATE {0} SET name='louie', code=66, hide=1, upc='{1}' WHERE id=6", _database.ThirdTable.Name, importId);
-            _database.ExecuteNonQuery("UPDATE {0} SET name='ed', code=77, hide=0, upc='{1}' WHERE id=7", _database.ThirdTable.Name, importId);
-            _database.ExecuteNonQuery("UPDATE {0} SET name='tomas', code=88, hide=0, upc='{1}' WHERE id=8", _database.ThirdTable.Name, importId);
-            _database.ExecuteNonQuery("UPDATE {0} SET name='hector', code=99, hide=1, upc='{1}' WHERE id=9", _database.ThirdTable.Name, importId);
-            _database.ExecuteNonQuery("UPDATE {0} SET name='eduardo', code=1010, hide=0, upc='{1}' WHERE id=10", _database.ThirdTable.Name, importId);
+            _database.ExecuteNonQuery("UPDATE {0} SET name='louie', code=66, hide=1 WHERE id=6", _database.ThirdTable.Name);
+            _database.ExecuteNonQuery("UPDATE {0} SET name='ed', code=77, hide=0 WHERE id=7", _database.ThirdTable.Name);
+            _database.ExecuteNonQuery("UPDATE {0} SET name='tomas', code=88, hide=0 WHERE id=8", _database.ThirdTable.Name);
+            _database.ExecuteNonQuery("UPDATE {0} SET name='hector', code=99, hide=1 WHERE id=9", _database.ThirdTable.Name);
+            _database.ExecuteNonQuery("UPDATE {0} SET name='eduardo', code=1010, hide=0 WHERE id=10", _database.ThirdTable.Name);
             
-            _identityTable1.Where(x => x.Values["upc"] != importId).SyncWith(_identityTable2.Where(x => x.Values["upc"] == importId), x => x.Name, SyncFields.Exclude, x => x.Id, x => x.Name, x => x.Values["upc"]);
+            _identityTable1.SyncWith(_identityTable2, x => x.Name, SyncFields.Exclude, x => x.Id, x => x.Name, x => x.Values["upc"]);
             
-            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='ed' AND code=77 AND hide=0 AND upc IS NULL AND id=1", _database.FirstTable.Name).ShouldEqual(1);
-            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='don' AND code=22 AND hide=0 AND upc IS NULL AND id=2", _database.FirstTable.Name).ShouldEqual(1);
-            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='tomas' AND code=88 AND hide=0 AND upc='{1}' AND id=3", _database.FirstTable.Name, Guid.Empty).ShouldEqual(1);
-            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='hector' AND code=99 AND hide=1 AND upc='{1}' AND id=4", _database.FirstTable.Name, Guid.Empty).ShouldEqual(1);
-            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='eduardo' AND code=1010 AND hide=0 AND upc='{1}' AND id=5", _database.FirstTable.Name, Guid.Empty).ShouldEqual(1);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='ed' AND code=77 AND hide=0 AND id=1", _database.FirstTable.Name).ShouldEqual(1);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='don' AND code=22 AND hide=0 AND id=2", _database.FirstTable.Name).ShouldEqual(1);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='tomas' AND code=88 AND hide=0 AND id=3", _database.FirstTable.Name).ShouldEqual(1);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='hector' AND code=99 AND hide=1 AND id=4", _database.FirstTable.Name).ShouldEqual(1);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='eduardo' AND code=1010 AND hide=0 AND id=5", _database.FirstTable.Name).ShouldEqual(1);
 
-            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='louie' AND code=66 AND hide=1 AND upc='{1}' AND id=6", _database.ThirdTable.Name, importId).ShouldEqual(1);
-            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='ed' AND code=77 AND hide=0 AND upc='{1}' AND id=7", _database.ThirdTable.Name, importId).ShouldEqual(1);
-            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='tomas' AND code=88 AND hide=0 AND upc='{1}' AND id=8", _database.ThirdTable.Name, importId).ShouldEqual(1);
-            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='hector' AND code=99 AND hide=1 AND upc='{1}' AND id=9", _database.ThirdTable.Name, importId).ShouldEqual(1);
-            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='eduardo' AND code=1010 AND hide=0 AND upc='{1}' AND id=10", _database.ThirdTable.Name, importId).ShouldEqual(1);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='louie' AND code=66 AND hide=1 AND id=6", _database.ThirdTable.Name).ShouldEqual(1);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='ed' AND code=77 AND hide=0 AND id=7", _database.ThirdTable.Name).ShouldEqual(1);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='tomas' AND code=88 AND hide=0 AND id=8", _database.ThirdTable.Name).ShouldEqual(1);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='hector' AND code=99 AND hide=1 AND id=9", _database.ThirdTable.Name).ShouldEqual(1);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0} WHERE name='eduardo' AND code=1010 AND hide=0 AND id=10", _database.ThirdTable.Name).ShouldEqual(1);
         }
     }
 }
