@@ -69,6 +69,54 @@ namespace Tests.TransactSql
         }
 
         [Test]
+        public void should_render_sql_with_nolock_hint()
+        {
+            var query = MockQueryable<Entity>.Create(TableName1);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var statement = SelectWriter<Entity>.CreateStatement(select, Map, noLock: true);
+
+            statement.Result.ShouldEqual(Statement.ResultType.Multiple);
+            statement.Parameters.Count.ShouldEqual(0);
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM [{0}] {1} WITH (NOLOCK)", TableName1, select.From.Alias));
+        }
+
+        [Test]
+        public void should_render_sql_with_nolock_hint_in_nested_query()
+        {
+            var query = MockQueryable<Entity>.Create(TableName1);
+            query.Skip(10);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var statement = SelectWriter<Entity>.CreateStatement(select, Map, noLock: true);
+
+            statement.Result.ShouldEqual(Statement.ResultType.Multiple);
+            statement.Parameters.Count.ShouldEqual(0);
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY [id]) AS [__RowNumber__] FROM [{0}] {1} WITH (NOLOCK)) AS {1} WHERE [__RowNumber__] >= 11",
+                                                    TableName1, select.From.Alias));
+        }
+
+        [Test]
+        public void should_render_sql_with_nolock_hint_in_sub_queries()
+        {
+            var query = MockQueryable<Entity>.Create(TableName1);
+            query.Union(MockQueryable<Entity>.Create(TableName2).Take(1).Union(MockQueryable<Entity>.Create(TableName3)).Take(3)).Take(5);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            select.Projection = new List<SelectProjection>
+                                    {
+                                        new SelectProjection {Projection = Projection.Create.Field("Name")},
+                                        new SelectProjection {Projection = Projection.Create.Field("Age")}
+                                    };
+            var statement = SelectWriter<Entity>.CreateStatement(select, Map, noLock: true);
+
+            statement.Parameters.Count().ShouldEqual(0);
+            statement.Text.ShouldEqual(string.Format("SELECT TOP (5) [name], [age] FROM (SELECT TOP (3) [name], [age] FROM (SELECT [name], [age] FROM [XLIST_3] {0} WITH (NOLOCK) UNION SELECT TOP (1) [name], [age] FROM [XLIST_2] {1} WITH (NOLOCK)) AS {2} UNION SELECT [name], [age] FROM [XLIST_1] {3} WITH (NOLOCK)) AS {4}",
+                                                    select.From.Queries[0].From.Queries[0].From.Alias,
+                                                    select.From.Queries[0].From.Queries[1].From.Alias,
+                                                    select.From.Queries[0].From.Alias,
+                                                    select.From.Queries[1].From.Alias,
+                                                    select.From.Alias));
+        }
+
+        [Test]
         public void Select_Top_Count_Test()
         {
             var query = MockQueryable<Entity>.Create(TableName1);

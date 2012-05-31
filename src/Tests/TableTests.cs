@@ -109,6 +109,30 @@ namespace Tests
         }
 
         [Test]
+        public void should_select_records_with_nolock()
+        {
+            var results = Table<IdentityEntity>.Create(_database.Connection, _database.FirstTable.Name, IdentityMap, noLock: true).ToList();
+            results.Count().ShouldBeGreaterThan(2);
+            results.All(x => x.Name.Length > 3).ShouldEqual(true);
+            results.All(x => x.Id > 0).ShouldEqual(true);
+            results.First().Values.Count.ShouldBeGreaterThan(2);
+            ((bool)results.First().Values["hide"]).ShouldEqual(false);
+            ((DateTime)results.First().Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+        }
+
+        [Test]
+        public void should_union_records_with_nolock()
+        {
+            var results = Table<IdentityEntity>.Create(_database.Connection, _database.FirstTable.Name, IdentityMap, noLock: true)
+                .Union(Table<IdentityEntity>.Create(_database.Connection, _database.ThirdTable.Name, IdentityMap, noLock: true)).ToList();
+            results.Count().ShouldBeGreaterThan(2);
+            results.All(x => x.Name.Length > 3).ShouldEqual(true);
+            results.All(x => x.Id > 0).ShouldEqual(true);
+            results.First().Values.Count.ShouldBeGreaterThan(2);
+            ((bool)results.First().Values["hide"]).ShouldEqual(false);
+        }
+
+        [Test]
         public void Select_Union()
         {
             var results = _identityTable1.Where(x => x.Id > 2).Union(_identityTable2.Where(x => x.Id > 3)).ToList();

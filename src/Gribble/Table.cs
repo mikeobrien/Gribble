@@ -22,41 +22,43 @@ namespace Gribble
         private readonly string _table;
         private readonly IEntityMapping _map;
         private readonly IProfiler _profiler;
+        private readonly bool _noLock;
 
-        public Table(IConnectionManager connectionManagerManager, string table, IEntityMapping mapping, IProfiler profiler)
+        public Table(IConnectionManager connectionManagerManager, string table, IEntityMapping mapping, IProfiler profiler, bool noLock)
         {
             _connectionManager = connectionManagerManager;
             _table = table;
             _map = mapping;
             _profiler = profiler;
+            _noLock = noLock;
         }
 
-        public static ITable<TEntity> Create<TKey>(SqlConnection connection, string tableName, string keyColumn, TimeSpan? commandTimeout = null, IProfiler profiler = null)
+        public static ITable<TEntity> Create<TKey>(SqlConnection connection, string tableName, string keyColumn, TimeSpan? commandTimeout = null, IProfiler profiler = null, bool noLock = false)
         {
-            return Create<TKey>(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), keyColumn, tableName, profiler ?? new ConsoleProfiler());
+            return Create<TKey>(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), keyColumn, tableName, profiler ?? new ConsoleProfiler(), noLock);
         }
 
-        public static ITable<TEntity> Create<TKey>(IConnectionManager connectionManager, string tableName, string keyColumn, IProfiler profiler = null)
+        public static ITable<TEntity> Create<TKey>(IConnectionManager connectionManager, string tableName, string keyColumn, IProfiler profiler = null, bool noLock = false)
         {
             var mapping = new EntityMapping(typeof(Guid) == typeof(TKey) ? new GuidKeyEntityMap(keyColumn) : (typeof(int) == typeof(TKey) ? (IClassMap)new IntKeyEntityMap(keyColumn) : null));
-            return new Table<TEntity>(connectionManager, tableName, mapping, profiler ?? new ConsoleProfiler());
+            return new Table<TEntity>(connectionManager, tableName, mapping, profiler ?? new ConsoleProfiler(), noLock);
         }
 
-        public static ITable<TEntity> Create(SqlConnection connection, string tableName, IEntityMapping entityMapping, TimeSpan? commandTimeout = null, IProfiler profiler = null)
+        public static ITable<TEntity> Create(SqlConnection connection, string tableName, IEntityMapping entityMapping, TimeSpan? commandTimeout = null, IProfiler profiler = null, bool noLock = false)
         {
-            return Create(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), tableName, entityMapping, profiler ?? new ConsoleProfiler());
+            return Create(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), tableName, entityMapping, profiler ?? new ConsoleProfiler(), noLock);
         }
 
-        public static ITable<TEntity> Create(IConnectionManager connectionManager, string tableName, IEntityMapping entityMapping, IProfiler profiler = null)
+        public static ITable<TEntity> Create(IConnectionManager connectionManager, string tableName, IEntityMapping entityMapping, IProfiler profiler = null, bool noLock = false)
         {
-            return new Table<TEntity>(connectionManager, tableName, entityMapping, profiler ?? new ConsoleProfiler());
+            return new Table<TEntity>(connectionManager, tableName, entityMapping, profiler ?? new ConsoleProfiler(), noLock);
         }
 
         public string Name { get { return _table; } }
 
         public override QueryableBase<TEntity> CreateQuery()
         {
-            return new Table<TEntity>(_connectionManager, _table, _map, _profiler);
+            return new Table<TEntity>(_connectionManager, _table, _map, _profiler, _noLock);
         }
 
         public override TResult ExecuteQuery<TResult>(Expression expression)
@@ -158,7 +160,7 @@ namespace Gribble
                 var columnsStatement = SchemaWriter.CreateUnionColumnsStatement(select);
                 columns = Command.Create(columnsStatement, _profiler).ExecuteEnumerable<string>(_connectionManager);
             }
-            var selectStatement = SelectWriter<TEntity>.CreateStatement(select, _map, columns);
+            var selectStatement = SelectWriter<TEntity>.CreateStatement(select, _map, columns, _noLock);
             return (TResult)(new Loader<TEntity>(Command.Create(selectStatement, _profiler), _map).Execute(_connectionManager));
         }
 
@@ -167,7 +169,7 @@ namespace Gribble
             insert.Query.Projection = GetSharedColumns(insert.Query, insert.Into);
             var statement = InsertWriter<TEntity>.CreateStatement(insert, _map);
             Command.Create(statement, _profiler).ExecuteNonQuery(_connectionManager);
-            return new Table<TEntity>(_connectionManager, insert.Into.Name, _map, _profiler);
+            return new Table<TEntity>(_connectionManager, insert.Into.Name, _map, _profiler, _noLock);
         }
 
         private IList<SelectProjection> GetSharedColumns(Select source, Table target)
@@ -199,7 +201,7 @@ namespace Gribble
             
             var statement = SyncWriter<TEntity>.CreateStatement(sync, _map);
             Command.Create(statement, _profiler).ExecuteNonQuery(_connectionManager);
-            return new Table<TEntity>(_connectionManager, sync.Target.From.Table.Name, _map, _profiler);
+            return new Table<TEntity>(_connectionManager, sync.Target.From.Table.Name, _map, _profiler, _noLock);
         }
     }
 }

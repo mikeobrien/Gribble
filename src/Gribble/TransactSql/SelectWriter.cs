@@ -9,7 +9,7 @@ namespace Gribble.TransactSql
 {
     public static class SelectWriter<TEntity>
     {
-        public static Statement CreateStatement(Select select, IEntityMapping mapping, IEnumerable<string> projectionOverride = null)
+        public static Statement CreateStatement(Select select, IEntityMapping mapping, IEnumerable<string> projectionOverride = null, bool noLock = false)
         {
             var sql = new SqlWriter();
             var parameters = new Dictionary<string, object>();
@@ -66,11 +66,14 @@ namespace Gribble.TransactSql
 
             switch (select.From.Type)
             {
-                case Data.DataType.Table: sql.QuotedName(select.From.Table.Name).Write(select.From.Alias); break;
+                case Data.DataType.Table: 
+                    sql.QuotedName(select.From.Table.Name).Write(select.From.Alias);
+                    if (noLock) sql.With(x => x.NoLock.Flush());
+                    break;
                 case Data.DataType.Query:
                     var first = true;
                     if (select.HasConditions) sql.OpenBlock.Trim().Flush();
-                    foreach (var subQuery in select.From.Queries.Select(x => CreateStatement(x, mapping, projection)))
+                    foreach (var subQuery in select.From.Queries.Select(x => CreateStatement(x, mapping, projection, noLock)))
                     {
                         sql.Do(!first, x => x.Union.Flush()).Write(subQuery.Text).Flush();
                         parameters.AddRange(subQuery.Parameters);

@@ -73,6 +73,8 @@ namespace Gribble.TransactSql
         public SqlWriter Between(int start, int end) 
             { return Write("BETWEEN").Value(start, SqlDbType.Int).And.Value(end, SqlDbType.Int); }
         public SqlWriter In { get { return Write("IN"); } }
+        public SqlWriter With(Action<SqlWriter> hint) { return Write("WITH").OpenBlock.Trim().Do(hint).Trim().CloseBlock; }
+        public SqlWriter NoLock { get { return Write("NOLOCK"); } }
         public SqlWriter Exists { get { return Write("EXISTS"); } }
         public SqlWriter Like(bool condition) { return Do(!condition, x => x.Not.Flush()).Write("LIKE"); }
         public SqlWriter InsertInto { get { return Write("INSERT INTO"); } }
