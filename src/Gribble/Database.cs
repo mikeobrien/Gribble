@@ -86,22 +86,19 @@ namespace Gribble
         private TResult Load<TEntity, TResult>(Command command)
         { return (TResult)new Loader<TEntity>(command, _mappingCollection.GetEntityMapping<TEntity>()).Execute(_connectionManager); }
 
-        public void CreateTable(string tableName, string modelTable)
-        {
-            throw new NotImplementedException();
-            //var columns = GetColumns(SchemaWriter.CreateCreateTableColumnsStatement(select)).ToList();
-            //database.CreateTable(select.Target.Table.Name, columns.ToArray());
-            //var indexes = database.GetIndexes(select.GetSourceTables().First().Source.Table.Name).Where(x => !x.PrimaryKey && !x.Clustered).ToList();
-            //if (indexes.Any()) indexes.ForEach(x => database.AddNonClusteredIndex(select.Target.Table.Name, x.Columns.ToArray()));
-            //return columns.Where(x => !hasIdentityKey || !x.Name.Equals(keyColumnName, StringComparison.OrdinalIgnoreCase)).
-            //               Select(x => x.Name);
-        }
-
         public bool TableExists(string tableName)
         { return Command.Create(SchemaWriter.CreateTableExistsStatement(tableName), _profiler).ExecuteScalar<bool>(_connectionManager); }
 
         public void CreateTable(string tableName, params Column[] columns)
         { Command.Create(SchemaWriter.CreateTableCreateStatement(tableName, columns), _profiler).ExecuteNonQuery(_connectionManager); }
+
+        public void CreateTable(string tableName, string modelTable)
+        {
+            var columns = GetColumns(modelTable).ToList();
+            var indexes = GetIndexes(modelTable).Where(x => !x.Clustered).ToList();
+            CreateTable(tableName, columns.ToArray());
+            AddNonClusteredIndexes(tableName, indexes.Select(x => new Index.ColumnSet(x.Columns)).ToArray());
+        }
 
         public void DeleteTable(string tableName)
         { Command.Create(SchemaWriter.CreateDeleteTableStatement(tableName), _profiler).ExecuteNonQuery(_connectionManager); }
@@ -183,7 +180,9 @@ namespace Gribble
         }
 
         public void AddNonClusteredIndex(string tableName, params Index.Column[] columns)
-        { Command.Create(SchemaWriter.CreateAddNonClusteredIndexStatement(tableName, columns), _profiler).ExecuteNonQuery(_connectionManager); }
+        { 
+            Command.Create(SchemaWriter.CreateAddNonClusteredIndexStatement(tableName, columns), _profiler).ExecuteNonQuery(_connectionManager);
+        }
 
         public void AddNonClusteredIndexes(string tableName, params Index.ColumnSet[] indexColumns)
         {
