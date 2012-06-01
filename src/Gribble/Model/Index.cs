@@ -30,6 +30,12 @@ namespace Gribble.Model
                 columns.All(x => x.a.Descending == x.b.Descending);
         }
 
+        public override string ToString()
+        {
+            return string.Format("Name: {0}, Clustered: {1}, Unique: {2}, Primary Key: {3}, Columns: {4}", Name, Clustered, Unique, PrimaryKey, 
+                Columns.Select(x => string.Format("[Name: {0}, Descending: {1}]", x.Name, x.Descending)).Aggregate((a, i) => a + ", " + i));
+        }
+
         public class ColumnSet : List<Column>
         {
             public ColumnSet() {}
