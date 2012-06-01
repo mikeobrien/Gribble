@@ -120,5 +120,12 @@ namespace Gribble.TransactSql
             if (type != null) return type.SqlName;
             throw new Exception(string.Format("No data type found to match SQL data type '{0}'.", sqlType));
         }
+
+        public static byte GetSqlTypeId(this SqlDbType sqlType)
+        {
+            var type = SqlTypeMapping.FirstOrDefault(x => x.SqlType == sqlType);
+            if (type != null) return type.SqlId;
+            throw new Exception(string.Format("No data type found to match SQL data type '{0}'.", sqlType));
+        }
     }
 }

@@ -291,7 +291,7 @@ namespace Gribble.TransactSql
             if (!string.IsNullOrEmpty(computation))
                 return writer.As.OpenBlock.Trim().Write(computation).Trim().CloseBlock.Do(
                     computationPersisted.HasValue && computationPersisted.Value, x => x.Persisted.Do(writeNullable).Flush());
-            var type = clrType != null ? clrType.GetSqlType() : (sqlType != null ? sqlType.Value : SqlDbType.NVarChar);
+            var type = sqlType != null ? sqlType.Value : (clrType != null ? clrType.GetSqlType() : SqlDbType.NVarChar);
             writer.DataTypeDefinition(type, length, precision, scale);
             if (type == SqlDbType.Int && isIdentity) IntegerIdentity.Flush();
             writeNullable(writer);
