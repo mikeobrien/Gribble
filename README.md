@@ -1,7 +1,19 @@
 Gribble
 =============
 
-Gribble is a simple, Linq enabled ORM designed to work with dynamically created tables. Gribble supports POCO's and has a fluent mapping API (shamelessly ripped off from FluentNHibernate). It is not meant to be a replacement for a real ORM like NHiberate but to handle an edge case that NHibernate was not designed for.
+Gribble is a simple, Linq enabled ORM that was designed to work with dynamically created tables. It was not meant to be a replacement for a full fledged ORM like NHiberate but to handle a use case that other ORM's could not handle well. 
+
+Here is the skinny:
+
+* Supports most Linq query operators.
+* Supports POCO's.
+* Simple fluent mapping API (shamelessly ripped off from FluentNHibernate).
+* Only supports SQL Server.
+* Create, modify and delete tables, columns and indexes.
+* Execute stored procs and map results to entites.
+* Additional query operators for copying/syncing data and querying duplicate/distinct records.
+* Interfaced based so you can test against in memory collections.
+* NHibernate session/transaction integration.
 	
 Distribution
 ------------
