@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using Gribble.TransactSql;
 
 namespace Gribble.Model
 {
@@ -10,7 +11,7 @@ namespace Gribble.Model
         public Column(
             string name, 
             Type type = null,
-            SqlDbType sqlType = SqlDbType.NVarChar,
+            SqlDbType? sqlType = SqlDbType.NVarChar,
             KeyType key = KeyType.None,
             bool isIdentity = false, 
             short length = 0, 
@@ -23,8 +24,8 @@ namespace Gribble.Model
             bool? computationPersisted = null)
         {
             Name = name;
-            Type = type;
-            SqlType = sqlType;
+            Type = type ?? (sqlType.HasValue ? sqlType.Value.GetClrType(isNullable) : null);
+            SqlType = sqlType ?? type.GetSqlType();
             Key = key;
             IsIdentity = isIdentity;
             Length = length;
