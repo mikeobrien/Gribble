@@ -100,7 +100,7 @@ namespace Tests.TransactSql
         public void Create_Table_with_computation_Test()
         {
             var statement = SchemaWriter.CreateTableCreateStatement(TableName,
-                new Column("Value", computation: "1 + 1", isNullable: true));
+                new Column("Value", typeof(string), computation: "1 + 1", isNullable: true));
             statement.Result.ShouldEqual(Statement.ResultType.None);
             statement.Text.ShouldEqual("CREATE TABLE [some_table_in_the_db] ([Value] AS (1 + 1))");
         }
@@ -109,7 +109,7 @@ namespace Tests.TransactSql
         public void Create_Table_with_persisted_computation_Test()
         {
             var statement = SchemaWriter.CreateTableCreateStatement(TableName,
-                new Column("Value", computation: "1 + 1", computationPersisted: true));
+                new Column("Value", typeof(string), computation: "1 + 1", computationPersisted: true));
             statement.Result.ShouldEqual(Statement.ResultType.None);
             statement.Text.ShouldEqual("CREATE TABLE [some_table_in_the_db] ([Value] AS (1 + 1) PERSISTED NOT NULL)");
         }

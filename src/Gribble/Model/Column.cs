@@ -11,7 +11,7 @@ namespace Gribble.Model
         public Column(
             string name, 
             Type type = null,
-            SqlDbType? sqlType = SqlDbType.NVarChar,
+            SqlDbType? sqlType = null,
             KeyType key = KeyType.None,
             bool isIdentity = false, 
             short length = 0, 
@@ -24,8 +24,10 @@ namespace Gribble.Model
             bool? computationPersisted = null)
         {
             Name = name;
+            if (type == null && sqlType == null && string.IsNullOrEmpty(computation)) 
+                throw new Exception("No column data type or computation specified.");
             Type = type ?? (sqlType.HasValue ? sqlType.Value.GetClrType(isNullable) : null);
-            SqlType = sqlType ?? type.GetSqlType();
+            SqlType = sqlType ?? (type != null ? type.GetSqlType() : (SqlDbType?)null);
             Key = key;
             IsIdentity = isIdentity;
             Length = length;
@@ -87,7 +89,7 @@ namespace Gribble.Model
 
         public string Name { get; private set; }
         public Type Type { get; private set; }
-        public SqlDbType SqlType { get; private set; }
+        public SqlDbType? SqlType { get; private set; }
         public bool IsIdentity { get; private set; }
         public KeyType Key { get; private set; }
         public short Length { get; private set; }

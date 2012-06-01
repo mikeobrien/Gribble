@@ -133,7 +133,7 @@ namespace Tests
             GribbleDatabase.CreateTable(tableName, column);
 
             Database.ExecuteScalar<byte>("SELECT system_type_id FROM sys.columns WHERE object_id = object_id('{0}') AND name='{1}'", 
-                tableName, column.Name).ShouldEqual(column.SqlType.GetSqlTypeId());
+                tableName, column.Name).ShouldEqual(column.SqlType.Value.GetSqlTypeId());
         }
 
         [Test]
