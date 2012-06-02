@@ -334,7 +334,7 @@ Copys records from one table to another. Both the source and target must be an `
 
     IQueryable<TSource> CopyTo<TSource>(this IQueryable<TSource> source, IQueryable<TSource> target)
 
-Syncs the values of records based on a key. The records may be in the same table or seperate tables. You can specify the fields to include or exclude in the sync:
+Syncs the values of records based on a key. The records may be in the same table or seperate tables. You can specify the fields to include or exclude in the sync. Both the source and target must be an `ITable`:
 
     IQueryable<TTarget> SyncWith<TTarget, TKey>(this IQueryable<TTarget> target, IQueryable<TTarget> source, Expression<Func<TTarget, TKey>> keySelector,
         SyncFields syncFields, params Expression<Func<TTarget, object>>[] syncSelectors)
@@ -368,7 +368,26 @@ Returns the exception of two queries based on the specified selectors:
 
     IQueryable<TSource> Except<TSource>(this IQueryable<TSource> source, IQueryable<TSource> compare, params Expression<Func<TSource, object>>[] selectors)
 
-All custom query operators are complemented with an equivilent `IEnumerable<T>` so that a memory backed collection can be substituted when testing.
+All custom query operators are complemented with an equivalent `IEnumerable<T>` so that a memory backed collection can be substituted when testing.
+
+Extension Methods
+------------
+
+Gribble supports the following extension methods:
+
+`StartsWith`, `Contains`, `EndsWith`, `ToLower`, `ToUpper`, `Trim`, `TrimEnd`, `TrimStart`, `ToString`, `Substring`, `Replace`, `Insert`, `IndexOf`, `Hash`, ToHex`
+
+Gribble adds the following custom extension methods.
+
+Creates either a md5 or sha1 hash of a value:
+
+    enum HashAlgorithim { Md5, Sha1 }
+
+    byte[] Hash(this string value, HashAlgorithim algorithm)
+
+Converts a value to hex:
+
+    string ToHex(this byte[] value)
 
 Distribution
 ------------
