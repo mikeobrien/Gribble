@@ -16,9 +16,11 @@ Here is the skinny:
 * Interfaced based so you can test against in memory collections.
 * NHibernate session/transaction integration.
 	
-Example
+Working with Data
 ------------
-    
+
+Gribble allows you to work with data through the `Table` class which implements `ITable<T>` and `IQueryable<T>`.
+
 Let's say we have the following dynamically created table where `Id`, `Street`, `City`, `State` and `Zip` are standard columns and all other columns are dynamic (e.g. `Code` and `Active`):
 
     CREATE TABLE Address_F2A74B 
@@ -44,7 +46,7 @@ For this table we create the following entity:
         public Dictionary<string, object> Values { get; set; }
     }
     
-The `Values` property will allow us to get and set all non mapped fields (I refer to them as "dynamic" fields in this document). This property must be a `Dictionary<string, object>` where the key is the name of the field and the value is the value of the field.
+The `Values` property will allow us to get and set all non mapped fields (I refer to them as "dynamic" fields in this document). This property must be a `Dictionary<string, object>` where the key is the name of the field and the value is the value of the field. It is possible to create a mapping for the keys so that an alias can be used instead of the raw column name. This is discussed later.
 
 We next create a map in the spirit of [James Gregory's FluentNHibernate](http://www.fluentnhibernate.org/):
 
@@ -65,12 +67,12 @@ The Gribble fluent mapping works the same as FNH. The `Generated()` flag tells G
 
 Note: Gribble also provides a stock entity (`Gribble.Entity<TKey>`) and class map (`Gribble.IntKeyEntityMap/GuidKeyEntityMap`) out of the box that only contains an `Id` and `Values` property. This is handy if you need to work with a table that is completely dynamic and do not want to create an entity and map. `Table` contains static factory methods, discussed next, that omit the mapping and will use the built in one (`Table.Create<TKey>(...)`).
 
-We create a `Table` by passing in a connection manager, an entity map and an optional profiler. You can create a `Table` with the new keyword or one of the static factory methods. There is a connection manager that takes a `System.Data.SqlConnection` or connection string and one that takes an `NHibernate.ISession` (When using NHibernate integration). The class map you defined above will also need to be wrapped in an `EntityMapping` and passed in as well. 
+We create a `Table` by passing in a connection manager, a class map and an optional profiler. You can create a `Table` with the new keyword or one of the static factory methods. There is a connection manager that takes a `System.Data.SqlConnection` or connection string and one that takes an `NHibernate.ISession` (When using NHibernate integration). 
 
     // Connection string and console profiler
     using (var connectionManager = new ConnectionManager("server=localhost...")) 
     {
-        var table = new Table(connectionManager, "Address_F2A74B", new EntityMapping(new AddressMap()), new ConsoleProfiler());
+        var table = new Table<Address>(connectionManager, "Address_F2A74B", new AddressMap(), new ConsoleProfiler());
         ...
     }
 
@@ -79,7 +81,7 @@ We create a `Table` by passing in a connection manager, an entity map and an opt
     {
         connection.Open();
         var connectionManager = new ConnectionManager(connection);
-        var table = new Table(connectionManager, "Address_F2A74B", new EntityMapping(new AddressMap()));
+        var table = new Table<Address>(connectionManager, "Address_F2A74B", new AddressMap());
         ...
     }
 
@@ -87,14 +89,14 @@ We create a `Table` by passing in a connection manager, an entity map and an opt
     using (var session = sessionFactory.OpenSession()) 
     {
         var connectionManager = new Gribble.NHibernate.ConnectionManager(session);
-        var table = new Table(connectionManager, "Address_F2A74B", new EntityMapping(new AddressMap()));
+        var table = new Table<Address>(connectionManager, "Address_F2A74B", new AddressMap());
         ...
     }
     
-    // Static factory using built in entity and map. Requires key column name.
+    // Static factory method using built in entity and map. Requires key column name.
     using (var connectionManager = new ConnectionManager("server=localhost...")) 
     {
-        var table = Table.Create<Guid>(connectionManager, "Address_F2A74B", "Id");
+        var table = Table<Entity<Guid>>.Create<Guid>(connectionManager, "Address_F2A74B", "Id");
         ...
     }
     
@@ -125,6 +127,163 @@ You can also get, add, modify, delete and delete many records:
     table.DeleteMany(x => x.State == "CO" && !x.Values["Active"]);
     
     table.DeleteMany(table.Duplicates(x => x.Values["Code"]));
+
+In some cases you may want to map the raw column names to an alias at runtime. This may especially so when allowing users to set values via an API. Lets say for example we had the following table:
+
+    CREATE TABLE Address_F2A74B 
+    (
+	    Id uniqueidentifier NOT NULL,
+	    Street nvarchar(200) NOT NULL,
+	    City nvarchar(200) NOT NULL,
+	    State nvarchar(200) NOT NULL,
+	    Zip nvarchar(200) NOT NULL,
+	    F2A74B_code varchar(3) NOT NULL,
+	    F2A74B_active bit NOT NULL
+    )
+
+And a mapping stored somewhere like this (Like the users custom columns table) which map a column name to friendly alias:
+
+F2A74B_code = Code
+F2A74B_active = Active
+...
+
+Instead of referencing the dynamic fields like `address.Values["F2A74B_active"]` you can pass a mapping override that applies to dynamic fields and reference it like `address.Values["Active"]`:
+
+    var dynamicColumnMapping = new [] { new ColumnMapping("F2A74B_code", "Code"), new ColumnMapping("F2A74B_active", "Active") };
+    var entityMapping = new EntityMapping(new AddressMap(), dynamicColumnMapping);
+    
+    var table = new Table<Address>(connectionManager, "Address_F2A74B", entityMapping);
+    
+    var results = table.Where(x => x.State == "CO" && x.Values["Active"]).ToList();
+
+Working with Schema
+------------
+
+Gribble allows you to work with table schema through the `Database` class which implements `IDatabase`.
+
+We create a `Database` by passing in a connection manager, an optional class map (Only used when retuning entities from a stored procedure) and an optional profiler. You can create a `Table` with the new keyword or one of the static factory methods. There is a connection manager that takes a `System.Data.SqlConnection` or connection string and one that takes an `NHibernate.ISession` (When using NHibernate integration). 
+
+    // Connection string and console profiler
+    using (var connectionManager = new ConnectionManager("server=localhost...")) 
+    {
+        var database = Database.Create(connectionManager, profiler: new ConsoleProfiler());
+        ...
+    }
+
+    // Existing connection with optional mapping
+    using (var connection = new SqlConnection("server=localhost...")) 
+    {
+        connection.Open();
+        var connectionManager = new ConnectionManager(connection);
+        var mapping = new EntityMappingCollection(new IClassMap[] { new AddressMap() })
+        var database = Database.Create(connectionManager, mapping);
+        ...
+    }
+
+    // NHibernate session
+    using (var session = sessionFactory.OpenSession()) 
+    {
+        var connectionManager = new Gribble.NHibernate.ConnectionManager(session);
+        var database = Database.Create(connectionManager);
+        ...
+    }
+
+The database object allows you to do the following:
+
+* Call a stored procedure. You can also return results as entities: `CallProcedure`, `CallProcedureScalar<T>`, `CallProcedureSingle<TEntity>`, `CallProcedureSingleOrNone<TEntity>`, `CallProcedureMany<TEntity>`
+* Create a table: `CreateTable`
+* Create a table using an existing table schema as a template: `CreateTable`
+* Check if a table exists: `TableExists`
+* Delete a table: `DeleteTable`
+* Get table columns: `GetColumns`
+* Add table columns: `AddColumn`, `AddColumns`
+* Remove table columns: `RemoveColumn`
+* Get table indexes: `GetIndexes`
+* Add non clustered indexes: `AddNonClusteredIndex`, `AddNonClusteredIndexes`
+* Remove non clustered index: `RemoveNonClusteredIndex`
+
+NHibernate Integration
+------------
+
+Gribble integrates with NHibernate. More specifically it will use the NHibernate sql connection and enlist in an NHibernate transaction if one has been started. The integration is avaiable as a seperate assembly. The following example demonstrates how to use Gribble with NHibernate:
+
+    using (var session = sessionFactory.OpenSession()) 
+    {
+        var connectionManager = new Gribble.NHibernate.ConnectionManager(session);
+        var table = new Table<Address>(connectionManager, "Address_F2A74B", new AddressMap());
+        ...
+    }
+    
+    using (var session = sessionFactory.OpenSession()) 
+    {
+        var connectionManager = new Gribble.NHibernate.ConnectionManager(session);
+        var database = Database.Create(connectionManager);
+        ...
+    }
+
+IoC Configuration
+------------
+  
+Gribble was designed to be IoC friendly. The following demonstrates how to configure StructureMap and Gribble with NHibernate:
+
+    public class Registry : StructureMap.Configuration.DSL.Registry
+    {
+        public Registry()
+        {
+            ForSingletonOf<ISessionFactory>().
+                Use(context => Fluently.Configure().
+                    Database(MsSqlConfiguration.MsSql2008.ConnectionString("server=localhost...")).
+                    Mappings(map => map.FluentMappings.AddFromAssembly(Assembly.GetExecutingAssembly()).Conventions.Add(AutoImport.Never())).
+                    BuildConfiguration().
+                    BuildSessionFactory());
+            For<ISession>().Use(context => context.GetInstance<ISessionFactory>().OpenSession());
+            
+            Scan(x => { x.TheCallingAssembly(); x.AddAllTypesOf<IClassMap>(); });
+            ForSingletonOf<EntityMappingCollection>().Use<EntityMappingCollection>();
+            For<IConnectionManager>().Use<Gribble.NHibernate.ConnectionManager>();
+            For<ITableFactory>().Use<TableFactory>();
+            For<IDatabase>().Use<Database>();
+        }
+    }
+    
+    public class Data
+    {
+        private ITableFactory _tableFactory;
+        private IDatabase _database;
+        
+        public Data(ITableFactory tableFactory, IDatabase database) 
+        {
+            _tableFactory = tableFactory;
+            _database = database;
+        }
+        
+        public T GetRecord<T>(string tableName, object id) 
+        {
+            var table = _tableFactory.CreateFor<T>(tableName);
+            return table.Get(id);
+        }
+        
+        public IEnumerable<string> GetColumns(string tableName)
+        {
+            return _database.GetColumns(tableName);
+        }
+    }
+    
+    ObjectFactory.Initialize(x => x.AddRegistry<Registry>());
+    using (var container = ObjectFactory.Container.GetNestedContainer()) 
+    {
+        var data = container.GetInstance<Data>();
+        var result = data.GetRecord<Address>(id);
+    }
+
+Query Operators
+------------
+
+Gribble supports the following query operators:
+
+`Any`, `Count`, `CopyTo`, `First`, `FirstOrDefault`, `Distinct`, `Duplicates`, `Except`, `Intersect`, `OrderBy`, `OrderByDescending`, `Randomize`, `Skip`, `SyncWith`, `Take`, `TakePercent`, `Union`, `Where`
+
+All custom query operators are complemented with an equivilent `IEnumerable<T>` so that a memory backed collection can be substituted for testing.
 
 Distribution
 ------------

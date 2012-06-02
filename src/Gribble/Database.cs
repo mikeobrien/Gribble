@@ -14,7 +14,8 @@ namespace Gribble
         private readonly IProfiler _profiler;
         private readonly EntityMappingCollection _mappingCollection;
 
-        public Database(IConnectionManager connectionManager, EntityMappingCollection mappingCollection) : this(connectionManager, mappingCollection, null) { }
+        public Database(IConnectionManager connectionManager, EntityMappingCollection mappingCollection) : 
+            this(connectionManager, mappingCollection, null) { }
 
         internal Database(IConnectionManager connectionManager, EntityMappingCollection mappingCollection, IProfiler profiler)
         {

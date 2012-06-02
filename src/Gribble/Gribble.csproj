@@ -66,6 +66,7 @@
     <Compile Include="INamedQueryable.cs" />
     <Compile Include="IProfiler.cs" />
     <Compile Include="ITable.cs" />
+    <Compile Include="ITableFactory.cs" />
     <Compile Include="Loader.cs" />
     <Compile Include="Mapping\ClassMap.cs" />
     <Compile Include="Mapping\ColumnMapping.cs" />
@@ -100,6 +101,7 @@
     <Compile Include="Model\Table.cs" />
     <Compile Include="Model\Update.cs" />
     <Compile Include="Table.cs" />
+    <Compile Include="TableFactory.cs" />
     <Compile Include="TransactSql\SyncWriter.cs" />
     <Compile Include="TransactSql\DataTypes.cs" />
     <Compile Include="TransactSql\DeleteWriter.cs" />
