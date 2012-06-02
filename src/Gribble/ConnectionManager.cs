@@ -9,13 +9,13 @@ namespace Gribble
         private readonly Lazy<SqlConnection> _connection;
         private readonly TimeSpan _commandTimeout;
 
-        public ConnectionManager(SqlConnection connection, TimeSpan commandTimeout)
+        public ConnectionManager(SqlConnection connection, TimeSpan? commandTimeout = null)
         {
             _connection = new Lazy<SqlConnection>(() => connection);
-            _commandTimeout = commandTimeout;
+            _commandTimeout = commandTimeout ?? new TimeSpan(0, 5, 0);
         }
 
-        public ConnectionManager(string connectionString, TimeSpan commandTimeout)
+        public ConnectionManager(string connectionString, TimeSpan? commandTimeout = null)
         {
             _connection = new Lazy<SqlConnection>(() =>
                         {
@@ -23,7 +23,7 @@ namespace Gribble
                             connection.Open();
                             return connection;
                         });
-            _commandTimeout = commandTimeout;
+            _commandTimeout = commandTimeout ?? new TimeSpan(0, 5, 0);
         }
 
         public SqlConnection Connection { get { return _connection.Value; } }

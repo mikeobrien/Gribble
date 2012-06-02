@@ -24,7 +24,7 @@ namespace Gribble
         private readonly IProfiler _profiler;
         private readonly bool _noLock;
 
-        public Table(IConnectionManager connectionManagerManager, string table, IEntityMapping mapping, IProfiler profiler, bool noLock)
+        public Table(IConnectionManager connectionManagerManager, string table, IEntityMapping mapping, IProfiler profiler = null, bool noLock = false)
         {
             _connectionManager = connectionManagerManager;
             _table = table;
