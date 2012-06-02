@@ -21,6 +21,18 @@ Working with Data
 
 Gribble allows you to work with data through the `Table` class which implements `ITable<T>` and `IQueryable<T>`.
 
+    public interface ITable<TEntity>: IOrderedQueryable<TEntity>, INamedQueryable
+    {
+        TEntity Get<T>(T id);
+        void Insert(TEntity entity);
+        void Update(TEntity entity);
+        void Delete<T>(T id);
+        void Delete(TEntity entity);
+        void Delete(Expression<Func<TEntity, bool>> filter);
+        int DeleteMany(Expression<Func<TEntity, bool>> filter);
+        int DeleteMany(IQueryable<TEntity> source);
+    }
+
 Let's say we have the following dynamically created table where `Id`, `Street`, `City`, `State` and `Zip` are standard columns and all other columns are dynamic (e.g. `Code` and `Active`):
 
     CREATE TABLE Address_F2A74B 
@@ -128,7 +140,7 @@ You can also get, add, modify, delete and delete many records:
     
     table.DeleteMany(table.Duplicates(x => x.Values["Code"]));
 
-In some cases you may want to map the raw column names to an alias at runtime. This may especially so when allowing users to set values via an API. Lets say for example we had the following table:
+In some cases you may want to map the raw column names to an alias at runtime. This may especially be so when allowing users to set values via an API. Lets say for example we had the following table:
 
     CREATE TABLE Address_F2A74B 
     (
@@ -143,9 +155,9 @@ In some cases you may want to map the raw column names to an alias at runtime. T
 
 And a mapping stored somewhere like this (Like the users custom columns table) which map a column name to friendly alias:
 
-F2A74B_code = Code
-F2A74B_active = Active
-...
+    F2A74B_code = Code
+    F2A74B_active = Active
+    ...
 
 Instead of referencing the dynamic fields like `address.Values["F2A74B_active"]` you can pass a mapping override that applies to dynamic fields and reference it like `address.Values["Active"]`:
 
@@ -161,7 +173,36 @@ Working with Schema
 
 Gribble allows you to work with table schema through the `Database` class which implements `IDatabase`.
 
-We create a `Database` by passing in a connection manager, an optional class map (Only used when retuning entities from a stored procedure) and an optional profiler. You can create a `Table` with the new keyword or one of the static factory methods. There is a connection manager that takes a `System.Data.SqlConnection` or connection string and one that takes an `NHibernate.ISession` (When using NHibernate integration). 
+    public interface IDatabase
+    {
+        void CallProcedure(string name);
+        void CallProcedure(string name, Dictionary<string, object> parameters);
+        T CallProcedureScalar<T>(string name);
+        T CallProcedureScalar<T>(string name, Dictionary<string, object> parameters);
+        TEntity CallProcedureSingle<TEntity>(string name);
+        TEntity CallProcedureSingle<TEntity>(string name, Dictionary<string, object> parameters);
+        TEntity CallProcedureSingleOrNone<TEntity>(string name);
+        TEntity CallProcedureSingleOrNone<TEntity>(string name, Dictionary<string, object> parameters);
+        IEnumerable<TEntity> CallProcedureMany<TEntity>(string name);
+        IEnumerable<TEntity> CallProcedureMany<TEntity>(string name, Dictionary<string, object> parameters);
+
+        void CreateTable(string tableName, params Column[] columns);
+        void CreateTable(string tableName, string modelTable);
+        bool TableExists(string tableName);
+        void DeleteTable(string tableName);
+
+        IEnumerable<Column> GetColumns(string tableName);
+        void AddColumn(string tableName, Column column);
+        void AddColumns(string tableName, params Column[] columns);
+        void RemoveColumn(string tableName, string columnName);
+
+        IEnumerable<Index> GetIndexes(string tableName);
+        void AddNonClusteredIndex(string tableName, params Index.Column[] columns);
+        void AddNonClusteredIndexes(string tableName, params Index.ColumnSet[] indexColumns);
+        void RemoveNonClusteredIndex(string tableName, string indexName);
+    }
+
+We create a `Database` by passing in a connection manager, an optional class map (Only used when retuning entities from a stored procedure) and an optional profiler. You can create a `Database` with the new keyword or one of the static factory methods. There is a connection manager that takes a `System.Data.SqlConnection` or connection string and one that takes an `NHibernate.ISession` (When using NHibernate integration). 
 
     // Connection string and console profiler
     using (var connectionManager = new ConnectionManager("server=localhost...")) 
@@ -211,12 +252,6 @@ Gribble integrates with NHibernate. More specifically it will use the NHibernate
     {
         var connectionManager = new Gribble.NHibernate.ConnectionManager(session);
         var table = new Table<Address>(connectionManager, "Address_F2A74B", new AddressMap());
-        ...
-    }
-    
-    using (var session = sessionFactory.OpenSession()) 
-    {
-        var connectionManager = new Gribble.NHibernate.ConnectionManager(session);
         var database = Database.Create(connectionManager);
         ...
     }
@@ -230,6 +265,7 @@ Gribble was designed to be IoC friendly. The following demonstrates how to confi
     {
         public Registry()
         {
+            // NHibernate registration
             ForSingletonOf<ISessionFactory>().
                 Use(context => Fluently.Configure().
                     Database(MsSqlConfiguration.MsSql2008.ConnectionString("server=localhost...")).
@@ -238,6 +274,7 @@ Gribble was designed to be IoC friendly. The following demonstrates how to confi
                     BuildSessionFactory());
             For<ISession>().Use(context => context.GetInstance<ISessionFactory>().OpenSession());
             
+            // Gribble registration
             Scan(x => { x.TheCallingAssembly(); x.AddAllTypesOf<IClassMap>(); });
             ForSingletonOf<EntityMappingCollection>().Use<EntityMappingCollection>();
             For<IConnectionManager>().Use<Gribble.NHibernate.ConnectionManager>();
@@ -283,7 +320,55 @@ Gribble supports the following query operators:
 
 `Any`, `Count`, `CopyTo`, `First`, `FirstOrDefault`, `Distinct`, `Duplicates`, `Except`, `Intersect`, `OrderBy`, `OrderByDescending`, `Randomize`, `Skip`, `SyncWith`, `Take`, `TakePercent`, `Union`, `Where`
 
-All custom query operators are complemented with an equivilent `IEnumerable<T>` so that a memory backed collection can be substituted for testing.
+Gribble adds the following custom query operators:
+
+    public static IQueryable<TSource> Randomize<TSource>(this IQueryable<TSource> source)
+
+Returns a random result set.
+
+    public static IQueryable<TSource> TakePercent<TSource>(this IQueryable<TSource> source, int percent)
+    
+Returns a top percentage of records.
+
+    IQueryable<TSource> CopyTo<TSource>(this IQueryable<TSource> source, IQueryable<TSource> target)
+
+Copys records from one table to another. Both the source and target must be an `ITable`.
+
+    IQueryable<TTarget> SyncWith<TTarget, TKey>(this IQueryable<TTarget> target, IQueryable<TTarget> source, Expression<Func<TTarget, TKey>> keySelector,
+        SyncFields syncFields, params Expression<Func<TTarget, object>>[] syncSelectors)
+
+Syncs the values of records based on a key. The records may be in the same table or seperate tables. You can specify the fields to include or exclude in the sync.
+
+    IQueryable<TSource> Distinct<TSource, TKey>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector)
+
+Returns a distinct result set based on the specified key.
+
+    IQueryable<TSource> Distinct<TSource, TKey, TOrder>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector,
+        Expression<Func<TSource, TOrder>> orderSelector, Order order)
+
+Returns a distinct result set based on the specified key and sorted by a projection.
+
+    IQueryable<TSource> Duplicates<TSource, TKey>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector)
+
+Returns duplicate records based on a key.
+
+    IQueryable<TSource> Duplicates<TSource, TKey, TOrder>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector, 
+        Expression<Func<TSource, TOrder>> orderSelector, Order order)
+
+    IQueryable<TSource> Duplicates<TSource, TKey, TOrder1, TOrder2>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector, 
+        Expression<Func<TSource, TOrder1>> orderSelector1, Order order1, Expression<Func<TSource, TOrder2>> orderSelector2, Order order2)
+
+Returns duplicate records based on a key and ordered by a projection or a predicate.
+
+    IQueryable<TSource> Intersect<TSource>(this IQueryable<TSource> source, IQueryable<TSource> compare, params Expression<Func<TSource, object>>[] selectors)
+
+Returns the intersection of two queries based on the specified selectors.
+
+    IQueryable<TSource> Except<TSource>(this IQueryable<TSource> source, IQueryable<TSource> compare, params Expression<Func<TSource, object>>[] selectors)
+
+Returns the exception of two queries based on the specified selectors.
+
+All custom query operators are complemented with an equivilent `IEnumerable<T>` so that a memory backed collection can be substituted when testing.
 
 Distribution
 ------------
