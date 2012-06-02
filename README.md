@@ -320,37 +320,39 @@ Gribble supports the following query operators:
 
 `Any`, `Count`, `CopyTo`, `First`, `FirstOrDefault`, `Distinct`, `Duplicates`, `Except`, `Intersect`, `OrderBy`, `OrderByDescending`, `Randomize`, `Skip`, `SyncWith`, `Take`, `TakePercent`, `Union`, `Where`
 
-Gribble adds the following custom query operators:
+Gribble adds the following custom query operators.
+
+Returns a random result set:
 
     public static IQueryable<TSource> Randomize<TSource>(this IQueryable<TSource> source)
-
-Returns a random result set.
+    
+Returns a top percentage of records:
 
     public static IQueryable<TSource> TakePercent<TSource>(this IQueryable<TSource> source, int percent)
-    
-Returns a top percentage of records.
+
+Copys records from one table to another. Both the source and target must be an `ITable`:
 
     IQueryable<TSource> CopyTo<TSource>(this IQueryable<TSource> source, IQueryable<TSource> target)
 
-Copys records from one table to another. Both the source and target must be an `ITable`.
+Syncs the values of records based on a key. The records may be in the same table or seperate tables. You can specify the fields to include or exclude in the sync:
 
     IQueryable<TTarget> SyncWith<TTarget, TKey>(this IQueryable<TTarget> target, IQueryable<TTarget> source, Expression<Func<TTarget, TKey>> keySelector,
         SyncFields syncFields, params Expression<Func<TTarget, object>>[] syncSelectors)
 
-Syncs the values of records based on a key. The records may be in the same table or seperate tables. You can specify the fields to include or exclude in the sync.
+Returns a distinct result set based on the specified key:
 
     IQueryable<TSource> Distinct<TSource, TKey>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector)
 
-Returns a distinct result set based on the specified key.
+Returns a distinct result set based on the specified key and sorted by a projection:
 
     IQueryable<TSource> Distinct<TSource, TKey, TOrder>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector,
         Expression<Func<TSource, TOrder>> orderSelector, Order order)
 
-Returns a distinct result set based on the specified key and sorted by a projection.
+Returns duplicate records based on a key:
 
     IQueryable<TSource> Duplicates<TSource, TKey>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector)
 
-Returns duplicate records based on a key.
+Returns duplicate records based on a key and ordered by a projection or a predicate:
 
     IQueryable<TSource> Duplicates<TSource, TKey, TOrder>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector, 
         Expression<Func<TSource, TOrder>> orderSelector, Order order)
@@ -358,15 +360,13 @@ Returns duplicate records based on a key.
     IQueryable<TSource> Duplicates<TSource, TKey, TOrder1, TOrder2>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> selector, 
         Expression<Func<TSource, TOrder1>> orderSelector1, Order order1, Expression<Func<TSource, TOrder2>> orderSelector2, Order order2)
 
-Returns duplicate records based on a key and ordered by a projection or a predicate.
+Returns the intersection of two queries based on the specified selectors:
 
     IQueryable<TSource> Intersect<TSource>(this IQueryable<TSource> source, IQueryable<TSource> compare, params Expression<Func<TSource, object>>[] selectors)
 
-Returns the intersection of two queries based on the specified selectors.
+Returns the exception of two queries based on the specified selectors:
 
     IQueryable<TSource> Except<TSource>(this IQueryable<TSource> source, IQueryable<TSource> compare, params Expression<Func<TSource, object>>[] selectors)
-
-Returns the exception of two queries based on the specified selectors.
 
 All custom query operators are complemented with an equivilent `IEnumerable<T>` so that a memory backed collection can be substituted when testing.
 
