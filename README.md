@@ -44,7 +44,7 @@ For this table we create the following entity:
         public Dictionary<string, object> Values { get; set; }
     }
     
-The Values property will allow us to get and set all non mapped fields (I refer to them as "dynamic" fields in this document). This property must be a Dictionary<<string, object>> where the key is the name of the field and the value is the value of the field.
+The Values property will allow us to get and set all non mapped fields (I refer to them as "dynamic" fields in this document). This property must be a `Dictionary<string, object>` where the key is the name of the field and the value is the value of the field.
 
 We next create a map in the spirit of [James Gregory's FluentNHibernate](http://www.fluentnhibernate.org/):
 
