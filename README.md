@@ -375,7 +375,7 @@ Extension Methods
 
 Gribble supports the following extension methods:
 
-`StartsWith`, `Contains`, `EndsWith`, `ToLower`, `ToUpper`, `Trim`, `TrimEnd`, `TrimStart`, `ToString`, `Substring`, `Replace`, `Insert`, `IndexOf`, `Hash`, `ToHex`
+`Contains`, `EndsWith`, `Hash`, `Insert`, `IndexOf`, `Replace`, `StartsWith`, `Substring`, `Trim`, `ToLower`, `ToString`, `ToUpper`, `TrimEnd`, `TrimStart`, `ToHex`
 
 Gribble adds the following custom extension methods.
 
