@@ -43,46 +43,6 @@ namespace Gribble
         public object ExecuteScalar(IConnectionManager connectionManager)
         { return Execute(() => CreateCommand(connectionManager).ExecuteScalar()); }
 
-        public IEnumerable<T> ExecuteEnumerable<T>(IConnectionManager connectionManager)
-        {
-            return ExecuteEnumerable(connectionManager, x => (T)x[0]);
-        }
-
-        public IEnumerable<Tuple<T1, T2>> ExecuteEnumerable<T1, T2>(IConnectionManager connectionManager)
-        {
-            return ExecuteEnumerable(connectionManager, x => new Tuple<T1, T2>((T1)x[0], (T2)x[1]));
-        }
-
-        public IEnumerable<Tuple<T1, T2, T3>> ExecuteEnumerable<T1, T2, T3>(IConnectionManager connectionManager)
-        {
-            return ExecuteEnumerable(connectionManager, x => new Tuple<T1, T2, T3>((T1)x[0], (T2)x[1], (T3)x[2]));
-        }
-
-        public IEnumerable<Tuple<T1, T2, T3, T4>> ExecuteEnumerable<T1, T2, T3, T4>(IConnectionManager connectionManager)
-        {
-            return ExecuteEnumerable(connectionManager, x => new Tuple<T1, T2, T3, T4>((T1)x[0], (T2)x[1], (T3)x[2], (T4)x[3]));
-        }
-
-        public IEnumerable<Tuple<T1, T2, T3, T4, T5>> ExecuteEnumerable<T1, T2, T3, T4, T5>(IConnectionManager connectionManager)
-        {
-            return ExecuteEnumerable(connectionManager, x => new Tuple<T1, T2, T3, T4, T5>((T1)x[0], (T2)x[1], (T3)x[2], (T4)x[3], (T5)x[4]));
-        }
-
-        public IEnumerable<Tuple<T1, T2, T3, T4, T5, T6>> ExecuteEnumerable<T1, T2, T3, T4, T5, T6>(IConnectionManager connectionManager)
-        {
-            return ExecuteEnumerable(connectionManager, x => new Tuple<T1, T2, T3, T4, T5, T6>((T1)x[0], (T2)x[1], (T3)x[2], (T4)x[3], (T5)x[4], (T6)x[5]));
-        }
-
-        public IEnumerable<Tuple<T1, T2, T3, T4, T5, T6, T7>> ExecuteEnumerable<T1, T2, T3, T4, T5, T6, T7>(IConnectionManager connectionManager)
-        {
-            return ExecuteEnumerable(connectionManager, x => new Tuple<T1, T2, T3, T4, T5, T6, T7>((T1)x[0], (T2)x[1], (T3)x[2], (T4)x[3], (T5)x[4], (T6)x[5], (T7)x[6]));
-        }
-
-        public IEnumerable<Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8>>> ExecuteEnumerable<T1, T2, T3, T4, T5, T6, T7, T8>(IConnectionManager connectionManager)
-        {
-            return ExecuteEnumerable(connectionManager, x => new Tuple<T1, T2, T3, T4, T5, T6, T7, Tuple<T8>>((T1) x[0], (T2) x[1], (T3) x[2], (T4) x[3], (T5) x[4], (T6) x[5], (T7) x[6], new Tuple<T8>((T8) x[7])));
-        }
-
         public int ExecuteNonQuery(IConnectionManager connectionManager)
         {
             return Execute(() => CreateCommand(connectionManager).ExecuteNonQuery());
@@ -97,7 +57,12 @@ namespace Gribble
             return command;
         }
 
-        private IEnumerable<T> ExecuteEnumerable<T>(IConnectionManager connectionManager, Func<IDataReader, T> createItem)
+        public IEnumerable<T> ExecuteEnumerable<T>(IConnectionManager connectionManager)
+        {
+            return ExecuteEnumerable(connectionManager, x => (T)x[0]);
+        }
+
+        public IEnumerable<T> ExecuteEnumerable<T>(IConnectionManager connectionManager, Func<IDataReader, T> createItem)
         {
             return Execute(() =>
             {

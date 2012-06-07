@@ -36,23 +36,48 @@ namespace Gribble
             _noLock = noLock;
         }
 
-        public static ITable<TEntity> Create<TKey>(SqlConnection connection, string tableName, string keyColumn, TimeSpan? commandTimeout = null, IProfiler profiler = null, bool noLock = false)
+        public static ITable<TEntity> Create<TKey>(
+            SqlConnection connection, 
+            string tableName, 
+            string keyColumn, 
+            TimeSpan? commandTimeout = null, 
+            IProfiler profiler = null, 
+            bool noLock = false)
         {
             return Create<TKey>(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), keyColumn, tableName, profiler ?? new ConsoleProfiler(), noLock);
         }
 
-        public static ITable<TEntity> Create<TKey>(IConnectionManager connectionManager, string tableName, string keyColumn, IProfiler profiler = null, bool noLock = false)
+        public static ITable<TEntity> Create<TKey>(
+            IConnectionManager connectionManager, 
+            string tableName, 
+            string keyColumn, 
+            IProfiler profiler = null, 
+            bool noLock = false)
         {
-            var mapping = new EntityMapping(typeof(Guid) == typeof(TKey) ? new GuidKeyEntityMap(keyColumn) : (typeof(int) == typeof(TKey) ? (IClassMap)new IntKeyEntityMap(keyColumn) : null));
+            var mapping = new EntityMapping(
+                    typeof(Guid) == typeof(TKey) ? 
+                    new GuidKeyEntityMap(keyColumn) : 
+                    (typeof(int) == typeof(TKey) ? (IClassMap)new IntKeyEntityMap(keyColumn) : null));
             return new Table<TEntity>(connectionManager, tableName, mapping, profiler ?? new ConsoleProfiler(), noLock);
         }
 
-        public static ITable<TEntity> Create(SqlConnection connection, string tableName, IEntityMapping entityMapping, TimeSpan? commandTimeout = null, IProfiler profiler = null, bool noLock = false)
+        public static ITable<TEntity> Create(
+            SqlConnection connection, 
+            string tableName, 
+            IEntityMapping entityMapping, 
+            TimeSpan? commandTimeout = null, 
+            IProfiler profiler = null, 
+            bool noLock = false)
         {
             return Create(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), tableName, entityMapping, profiler ?? new ConsoleProfiler(), noLock);
         }
 
-        public static ITable<TEntity> Create(IConnectionManager connectionManager, string tableName, IEntityMapping entityMapping, IProfiler profiler = null, bool noLock = false)
+        public static ITable<TEntity> Create(
+            IConnectionManager connectionManager, 
+            string tableName, 
+            IEntityMapping entityMapping, 
+            IProfiler profiler = null, 
+            bool noLock = false)
         {
             return new Table<TEntity>(connectionManager, tableName, entityMapping, profiler ?? new ConsoleProfiler(), noLock);
         }
@@ -175,18 +200,6 @@ namespace Gribble
             return new Table<TEntity>(_connectionManager, insert.Into.Name, _map, _profiler, _noLock);
         }
 
-        private IList<SelectProjection> GetSharedColumns(Select source, Table target)
-        {
-            var hasIdentityKey = _map.Key.KeyType == PrimaryKeyType.IdentitySeed;
-            var keyColumnName = _map.Key.GetColumnName();
-            var columns = Command.Create(SchemaWriter.CreateSharedColumnsStatement(source, target), _profiler).
-                                  ExecuteEnumerable<string, bool>(_connectionManager).
-                                  Where(x => !hasIdentityKey || !x.Item1.Equals(keyColumnName, StringComparison.OrdinalIgnoreCase));
-            if (columns.Any(x => x.Item2)) throw new StringColumnNarrowingException(columns.Select(x => x.Item1));
-            return columns.Select(x => x.Item1).Select(x => new SelectProjection {
-                Projection = Projection.Create.Field(_map.Column.GetPropertyName(x), !_map.Column.HasStaticPropertyMapping(x))}).ToList();
-        } 
-
         private IQueryable<TEntity> SyncWith(Sync sync)
         {
             if (!sync.Target.HasProjection)
@@ -206,5 +219,17 @@ namespace Gribble
             Command.Create(statement, _profiler).ExecuteNonQuery(_connectionManager);
             return new Table<TEntity>(_connectionManager, sync.Target.From.Table.Name, _map, _profiler, _noLock);
         }
+
+        private IList<SelectProjection> GetSharedColumns(Select source, Table target)
+        {
+            var hasIdentityKey = _map.Key.KeyType == PrimaryKeyType.IdentitySeed;
+            var keyColumnName = _map.Key.GetColumnName();
+            var columns = Command.Create(SchemaWriter.CreateSharedColumnsStatement(source, target), _profiler)
+                                 .ExecuteEnumerable(_connectionManager, r => new { Column = Database.ColumnFactory(r), IsNarrowing = (bool)r[SqlWriter.Aliases.IsNarrowing] })
+                                 .Where(x => (!hasIdentityKey || !x.Column.Name.Equals(keyColumnName, StringComparison.OrdinalIgnoreCase)) && !x.Column.IsComputed);
+            if (columns.Any(x => x.IsNarrowing)) throw new StringColumnNarrowingException(columns.Select(x => x.Column.Name));
+            return columns.Select(x => x.Column).Select(x => new SelectProjection {
+                Projection = Projection.Create.Field(_map.Column.GetPropertyName(x.Name), !_map.Column.HasStaticPropertyMapping(x.Name))}).ToList();
+        } 
     }
 }

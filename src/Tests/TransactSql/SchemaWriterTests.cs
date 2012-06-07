@@ -136,12 +136,13 @@ namespace Tests.TransactSql
             var select = new Select { From = { Type = Data.DataType.Query, 
                                                  Queries = new List<Select> { new Select { From = { Type = Data.DataType.Table, 
                                                                                                       Table = new Table { Name = TableName1 }}} }}};
-            var statement = SchemaWriter.CreateCreateTableColumnsStatement(select);
+            var statement = SchemaWriter.CreateSharedColumnsStatement(select);
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
             statement.Text.ShouldEqual("SELECT [SC].[name], [SC].[system_type_id], CAST(CASE WHEN [SC].[system_type_id] IN (239, 231, 99) THEN [SC].[max_length] / 2 ELSE [SC].[max_length] END AS smallint) AS [max_length], [SC].[is_nullable], [SC].[is_identity], " + 
                 "CAST((CASE OBJECT_DEFINITION([SC].[default_object_id]) WHEN '(GETDATE())' THEN 1 WHEN '(NEWID())' THEN 1 WHEN '(NEWSEQUENTIALID())' THEN 1 ELSE 0 END) AS bit) AS [is_auto_generated], " + 
                 "CASE OBJECT_DEFINITION([SC].[default_object_id]) WHEN '(GETDATE())' THEN NULL WHEN '(NEWID())' THEN NULL WHEN '(NEWSEQUENTIALID())' THEN NULL ELSE REPLACE(REPLACE(OBJECT_DEFINITION([SC].[default_object_id]), '(', ''), ')', '') END AS [default_value], " +
-                "ISNULL([SI].[is_primary_key], 0) AS [is_primary_key], CAST((CASE [SI].[type] WHEN 1 THEN 1 ELSE 0 END) AS bit) AS [is_primary_key_clustered], [SC].[precision], [SC].[scale], [SCC].[definition] AS [computation], [SCC].[is_persisted] AS [persisted_computation] " + 
+                "ISNULL([SI].[is_primary_key], 0) AS [is_primary_key], CAST((CASE [SI].[type] WHEN 1 THEN 1 ELSE 0 END) AS bit) AS [is_primary_key_clustered], [SC].[precision], [SC].[scale], [SCC].[definition] AS [computation], [SCC].[is_persisted] AS [persisted_computation], " +
+                "CAST(CASE WHEN [SC].[system_type_id] < (SELECT MAX([system_type_id]) FROM [sys].[columns] WHERE [name] = [__SubQuery__].[name] AND [system_type_id] IN (175, 167, 35, 239, 231, 99) AND [object_id] IN (OBJECT_ID(N'XLIST_1'))) THEN 1 ELSE 0 END AS bit) AS [is_narrowing] " +
                 "FROM ( ( ( [sys].[columns] [SC] LEFT JOIN [sys].[index_columns] [SIC] ON [SC].[column_id] = [SIC].[column_id] AND [SC].[object_id] = [SIC].[object_id] ) LEFT JOIN [sys].[indexes] [SI] ON [SI].[index_id] = [SIC].[index_id] AND " + 
                 "[SI].[object_id] = [SIC].[object_id] ) LEFT JOIN [sys].[computed_columns] [SCC] ON [SC].[column_id] = [SCC].[column_id] AND [SC].[object_id] = [SCC].[object_id] ) JOIN (SELECT [name], " + 
                 "CASE [system_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [system_type_id] END AS [system_type_id], CASE [user_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [user_type_id] END AS [user_type_id] " + 
@@ -166,7 +167,7 @@ namespace Tests.TransactSql
         {
             var statement = SchemaWriter.CreateGetIndexesStatement("XLIST_1");
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
-            statement.Text.ShouldEqual("SELECT [SI].[name] , [SI].[type] , [SI].[is_unique] , [SI].[is_primary_key] , [SC].[name] AS [column_name] , [SIC].[is_descending_key] FROM [sys].[indexes] [SI] JOIN [sys].[index_columns] [SIC] ON " + 
+            statement.Text.ShouldEqual("SELECT [SI].[name], [SI].[type], [SI].[is_unique], [SI].[is_primary_key], [SC].[name] AS [column_name], [SIC].[is_descending_key] FROM [sys].[indexes] [SI] JOIN [sys].[index_columns] [SIC] ON " + 
                 "[SI].[object_id] = [SIC].[object_id] AND [SI].[index_id] = [SIC].[index_id] JOIN [sys].[columns] [SC] ON [SIC].[object_id] = [SC].[object_id] AND [SIC].[column_id] = [SC].[column_id] WHERE [SI].[object_id] = OBJECT_ID(N'XLIST_1') ORDER BY [SI].[name]");
         }
 
@@ -192,13 +193,18 @@ namespace Tests.TransactSql
             var statement = SchemaWriter.CreateSharedColumnsStatement(select.CopyTo.Query, select.CopyTo.Into);
 
             statement.Parameters.Count().ShouldEqual(0);
-            statement.Text.ShouldEqual("SELECT [__SubQuery__].[name], " + 
-                "CAST(CASE WHEN [SC].[system_type_id] < (SELECT MAX([system_type_id]) FROM [sys].[columns] WHERE [name] = [__SubQuery__].[name] AND [system_type_id] IN (175, 167, 35, 239, 231, 99) AND [object_id] IN (OBJECT_ID(N'XLIST_1'), OBJECT_ID(N'XLIST_2'), OBJECT_ID(N'XLIST_3'))) THEN 1 ELSE 0 END AS bit) AS [NarrowingConversion] " + 
-                "FROM (SELECT [name], CASE [system_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [system_type_id] END AS [system_type_id], CASE [user_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [user_type_id] END AS [user_type_id] " + 
+            statement.Text.ShouldEqual("SELECT [SC].[name], [SC].[system_type_id], CAST(CASE WHEN [SC].[system_type_id] IN (239, 231, 99) THEN [SC].[max_length] / 2 ELSE [SC].[max_length] END AS smallint) AS [max_length], [SC].[is_nullable], [SC].[is_identity], " +
+                "CAST((CASE OBJECT_DEFINITION([SC].[default_object_id]) WHEN '(GETDATE())' THEN 1 WHEN '(NEWID())' THEN 1 WHEN '(NEWSEQUENTIALID())' THEN 1 ELSE 0 END) AS bit) AS [is_auto_generated], CASE OBJECT_DEFINITION([SC].[default_object_id]) WHEN '(GETDATE())' " + 
+                "THEN NULL WHEN '(NEWID())' THEN NULL WHEN '(NEWSEQUENTIALID())' THEN NULL ELSE REPLACE(REPLACE(OBJECT_DEFINITION([SC].[default_object_id]), '(', ''), ')', '') END AS [default_value], ISNULL([SI].[is_primary_key], 0) AS [is_primary_key], CAST((CASE [SI].[type] " + 
+                "WHEN 1 THEN 1 ELSE 0 END) AS bit) AS [is_primary_key_clustered], [SC].[precision], [SC].[scale], [SCC].[definition] AS [computation], [SCC].[is_persisted] AS [persisted_computation], CAST(CASE WHEN [SC].[system_type_id] < (SELECT MAX([system_type_id]) FROM [sys].[columns] " + 
+                "WHERE [name] = [__SubQuery__].[name] AND [system_type_id] IN (175, 167, 35, 239, 231, 99) AND [object_id] IN (OBJECT_ID(N'XLIST_1'), OBJECT_ID(N'XLIST_2'), OBJECT_ID(N'XLIST_3'), OBJECT_ID(N'XLIST_4'))) THEN 1 ELSE 0 END AS bit) AS [is_narrowing] FROM ( ( ( [sys].[columns] [SC] " + 
+                "LEFT JOIN [sys].[index_columns] [SIC] ON [SC].[column_id] = [SIC].[column_id] AND [SC].[object_id] = [SIC].[object_id] ) LEFT JOIN [sys].[indexes] [SI] ON [SI].[index_id] = [SIC].[index_id] AND [SI].[object_id] = [SIC].[object_id] ) LEFT JOIN [sys].[computed_columns] [SCC] ON " + 
+                "[SC].[column_id] = [SCC].[column_id] AND [SC].[object_id] = [SCC].[object_id] ) JOIN " + 
+                "(SELECT [name], CASE [system_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [system_type_id] END AS [system_type_id], CASE [user_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [user_type_id] END AS [user_type_id] " + 
                         "FROM [sys].[columns] WHERE [object_id] = OBJECT_ID(N'XLIST_1') INTERSECT SELECT [name], CASE [system_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [system_type_id] END AS [system_type_id], CASE [user_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [user_type_id] END AS [user_type_id] " + 
                             "FROM [sys].[columns] WHERE [object_id] = OBJECT_ID(N'XLIST_2') INTERSECT SELECT [name], CASE [system_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [system_type_id] END AS [system_type_id], CASE [user_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [user_type_id] END AS [user_type_id] " + 
                                 "FROM [sys].[columns] WHERE [object_id] = OBJECT_ID(N'XLIST_3') INTERSECT SELECT [name], CASE [system_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [system_type_id] END AS [system_type_id], CASE [user_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [user_type_id] END AS [user_type_id] " + 
-                                    "FROM [sys].[columns] WHERE [object_id] = OBJECT_ID(N'XLIST_4')) [__SubQuery__] JOIN [sys].[columns] [SC] ON [__SubQuery__].[name] = [SC].[name] AND [SC].[object_id] = OBJECT_ID(N'XLIST_4')");
+                                    "FROM [sys].[columns] WHERE [object_id] = OBJECT_ID(N'XLIST_4')) [__SubQuery__] ON [__SubQuery__].[name] = [SC].[name] AND [SC].[object_id] = OBJECT_ID(N'XLIST_4')");
         }
 
         [Test]

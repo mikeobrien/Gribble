@@ -13,41 +13,17 @@ namespace Gribble.TransactSql
             return CreateColumnsIntersectionStatement(select.GetSourceTables().Select(x => x.From.Table.Name));
         }
 
-        public static Statement CreateSharedColumnsStatement(Select source, Table target)
+        public static Statement CreateSharedColumnsStatement(Select select, Table target = null)
         {
-            var sql = new SqlWriter();
-            var sourceTables = source.GetSourceTables().Select(x => x.From.Table.Name);
-            var statement = CreateColumnsIntersectionStatement(sourceTables.Concat(new[] { target.Name }));
-
-            sql.Select.SubQueryColumn(System.Columns.Name).Trim().Comma.
-                    Cast(z => z.Case.When.Write(System.Columns.Aliased.SystemTypeId).LessThan.OpenBlock.Trim().
-                        Select.Max(x => x.Write(System.Columns.SystemTypeId)).From.Write(System.Columns.TableName).
-                        Where.Write(System.Columns.Name).Equal.SubQueryColumn(System.Columns.Name).And.
-                        Write(System.Columns.SystemTypeId).In.OpenBlock.Trim().ExpressionList(x => x.Comma.Flush(), x => x.DataTypeId(DataTypes.Char.SqlId),
-                                x => x.DataTypeId(DataTypes.VarChar.SqlId),
-                                x => x.DataTypeId(DataTypes.Text.SqlId),
-                                x => x.DataTypeId(DataTypes.NChar.SqlId),
-                                x => x.DataTypeId(DataTypes.NVarChar.SqlId),
-                                x => x.DataTypeId(DataTypes.NText.SqlId)).Trim().CloseBlock.And.
-                        Write(System.Columns.ObjectId).In.OpenBlock.Trim().ExpressionList(x => x.Comma.Flush(), sourceTables.Select<string, Action<SqlWriter>>(x => y => y.ObjectId(x))).Trim().CloseBlock.Trim().CloseBlock.
-                        Then.True.Else.False.End.Flush(), typeof(bool), null, null, null).As.QuotedName("NarrowingConversion").
-                    From.OpenBlock.Trim().Write(statement.Text).Trim().CloseBlock.SubQueryAlias.
-                    Join.Write(System.Columns.TableName).Write(System.Columns.TableAlias).On.
-                    SubQueryColumn(System.Columns.Name).Equal.Write(System.Columns.Aliased.Name).And.
-                    Write(System.Columns.Aliased.ObjectId).Equal.ObjectId(target.Name);
-            statement.Text = sql.ToString();
-            return statement;
-        }
-
-        public static Statement CreateCreateTableColumnsStatement(Select select)
-        {
-            var sourceTables = select.GetSourceTables().Select(x => x.From.Table.Name);
+            var sourceTables = select.GetSourceTables().Select(x => x.From.Table.Name).ToList();
+            if (target != null) sourceTables.Add(target.Name);
+            var targetName = target != null ? target.Name : sourceTables.First();
             var statement = CreateColumnsIntersectionStatement(sourceTables);
 
-            var writer = WriteSelectColumns(SqlWriter.CreateWriter()).
+            var writer = WriteSelectColumns(SqlWriter.CreateWriter(), sourceTables).
                     Join.OpenBlock.Trim().Write(statement.Text).Trim().CloseBlock.SubQueryAlias.On.
                     SubQueryColumn(System.Columns.Name).Equal.Write(System.Columns.Aliased.Name).And.
-                    Write(System.Columns.Aliased.ObjectId).Equal.ObjectId(sourceTables.First());
+                    Write(System.Columns.Aliased.ObjectId).Equal.ObjectId(targetName);
             return new Statement(writer.ToString(), Statement.StatementType.Text, Statement.ResultType.Multiple);
         }
 
@@ -58,7 +34,7 @@ namespace Gribble.TransactSql
             return new Statement(writer.ToString(), Statement.StatementType.Text, Statement.ResultType.Multiple);
         }
 
-        public static SqlWriter WriteSelectColumns(SqlWriter writer)
+        public static SqlWriter WriteSelectColumns(SqlWriter writer, IEnumerable<string> tables = null)
         {
             return writer.Select.
                     Write(System.Columns.Aliased.Name).Trim().Comma.
@@ -66,7 +42,7 @@ namespace Gribble.TransactSql
                     Cast(x => x.Case.When.Write(System.Columns.Aliased.SystemTypeId).In.
                         OpenBlock.Trim().Write(DataTypes.NChar.SqlId).Trim().Comma.Write(DataTypes.NVarChar.SqlId).Trim().Comma.Write(DataTypes.NText.SqlId).Trim().CloseBlock.
                         Then.Write(System.Columns.Aliased.MaxLength).Divide.Value(2, SqlDbType.Int).Else.Write(System.Columns.Aliased.MaxLength).End.Flush(), typeof(short), null, null, null).
-                        As.Write(System.Columns.MaxLength).Trim().Comma.
+                        As.QuotedName(System.Columns.MaxLength).Trim().Comma.
                     Write(System.Columns.Aliased.IsNullable).Trim().Comma.
                     Write(System.Columns.Aliased.IsIdentity).Trim().Comma.
                     Cast(x => x.Trim().OpenBlock.Trim().
@@ -75,7 +51,7 @@ namespace Gribble.TransactSql
                             When.NewIdColumnDefault.Then.True.
                             When.NewSequentialIdColumnDefault.Then.True.
                             Else.False.End.Trim().
-                        CloseBlock.Flush(), typeof(bool), null, null, null).As.Write(SqlWriter.Aliases.IsAutoGenerated).Trim().Comma.
+                        CloseBlock.Flush(), typeof(bool), null, null, null).As.QuotedName(SqlWriter.Aliases.IsAutoGenerated).Trim().Comma.
                     Case.ObjectDefinition(y => y.Write(System.Columns.Aliased.DefaultObjectId).Flush()).
                         When.GetDateColumnDefault.Then.Null.
                         When.NewIdColumnDefault.Then.Null.
@@ -85,17 +61,29 @@ namespace Gribble.TransactSql
                                                     y => y.QuotedString("")),
                                         x => x.QuotedString(")"),
                                         x => x.QuotedString("")).End.
-                        As.Write(SqlWriter.Aliases.DefalutValue).Trim().Comma.
-                    IsNull(x => x.Write(System.Indexes.Aliased.IsPrimaryKey).Flush(), x => x.False.Flush()).As.Write(System.Indexes.IsPrimaryKey).Trim().Comma.
+                        As.QuotedName(SqlWriter.Aliases.DefaultValue).Trim().Comma.
+                    IsNull(x => x.Write(System.Indexes.Aliased.IsPrimaryKey).Flush(), x => x.False.Flush()).As.QuotedName(System.Indexes.IsPrimaryKey).Trim().Comma.
                     Cast(x => x.Trim().OpenBlock.Trim().
                         Case.Write(System.Indexes.Aliased.Type).
                             When.Value(1, SqlDbType.Int).Then.True.
                             Else.False.End.Trim().CloseBlock.Flush(),
-                        typeof(bool), null, null, null).As.Write(SqlWriter.Aliases.IsPrimaryKeyClustered).Trim().Comma.
+                        typeof(bool), null, null, null).As.QuotedName(SqlWriter.Aliases.IsPrimaryKeyClustered).Trim().Comma.
                     Write(System.Columns.Aliased.Precision).Trim().Comma.
                     Write(System.Columns.Aliased.Scale).Trim().Comma.
-                    Write(System.ComputedColumns.Aliased.Definition).As.Write(SqlWriter.Aliases.Computation).Trim().Comma.
-                    Write(System.ComputedColumns.Aliased.IsPersisted).As.Write(SqlWriter.Aliases.PersistedComputation).
+                    Write(System.ComputedColumns.Aliased.Definition).As.QuotedName(SqlWriter.Aliases.Computation).Trim().Comma.
+                    Write(System.ComputedColumns.Aliased.IsPersisted).As.QuotedName(SqlWriter.Aliases.PersistedComputation).
+                    Do(tables != null && tables.Any(), sql => sql.Trim().Comma.Cast(z => z.Case.When.Write(System.Columns.Aliased.SystemTypeId).LessThan.OpenBlock.Trim().
+                        Select.Max(x => x.QuotedName(System.Columns.SystemTypeId)).From.Write(System.Columns.TableName).
+                        Where.QuotedName(System.Columns.Name).Equal.SubQueryColumn(System.Columns.Name).And.
+                        QuotedName(System.Columns.SystemTypeId).In.OpenBlock.Trim().ExpressionList(x => x.Comma.Flush(), x => x.DataTypeId(DataTypes.Char.SqlId),
+                                x => x.DataTypeId(DataTypes.VarChar.SqlId),
+                                x => x.DataTypeId(DataTypes.Text.SqlId),
+                                x => x.DataTypeId(DataTypes.NChar.SqlId),
+                                x => x.DataTypeId(DataTypes.NVarChar.SqlId),
+                                x => x.DataTypeId(DataTypes.NText.SqlId)).Trim().CloseBlock.And.
+                        QuotedName(System.Columns.ObjectId).In.OpenBlock.Trim().ExpressionList(x => x.Comma.Flush(), 
+                            tables.Select<string, Action<SqlWriter>>(x => y => y.ObjectId(x))).Trim().CloseBlock.Trim().CloseBlock.
+                        Then.True.Else.False.End.Flush(), typeof(bool), null, null, null).As.QuotedName(SqlWriter.Aliases.IsNarrowing)).
                     From.OpenBlock.OpenBlock.OpenBlock.Write(System.Columns.TableName).Write(System.Columns.TableAlias).
                         Left.Join.Write(System.IndexColumns.TableName).Write(System.IndexColumns.TableAlias).On.
                             Write(System.Columns.Aliased.ColumnId).Equal.Write(System.IndexColumns.Aliased.ColumnId).And.
@@ -115,17 +103,17 @@ namespace Gribble.TransactSql
             foreach (var table in tables.Select((x, i) => new { First = i == 0, Name = x }))
             {
                 if (!table.First) sql.Intersect.Flush();
-                sql.Select.Write(System.Columns.Name).Trim().Comma.
-                    Case.Write(System.Columns.SystemTypeId).When.DataTypeId(DataTypes.VarChar.SqlId).Then.DataTypeId(DataTypes.NVarChar.SqlId).
+                sql.Select.QuotedName(System.Columns.Name).Trim().Comma.
+                    Case.QuotedName(System.Columns.SystemTypeId).When.DataTypeId(DataTypes.VarChar.SqlId).Then.DataTypeId(DataTypes.NVarChar.SqlId).
                                             When.DataTypeId(DataTypes.Char.SqlId).Then.DataTypeId(DataTypes.NChar.SqlId).
                                             When.DataTypeId(DataTypes.Text.SqlId).Then.DataTypeId(DataTypes.NText.SqlId).
-                                            Else.Write(System.Columns.SystemTypeId).End.As.Write(System.Columns.SystemTypeId).Trim().Comma.
-                    Case.Write(System.Columns.UserTypeId).When.DataTypeId(DataTypes.VarChar.SqlId).Then.DataTypeId(DataTypes.NVarChar.SqlId).
+                                            Else.QuotedName(System.Columns.SystemTypeId).End.As.QuotedName(System.Columns.SystemTypeId).Trim().Comma.
+                    Case.QuotedName(System.Columns.UserTypeId).When.DataTypeId(DataTypes.VarChar.SqlId).Then.DataTypeId(DataTypes.NVarChar.SqlId).
                                                 When.DataTypeId(DataTypes.Char.SqlId).Then.DataTypeId(DataTypes.NChar.SqlId).
                                                 When.DataTypeId(DataTypes.Text.SqlId).Then.DataTypeId(DataTypes.NText.SqlId).
-                                                Else.Write(System.Columns.UserTypeId).End.As.Write(System.Columns.UserTypeId).
+                                                Else.QuotedName(System.Columns.UserTypeId).End.As.QuotedName(System.Columns.UserTypeId).
                     From.Write(System.Columns.TableName).
-                    Where.Write(System.Columns.ObjectId).Equal.ObjectId(table.Name);
+                    Where.QuotedName(System.Columns.ObjectId).Equal.ObjectId(table.Name);
             }
 
             return new Statement(sql.ToString(), Statement.StatementType.Text, Statement.ResultType.Multiple);
@@ -185,11 +173,11 @@ namespace Gribble.TransactSql
         {
             var writer = new SqlWriter();
             writer.Select.
-                Write(System.Indexes.Aliased.Name).Comma.
-                Write(System.Indexes.Aliased.Type).Comma.
-                Write(System.Indexes.Aliased.IsUnique).Comma.
-                Write(System.Indexes.Aliased.IsPrimaryKey).Comma.
-                Write(System.Columns.Aliased.Name).As.Write(SqlWriter.Aliases.ColumnName).Comma.
+                Write(System.Indexes.Aliased.Name).Trim().Comma.
+                Write(System.Indexes.Aliased.Type).Trim().Comma.
+                Write(System.Indexes.Aliased.IsUnique).Trim().Comma.
+                Write(System.Indexes.Aliased.IsPrimaryKey).Trim().Comma.
+                Write(System.Columns.Aliased.Name).As.QuotedName(SqlWriter.Aliases.ColumnName).Trim().Comma.
                 Write(System.IndexColumns.Aliased.IsDescendingKey).
                 From.Write(System.Indexes.TableName).Write(System.Indexes.TableAlias).
                     Join.Write(System.IndexColumns.TableName).Write(System.IndexColumns.TableAlias).On.
