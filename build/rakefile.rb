@@ -6,7 +6,7 @@ reportsPath = "reports"
 version = ENV["BUILD_NUMBER"]
 
 task :build => [:createCorePackage, :createNHibernatePackage]
-task :pushPackages => [:pushCorePackage, :pushNHibernatePackage]
+task :deploy => [:pushCorePackage, :pushNHibernatePackage]
 
 assemblyinfo :coreAssemblyInfo do |asm|
     asm.version = version

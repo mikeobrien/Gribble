@@ -389,11 +389,11 @@ Converts a value to hex:
 
     string ToHex(this byte[] value)
 
-Distribution
+Installation
 ------------
 
-http://nuget.org/List/Packages/gribble  
-http://nuget.org/List/Packages/gribble.nhibernate
+    PM> Install-Package gribble  
+    PM> Install-Package gribble.nhibernate
 	
 Props
 ------------
