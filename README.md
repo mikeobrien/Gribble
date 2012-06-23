@@ -324,11 +324,11 @@ Gribble adds the following custom query operators.
 
 Returns a random result set:
 
-    public static IQueryable<TSource> Randomize<TSource>(this IQueryable<TSource> source)
+    IQueryable<TSource> Randomize<TSource>(this IQueryable<TSource> source)
     
 Returns a top percentage of records:
 
-    public static IQueryable<TSource> TakePercent<TSource>(this IQueryable<TSource> source, int percent)
+    IQueryable<TSource> TakePercent<TSource>(this IQueryable<TSource> source, int percent)
 
 Copys records from one table to another. Both the source and target must be an `ITable`:
 
