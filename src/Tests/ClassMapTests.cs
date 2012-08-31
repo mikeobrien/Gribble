@@ -59,6 +59,66 @@ namespace Tests
             }
         }
 
+        public class IdentityPropertyNameConventionMap : ClassMap<IdentityEntity>
+        {
+            public IdentityPropertyNameConventionMap()
+            {
+                Id(x => x.Id);
+                Map(x => x.Name);
+                Map(x => x.Age);
+                Map(x => x.Values).Dynamic();
+            }
+        }
+
+        public class GuidPropertyNameConventionMap : ClassMap<GuidEntity>
+        {
+            public GuidPropertyNameConventionMap()
+            {
+                Id(x => x.Id).Generated();
+                Map(x => x.Name);
+                Map(x => x.Age);
+                Map(x => x.Values).Dynamic();
+            }
+        }
+
+        [Test]
+        public void should_use_property_names_for_column_names_with_identity_key()
+        {
+            var map = new IdentityPropertyNameConventionMap();
+            map.Type.ShouldEqual(typeof(IdentityEntity));
+            map.PropertyColumMapping.Count.ShouldEqual(3);
+            map.PropertyColumMapping.ElementAt(0).Key.ShouldEqual("Id");
+            map.PropertyColumMapping.ElementAt(0).Value.ShouldEqual("Id");
+            map.PropertyColumMapping.ElementAt(1).Key.ShouldEqual("Name");
+            map.PropertyColumMapping.ElementAt(1).Value.ShouldEqual("Name");
+            map.PropertyColumMapping.ElementAt(2).Key.ShouldEqual("Age");
+            map.PropertyColumMapping.ElementAt(2).Value.ShouldEqual("Age");
+            map.HasDynamicProperty.ShouldEqual(true);
+            map.DynamicProperty.ShouldEqual("Values");
+            map.KeyType.ShouldEqual(PrimaryKeyType.IdentitySeed);
+            map.KeyProperty.ShouldEqual("Id");
+            map.KeyColumn.ShouldEqual("Id");
+        }
+
+        [Test]
+        public void should_use_property_names_for_column_names_with_guid_key()
+        {
+            var map = new GuidPropertyNameConventionMap();
+            map.Type.ShouldEqual(typeof(GuidEntity));
+            map.PropertyColumMapping.Count.ShouldEqual(3);
+            map.PropertyColumMapping.ElementAt(0).Key.ShouldEqual("Id");
+            map.PropertyColumMapping.ElementAt(0).Value.ShouldEqual("Id");
+            map.PropertyColumMapping.ElementAt(1).Key.ShouldEqual("Name");
+            map.PropertyColumMapping.ElementAt(1).Value.ShouldEqual("Name");
+            map.PropertyColumMapping.ElementAt(2).Key.ShouldEqual("Age");
+            map.PropertyColumMapping.ElementAt(2).Value.ShouldEqual("Age");
+            map.HasDynamicProperty.ShouldEqual(true);
+            map.DynamicProperty.ShouldEqual("Values");
+            map.KeyType.ShouldEqual(PrimaryKeyType.GuidClientGenerated);
+            map.KeyProperty.ShouldEqual("Id");
+            map.KeyColumn.ShouldEqual("Id");
+        }
+
         [Test]
         public void Identity_Map_Test()
         {

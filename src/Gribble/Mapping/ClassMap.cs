@@ -84,7 +84,10 @@ namespace Gribble.Mapping
 
         public class ColumnMapping : Mapping
         {
-            public ColumnMapping(string propertyName, ClassMap<T> map) : base(propertyName, map) { }
+            public ColumnMapping(string propertyName, ClassMap<T> map) : base(propertyName, map)
+            {
+                Column(propertyName);
+            }
             public void Column(string name) { Map.AddMapping(name, PropertyName); }
         }
 
@@ -96,7 +99,10 @@ namespace Gribble.Mapping
 
         public class IdentityKeyMapping : Mapping
         {
-            public IdentityKeyMapping(string propertyName, ClassMap<T> map) : base(propertyName, map) { }
+            public IdentityKeyMapping(string propertyName, ClassMap<T> map) : base(propertyName, map)
+            {
+                Column(propertyName);
+            }
 
             public void Column(string name)
             { Map.AddKeyMapping(PrimaryKeyType.IdentitySeed, name, PropertyName); }
@@ -104,23 +110,20 @@ namespace Gribble.Mapping
 
         public class GuidKeyMapping : Mapping
         {
-            public GuidKeyMapping(string propertyName, ClassMap<T> map) : base(propertyName, map) { }
-
-            public GuidGeneration Column(string name)
+            public GuidKeyMapping(string propertyName, ClassMap<T> map) : base(propertyName, map)
             {
-                Map.AddKeyMapping(PrimaryKeyType.GuidServerGenerated, name, PropertyName);
-                return new GuidGeneration(Map);
+                Column(propertyName);
             }
-        }
-
-        public class GuidGeneration
-        {
-            private readonly ClassMap<T> _map;
-            public GuidGeneration(ClassMap<T> map) { _map = map; }
 
             public void Generated()
             {
-                _map.KeyType = PrimaryKeyType.GuidClientGenerated;
+                Map.KeyType = PrimaryKeyType.GuidClientGenerated;
+            }
+
+            public GuidKeyMapping Column(string name)
+            {
+                Map.AddKeyMapping(PrimaryKeyType.GuidServerGenerated, name, PropertyName);
+                return this;
             }
         }
     }
