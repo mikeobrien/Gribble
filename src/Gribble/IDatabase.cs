@@ -5,17 +5,6 @@ namespace Gribble
 {
     public interface IDatabase
     {
-        void CallProcedure(string name);
-        void CallProcedure(string name, Dictionary<string, object> parameters);
-        T CallProcedureScalar<T>(string name);
-        T CallProcedureScalar<T>(string name, Dictionary<string, object> parameters);
-        TEntity CallProcedureSingle<TEntity>(string name);
-        TEntity CallProcedureSingle<TEntity>(string name, Dictionary<string, object> parameters);
-        TEntity CallProcedureSingleOrNone<TEntity>(string name);
-        TEntity CallProcedureSingleOrNone<TEntity>(string name, Dictionary<string, object> parameters);
-        IEnumerable<TEntity> CallProcedureMany<TEntity>(string name);
-        IEnumerable<TEntity> CallProcedureMany<TEntity>(string name, Dictionary<string, object> parameters);
-
         void CreateTable(string tableName, params Column[] columns);
         void CreateTable(string tableName, string modelTable);
         bool TableExists(string tableName);

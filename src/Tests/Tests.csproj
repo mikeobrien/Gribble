@@ -63,6 +63,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClassMapTests.cs" />
+    <Compile Include="StoredProcedureTests.cs" />
     <Compile Include="DatabaseTests.cs" />
     <Compile Include="EntityAdapterTests.cs" />
     <Compile Include="EntityMapTests.cs" />

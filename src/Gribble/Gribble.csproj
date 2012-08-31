@@ -43,6 +43,8 @@
     <Compile Include="Command.cs" />
     <Compile Include="ConnectionManager.cs" />
     <Compile Include="ConsoleProfiler.cs" />
+    <Compile Include="StoredProcedure.cs" />
+    <Compile Include="IStoredProcedure.cs" />
     <Compile Include="Database.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="EntityAdapter.cs" />

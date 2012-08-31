@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Data;
-using System.Linq;
 using FluentNHibernate.Cfg;
 using FluentNHibernate.Conventions.Helpers;
 using Gribble;
-using Gribble.Mapping;
 using Gribble.Model;
 using NHibernate.Cfg;
 using NUnit.Framework;
@@ -77,7 +75,7 @@ namespace Tests.NHibernate
             using (var transaction = session.BeginTransaction())
             {
                 var connectionManager = new ConnectionManager(session);
-                var database = new Database(connectionManager, new EntityMappingCollection(Enumerable.Empty<IClassMap>()));
+                var database = Database.Create(connectionManager);
                 database.CreateTable(TableName,
                     new Column("id", typeof(int), key: Column.KeyType.PrimaryKey, isIdentity: true),
                     new Column("name", typeof(string), length: 500));
@@ -95,7 +93,7 @@ namespace Tests.NHibernate
             using (var session = factory.OpenSession())
             {
                 var connectionManager = new ConnectionManager(session);
-                var database = new Database(connectionManager, new EntityMappingCollection(Enumerable.Empty<IClassMap>()));
+                var database = Database.Create(connectionManager);
                 database.CreateTable(TableName,
                     new Column("id", typeof(int), key: Column.KeyType.PrimaryKey, isIdentity: true),
                     new Column("name", typeof(string), length: 500));
