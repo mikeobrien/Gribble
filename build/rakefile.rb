@@ -140,5 +140,5 @@ end
 
 nugetpush :pushNHibernatePackage => :createNHibernatePackage do |nuget|
     nuget.apikey = nugetApiKey
-    nuget.package = File.join(deployPath, "gribble.nhibernate.#{version}.nupkg")
+    nuget.package = File.join(deployPath, "gribble.nhibernate.#{version}.nupkg").gsub('/', '\\')
 end
