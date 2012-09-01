@@ -32,7 +32,22 @@ namespace Tests
             }
         }
 
-        public static EntityMappingCollection MappingCollection = new EntityMappingCollection(new IClassMap[] { new TestClassMap() });
+        public class NoIdEntity
+        {
+            public string Name { get; set; }
+            public Dictionary<string, object> Values { get; set; }
+        }
+
+        public class TestNoIdClassMap : ClassMap<NoIdEntity>
+        {
+            public TestNoIdClassMap()
+            {
+                Map(x => x.Name).Column("name");
+                Map(x => x.Values).Dynamic();
+            }
+        }
+
+        public static EntityMappingCollection MappingCollection = new EntityMappingCollection(new IClassMap[] { new TestClassMap(), new TestNoIdClassMap() });
         public static IProfiler Profiler = new ConsoleProfiler();
         public IStoredProcedure StoredProcedure;
 
@@ -55,7 +70,7 @@ namespace Tests
         public void TestSetup() { Database.CreateTables(); }
 
         [Test]
-        public void Get_All_Test()
+        public void should_get_multiple_results()
         {
             var results = StoredProcedure.ExecuteMany<Entity>("GetAll").ToList();
             results.Count().ShouldEqual(10);
@@ -67,7 +82,19 @@ namespace Tests
         }
 
         [Test]
-        public void Get_One_Test()
+        public void should_get_multiple_results_without_an_id()
+        {
+            var results = StoredProcedure.ExecuteMany<NoIdEntity>("GetAll").ToList();
+            results.Count().ShouldEqual(10);
+            results.All(x => x.Name.Length > 3).ShouldEqual(true);
+            results.First().Values.Count.ShouldEqual(3);
+            ((int)results.First().Values["id"]).ShouldBeGreaterThan(-1);
+            ((bool)results.First().Values["hide"]).ShouldEqual(false);
+            ((DateTime)results.First().Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+        }
+
+        [Test]
+        public void should_get_one_result()
         {
             var result = StoredProcedure.ExecuteSingle<Entity>("GetOne", new { Id = 5 });
             result.ShouldNotBeNull();
@@ -79,14 +106,14 @@ namespace Tests
         }
 
         [Test]
-        public void Get_Scalar_Test()
+        public void should_get_scalar_result()
         {
             var result = StoredProcedure.ExecuteScalar<int>("GetCount");
             result.ShouldBeGreaterThan(8);
         }
 
         [Test]
-        public void Get_Non_Query_Test()
+        public void should_execute_non_query()
         {
             StoredProcedure.Execute("DeleteOne", new { Id = 6 });
 

@@ -36,28 +36,44 @@ namespace Tests
             public Dictionary<string, object> Values { get; set; }
         }
 
+        public class NoIdEntity
+        {
+            public string Name { get; set; }
+            public Dictionary<string, object> Values { get; set; }
+        }
+
         private static readonly Guid Key = Guid.NewGuid();
 
-        private static readonly Dictionary<string, object> EntityValues = new Dictionary<string, object>
-                                                                    {
-                                                                        {"col_active", false},
-                                                                        {"col_age", 44},
-                                                                        {"col_birthdate", DateTime.MaxValue},
-                                                                        {"col_created", DateTime.MinValue},
-                                                                        {"col_distance", 22.3},
-                                                                        {"col_flag", (byte)23},
-                                                                        {"col_id", Key},
-                                                                        {"col_length", 22.3m},
-                                                                        {"col_miles", 10L},
-                                                                        {"col_name", "oh hai"},
-                                                                        {"col_price", 45.67F},
-                                                                        {"col_companyname", "Some company"},
-                                                                        {"col_optout", true},
-                                                                        {"col_optoutdate", DateTime.MinValue},
-                                                                        {"col_state", 2},
-                                                                        {"col_state_null", 1},
-                                                                        {"col_state_null2", null}
-                                                                    };
+        private static readonly Dictionary<string, object> EntityValues = 
+            new Dictionary<string, object>
+            {
+                {"col_active", false},
+                {"col_age", 44},
+                {"col_birthdate", DateTime.MaxValue},
+                {"col_created", DateTime.MinValue},
+                {"col_distance", 22.3},
+                {"col_flag", (byte)23},
+                {"col_id", Key},
+                {"col_length", 22.3m},
+                {"col_miles", 10L},
+                {"col_name", "oh hai"},
+                {"col_price", 45.67F},
+                {"col_companyname", "Some company"},
+                {"col_optout", true},
+                {"col_optoutdate", DateTime.MinValue},
+                {"col_state", 2},
+                {"col_state_null", 1},
+                {"col_state_null2", null}
+            };
+
+        private static readonly Dictionary<string, object> NoIdEntityValues =
+            new Dictionary<string, object>
+            {
+                {"col_name", "oh hai"},
+                {"col_companyname", "Some company"},
+                {"col_optout", true},
+                {"col_optoutdate", DateTime.MinValue},
+            };
 
         public class EntityMap : ClassMap<Entity>
         {
@@ -81,36 +97,62 @@ namespace Tests
             }
         }
 
-        private static readonly EntityMapping Map = new EntityMapping(new EntityMap(), new[] {
-                                                                        new ColumnMapping("col_companyname", "CompanyName"),
-                                                                        new ColumnMapping("col_optout", "OptOut"),
-                                                                        new ColumnMapping("col_optoutdate", "OptOutDate")
-                                                                    });
+        public class NoIdEntityMap : ClassMap<NoIdEntity>
+        {
+            public NoIdEntityMap()
+            {
+                Map(x => x.Name).Column("col_name");
+                Map(x => x.Values).Dynamic();
+            }
+        }
+
+        private static readonly EntityMapping Map = 
+            new EntityMapping(new EntityMap(), new[] {
+                new ColumnMapping("col_companyname", "CompanyName"),
+                new ColumnMapping("col_optout", "OptOut"),
+                new ColumnMapping("col_optoutdate", "OptOutDate")
+            });
+
+        private static readonly EntityMapping NoIdMap = new EntityMapping(new NoIdEntityMap(), new[] {
+                new ColumnMapping("col_companyname", "CompanyName"),
+                new ColumnMapping("col_optout", "OptOut"),
+                new ColumnMapping("col_optoutdate", "OptOutDate")
+            });
 
         private readonly Func<Entity> _createEntity = 
             () => new Entity {
-                                  Active = false,
-                                  Age = 44,
-                                  Birthdate = DateTime.MaxValue,
-                                  Created = DateTime.MinValue,
-                                  Distance = 22.3,
-                                  Flag = 23,
-                                  Id = Key,
-                                  Length = 22.3m,
-                                  Miles = 10,
-                                  Name = "oh hai",
-                                  Price = 45.67F,
-                                  Values = new Dictionary<string,object>
-                                            {
-                                                {"CompanyName", "Some company"},
-                                                {"OptOut", true},
-                                                {"OptOutDate", DateTime.MinValue}
-                                            }
+                    Active = false,
+                    Age = 44,
+                    Birthdate = DateTime.MaxValue,
+                    Created = DateTime.MinValue,
+                    Distance = 22.3,
+                    Flag = 23,
+                    Id = Key,
+                    Length = 22.3m,
+                    Miles = 10,
+                    Name = "oh hai",
+                    Price = 45.67F,
+                    Values = new Dictionary<string,object>
+                            {
+                                {"CompanyName", "Some company"},
+                                {"OptOut", true},
+                                {"OptOutDate", DateTime.MinValue}
+                            }
+            };
 
+        private readonly Func<NoIdEntity> _createNoIdEntity =
+            () => new NoIdEntity {
+                Name = "oh hai",
+                Values = new Dictionary<string, object>
+                            {
+                                {"CompanyName", "Some company"},
+                                {"OptOut", true},
+                                {"OptOutDate", DateTime.MinValue}
+                            }
             };
 
         [Test]
-        public void Get_Entity_Fields_Test()
+        public void should_get_entity_fields()
         {
             var entity = _createEntity();
             var adapter = new EntityAdapter<Entity>(entity, Map);
@@ -137,7 +179,21 @@ namespace Tests
         }
 
         [Test]
-        public void Set_Entity_Fields_Test()
+        public void should_get_entity_with_no_id_fields()
+        {
+            var entity = _createNoIdEntity();
+            var adapter = new EntityAdapter<NoIdEntity>(entity, NoIdMap);
+            var values = adapter.GetValues();
+            values.Count.ShouldEqual(NoIdEntityValues.Count);
+
+            values["col_name"].ShouldEqual(entity.Name);
+            values["col_companyname"].ShouldEqual(entity.Values["CompanyName"]);
+            values["col_optout"].ShouldEqual(entity.Values["OptOut"]);
+            values["col_optoutdate"].ShouldEqual(entity.Values["OptOutDate"]);
+        }
+
+        [Test]
+        public void should_set_entity_fields()
         {
             var entity = new Entity();
             var adapter = new EntityAdapter<Entity>(entity, Map);
@@ -164,7 +220,21 @@ namespace Tests
         }
 
         [Test]
-        public void Get_Entity_Key_Test()
+        public void should_set_entity_with_no_id_fields()
+        {
+            var entity = new NoIdEntity();
+            var adapter = new EntityAdapter<NoIdEntity>(entity, NoIdMap);
+            adapter.SetValues(NoIdEntityValues);
+
+            entity.Name.ShouldEqual(EntityValues["col_name"]);
+            entity.Values.Count.ShouldEqual(3);
+            entity.Values["CompanyName"].ShouldEqual(EntityValues["col_companyname"]);
+            entity.Values["OptOut"].ShouldEqual(EntityValues["col_optout"]);
+            entity.Values["OptOutDate"].ShouldEqual(EntityValues["col_optoutdate"]);
+        }
+
+        [Test]
+        public void should_get_entity_key()
         {
             var entity = _createEntity();
             var adapter = new EntityAdapter<Entity>(entity, Map);
@@ -173,7 +243,7 @@ namespace Tests
         }
 
         [Test]
-        public void Set_Entity_Key_Test()
+        public void should_set_entity_key()
         {
             var entity = new Entity();
             var adapter = new EntityAdapter<Entity>(entity, Map);

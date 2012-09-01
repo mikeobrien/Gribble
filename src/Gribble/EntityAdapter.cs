@@ -82,7 +82,7 @@ namespace Gribble
                                           Where(x => x.CanRead && x.CanWrite && 
                                                      map.StaticProperty.HasColumnMapping(x.Name) && 
                                                      x.Name != dynamicPropertyName).ToList();
-            _keyProperty = _properties.First(x => x.Name == map.Key.GetPropertyName());
+            _keyProperty = _properties.FirstOrDefault(x => x.Name == map.Key.GetPropertyName());
         }
 
         private static Dictionary<string, object> GetDynamicValues(TEntity entity)
