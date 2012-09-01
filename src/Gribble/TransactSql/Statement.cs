@@ -30,7 +30,7 @@ namespace Gribble.TransactSql
             Type = type;
             Text = text;
             Result = result;
-            Parameters = parameters;
+            Parameters = parameters ?? new Dictionary<string, object>();
         }
 
         public string Text;

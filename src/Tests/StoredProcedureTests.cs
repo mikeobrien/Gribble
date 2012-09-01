@@ -69,7 +69,7 @@ namespace Tests
         [Test]
         public void Get_One_Test()
         {
-            var result = StoredProcedure.ExecuteSingle<Entity>("GetOne", new Dictionary<string, object> { { "Id", 5 } });
+            var result = StoredProcedure.ExecuteSingle<Entity>("GetOne", new { Id = 5 });
             result.ShouldNotBeNull();
             result.Name.Length.ShouldBeGreaterThan(3);
             result.Id.ShouldEqual(5);
@@ -88,7 +88,7 @@ namespace Tests
         [Test]
         public void Get_Non_Query_Test()
         {
-            StoredProcedure.Execute("DeleteOne", new Dictionary<string, object> { { "Id", 6 } });
+            StoredProcedure.Execute("DeleteOne", new { Id = 6 });
 
             var result = StoredProcedure.ExecuteScalar<int>("GetCount");
             result.ShouldEqual(9);

@@ -98,6 +98,7 @@
     <Compile Include="Model\Update.cs" />
     <Compile Include="Table.cs" />
     <Compile Include="TableFactory.cs" />
+    <Compile Include="ReflectionExtensions.cs" />
     <Compile Include="TransactSql\SyncWriter.cs" />
     <Compile Include="TransactSql\DataTypes.cs" />
     <Compile Include="TransactSql\DeleteWriter.cs" />

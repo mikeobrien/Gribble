@@ -42,37 +42,34 @@ namespace Gribble
             return new StoredProcedure(connectionManager, mappingCollection, profiler ?? new ConsoleProfiler());
         }
 
-        public void Execute(string name)
-        { Command.Create(StoredProcedureWriter.CreateStatement(name, Statement.ResultType.None), _profiler).ExecuteNonQuery(_connectionManager); }
+        public void Execute(string name, object parameters = null)
+        {
+            Command.Create(StoredProcedureWriter.CreateStatement(name, parameters.ToDictionary(), Statement.ResultType.None), _profiler).ExecuteNonQuery(_connectionManager);
+        }
 
-        public void Execute(string name, Dictionary<string, object> parameters)
-        { Command.Create(StoredProcedureWriter.CreateStatement(name, parameters, Statement.ResultType.None), _profiler).ExecuteNonQuery(_connectionManager); }
+        public T ExecuteScalar<T>(string name, object parameters = null)
+        {
+            return Command.Create(StoredProcedureWriter.CreateStatement(name, parameters.ToDictionary(), Statement.ResultType.Scalar), _profiler).ExecuteScalar<T>(_connectionManager);
+        }
 
-        public T ExecuteScalar<T>(string name)
-        { return Command.Create(StoredProcedureWriter.CreateStatement(name, Statement.ResultType.Scalar), _profiler).ExecuteScalar<T>(_connectionManager); }
+        public TEntity ExecuteSingle<TEntity>(string name, object parameters = null)
+        {
+            return Load<TEntity, TEntity>(Command.Create(StoredProcedureWriter.CreateStatement(name, parameters.ToDictionary(), Statement.ResultType.Single), _profiler));
+        }
 
-        public T ExecuteScalar<T>(string name, Dictionary<string, object> parameters)
-        { return Command.Create(StoredProcedureWriter.CreateStatement(name, parameters, Statement.ResultType.Scalar), _profiler).ExecuteScalar<T>(_connectionManager); }
+        public TEntity ExecuteSingleOrNone<TEntity>(string name, object parameters = null)
+        {
+            return Load<TEntity, TEntity>(Command.Create(StoredProcedureWriter.CreateStatement(name, parameters.ToDictionary(), Statement.ResultType.SingleOrNone), _profiler));
+        }
 
-        public TEntity ExecuteSingle<TEntity>(string name)
-        { return Load<TEntity, TEntity>(Command.Create(StoredProcedureWriter.CreateStatement(name, Statement.ResultType.Single), _profiler)); }
-
-        public TEntity ExecuteSingle<TEntity>(string name, Dictionary<string, object> parameters)
-        { return Load<TEntity, TEntity>(Command.Create(StoredProcedureWriter.CreateStatement(name, parameters, Statement.ResultType.Single), _profiler)); }
-
-        public TEntity ExecuteSingleOrNone<TEntity>(string name)
-        { return Load<TEntity, TEntity>(Command.Create(StoredProcedureWriter.CreateStatement(name, Statement.ResultType.SingleOrNone), _profiler)); }
-
-        public TEntity ExecuteSingleOrNone<TEntity>(string name, Dictionary<string, object> parameters)
-        { return Load<TEntity, TEntity>(Command.Create(StoredProcedureWriter.CreateStatement(name, parameters, Statement.ResultType.SingleOrNone), _profiler)); }
-
-        public IEnumerable<TEntity> ExecuteMany<TEntity>(string name)
-        { return Load<TEntity, IEnumerable<TEntity>>(Command.Create(StoredProcedureWriter.CreateStatement(name, Statement.ResultType.Multiple), _profiler)); }
-
-        public IEnumerable<TEntity> ExecuteMany<TEntity>(string name, Dictionary<string, object> parameters)
-        { return Load<TEntity, IEnumerable<TEntity>>(Command.Create(StoredProcedureWriter.CreateStatement(name, parameters, Statement.ResultType.Multiple), _profiler)); }
+        public IEnumerable<TEntity> ExecuteMany<TEntity>(string name, object parameters = null)
+        {
+            return Load<TEntity, IEnumerable<TEntity>>(Command.Create(StoredProcedureWriter.CreateStatement(name, parameters.ToDictionary(), Statement.ResultType.Multiple), _profiler));
+        }
 
         private TResult Load<TEntity, TResult>(Command command)
-        { return (TResult)new Loader<TEntity>(command, _map.GetEntityMapping<TEntity>()).Execute(_connectionManager); }
+        {
+            return (TResult)new Loader<TEntity>(command, _map.GetEntityMapping<TEntity>()).Execute(_connectionManager);
+        }
     }
 }
