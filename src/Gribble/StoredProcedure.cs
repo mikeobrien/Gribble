@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
@@ -13,9 +12,6 @@ namespace Gribble
         private readonly IConnectionManager _connectionManager;
         private readonly IProfiler _profiler;
         private readonly EntityMappingCollection _map;
-
-        public StoredProcedure(IConnectionManager connectionManager, EntityMappingCollection map) : 
-            this(connectionManager, map, null) { }
 
         public StoredProcedure(IConnectionManager connectionManager, EntityMappingCollection map, IProfiler profiler)
         {
