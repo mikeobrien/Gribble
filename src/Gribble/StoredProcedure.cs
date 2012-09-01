@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Linq;
 using Gribble.Mapping;
 using Gribble.TransactSql;
 
@@ -15,11 +17,21 @@ namespace Gribble
         public StoredProcedure(IConnectionManager connectionManager, EntityMappingCollection map) : 
             this(connectionManager, map, null) { }
 
-        internal StoredProcedure(IConnectionManager connectionManager, EntityMappingCollection map, IProfiler profiler)
+        public StoredProcedure(IConnectionManager connectionManager, EntityMappingCollection map, IProfiler profiler)
         {
             _connectionManager = connectionManager;
             _profiler = profiler;
             _map = map;
+        }
+
+        public static IStoredProcedure Create(SqlConnection connection, TimeSpan? commandTimeout = null, IProfiler profiler = null)
+        {
+            return Create(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), profiler);
+        }
+
+        public static IStoredProcedure Create(IConnectionManager connectionManager, IProfiler profiler = null)
+        {
+            return new StoredProcedure(connectionManager, new EntityMappingCollection(Enumerable.Empty<IClassMap>()), profiler ?? new ConsoleProfiler());
         }
 
         public static IStoredProcedure Create(SqlConnection connection, string keyColumn, TimeSpan? commandTimeout = null, IProfiler profiler = null)

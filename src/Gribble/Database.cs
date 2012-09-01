@@ -13,7 +13,7 @@ namespace Gribble
         private readonly IConnectionManager _connectionManager;
         private readonly IProfiler _profiler;
 
-        internal Database(IConnectionManager connectionManager, IProfiler profiler)
+        public Database(IConnectionManager connectionManager, IProfiler profiler)
         {
             _connectionManager = connectionManager;
             _profiler = profiler;
