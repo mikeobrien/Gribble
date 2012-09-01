@@ -110,7 +110,7 @@ end
 
 nugetpush :pushCorePackage => :createCorePackage do |nuget|
     nuget.apikey = nugetApiKey
-    nuget.package = File.join(deployPath, "gribble.#{version}.nupkg")
+    nuget.package = File.join(deployPath, "gribble.#{version}.nupkg").gsub('/', '\\')
 end
 
 nuspec :createNHibernateSpec => :prepPackages do |nuspec|
