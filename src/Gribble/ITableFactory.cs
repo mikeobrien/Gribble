@@ -5,9 +5,9 @@ namespace Gribble
 {
     public interface ITableFactory
     {
-        ITable<TEntity> CreateFor<TEntity>(string tableName, IProfiler profiler = null, bool noLock = false) 
+        ITable<TEntity> CreateFor<TEntity>(string tableName, bool noLock = false) 
             where TEntity : class, new();
-        ITable<TEntity> CreateFor<TEntity>(string tableName, IEnumerable<ColumnMapping> mapping, IProfiler profiler = null, bool noLock = false) 
+        ITable<TEntity> CreateFor<TEntity>(string tableName, IEnumerable<ColumnMapping> mapping, bool noLock = false) 
             where TEntity : class, new();
     }
 }
