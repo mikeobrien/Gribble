@@ -14,7 +14,7 @@ assemblyinfo :coreAssemblyInfo do |asm|
     asm.product_name = "Gribble"
     asm.title = "Gribble"
     asm.description = "Gribble ORM"
-    asm.copyright = "Copyright (c) 2011 Ultraviolet Catastrophe"
+    asm.copyright = "Copyright (c) #{Time.now.year} Ultraviolet Catastrophe"
     asm.output_file = "src/Gribble/Properties/AssemblyInfo.cs"
 end
 
