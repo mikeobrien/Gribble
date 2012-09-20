@@ -30,7 +30,7 @@ assemblyinfo :nhibernateAssemblyInfo do |asm|
     asm.product_name = "Gribble NHibernate Integration"
     asm.title = "Gribble NHibernate Integration"
     asm.description = "Gribble NHibernate Integration"
-    asm.copyright = "Copyright (c) 2011 Ultraviolet Catastrophe"
+    asm.copyright = "Copyright (c) #{Time.now.year} Ultraviolet Catastrophe"
     asm.output_file = "src/Gribble.NHibernate/Properties/AssemblyInfo.cs"
 end
 
