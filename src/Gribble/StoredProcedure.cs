@@ -50,9 +50,9 @@ namespace Gribble
             return new StoredProcedure(connectionManager, mappingCollection, profiler ?? new ConsoleProfiler());
         }
 
-        public void Execute(string name, object parameters = null)
+        public int Execute(string name, object parameters = null)
         {
-            Command.Create(StoredProcedureWriter.CreateStatement(name, parameters.ToDictionary(), Statement.ResultType.None), _profiler).ExecuteNonQuery(_connectionManager);
+            return Command.Create(StoredProcedureWriter.CreateStatement(name, parameters.ToDictionary(), Statement.ResultType.None), _profiler).ExecuteNonQuery(_connectionManager);
         }
 
         public T ExecuteScalar<T>(string name, object parameters = null)
