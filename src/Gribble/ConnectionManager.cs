@@ -28,7 +28,7 @@ namespace Gribble
 
         public SqlConnection Connection { get { return _connection.Value; } }
 
-        public IDbCommand CreateCommand()
+        public SqlCommand CreateCommand()
         {
             var command = _connection.Value.CreateCommand();
             command.CommandTimeout = (int) _commandTimeout.TotalSeconds;

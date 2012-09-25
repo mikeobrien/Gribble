@@ -1,5 +1,4 @@
 using System;
-using System.Data;
 using System.Data.SqlClient;
 
 namespace Gribble
@@ -7,6 +6,6 @@ namespace Gribble
     public interface IConnectionManager : IDisposable
     {
         SqlConnection Connection { get; }
-        IDbCommand CreateCommand();
+        SqlCommand CreateCommand();
     }
 }

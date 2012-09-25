@@ -56,6 +56,7 @@ namespace Tests
         {
             Database.SetUp();
             Database.CreateTables();
+            Database.ExecuteNonQuery("CREATE PROCEDURE ReturnValue AS BEGIN RETURN 42 END", Database.FirstTable.Name);
             Database.ExecuteNonQuery("CREATE PROCEDURE GetAll AS BEGIN SELECT * FROM {0} END", Database.FirstTable.Name);
             Database.ExecuteNonQuery("CREATE PROCEDURE GetOne @Id int AS BEGIN SELECT TOP 1 * FROM {0} WHERE Id=@Id END", Database.FirstTable.Name);
             Database.ExecuteNonQuery("CREATE PROCEDURE GetCount AS BEGIN SELECT COUNT(*) FROM {0} END", Database.FirstTable.Name);
@@ -115,10 +116,16 @@ namespace Tests
         [Test]
         public void should_execute_non_query()
         {
-            StoredProcedure.Execute("DeleteOne", new { Id = 6 });
+            StoredProcedure.Execute("DeleteOne", new { Id = 6 }).ShouldEqual(1);
 
             var result = StoredProcedure.ExecuteScalar<int>("GetCount");
             result.ShouldEqual(9);
+        }
+
+        [Test]
+        public void should_execute_non_query_return()
+        {
+            StoredProcedure.Execute<int>("ReturnValue").ShouldEqual(42);
         }
     }
 }

@@ -21,12 +21,12 @@ namespace Gribble.NHibernate
 
         public SqlConnection Connection { get { return (SqlConnection)_session.Connection; } }
 
-        public IDbCommand CreateCommand()
+        public SqlCommand CreateCommand()
         {
             var command = _session.Connection.CreateCommand();
             command.CommandTimeout = _timeout;
             _session.Transaction.Enlist(command);
-            return command;
+            return (SqlCommand)command;
         }
 
         public void Dispose() { }

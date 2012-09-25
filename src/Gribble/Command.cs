@@ -48,7 +48,19 @@ namespace Gribble
             return Execute(() => CreateCommand(connectionManager).ExecuteNonQuery());
         }
 
-        private IDbCommand CreateCommand(IConnectionManager connectionManager)
+        public TReturn ExecuteNonQuery<TReturn>(IConnectionManager connectionManager)
+        {
+            return Execute(() => {
+                const string parameterName = "@__return__";
+                var command = CreateCommand(connectionManager);
+                command.Parameters.Add(new SqlParameter {
+                        ParameterName = parameterName, Direction = ParameterDirection.ReturnValue });
+                command.ExecuteNonQuery();
+                return (TReturn)command.Parameters[parameterName].Value;
+            });
+        }
+
+        private SqlCommand CreateCommand(IConnectionManager connectionManager)
         {
             var command = connectionManager.CreateCommand();
             command.CommandText = Statement.Text;

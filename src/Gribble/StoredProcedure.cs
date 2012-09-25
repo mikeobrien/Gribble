@@ -55,6 +55,11 @@ namespace Gribble
             return Command.Create(StoredProcedureWriter.CreateStatement(name, parameters.ToDictionary(), Statement.ResultType.None), _profiler).ExecuteNonQuery(_connectionManager);
         }
 
+        public TReturn Execute<TReturn>(string name, object parameters = null)
+        {
+            return Command.Create(StoredProcedureWriter.CreateStatement(name, parameters.ToDictionary(), Statement.ResultType.None), _profiler).ExecuteNonQuery<TReturn>(_connectionManager);
+        }
+
         public T ExecuteScalar<T>(string name, object parameters = null)
         {
             return Command.Create(StoredProcedureWriter.CreateStatement(name, parameters.ToDictionary(), Statement.ResultType.Scalar), _profiler).ExecuteScalar<T>(_connectionManager);
