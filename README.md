@@ -175,7 +175,8 @@ Gribble allows you to execute stored procedures through the `StoredProcedure` cl
 
     public interface IStoredProcedure
     {
-        void Execute(string name, object parameters = null);
+        TReturn Execute<TReturn>(string name, object parameters = null); // Returns the return value
+        int Execute(string name, object parameters = null); // Returns the number of records affected
         T ExecuteScalar<T>(string name, object parameters = null);
         TEntity ExecuteSingle<TEntity>(string name, object parameters = null);
         TEntity ExecuteSingleOrNone<TEntity>(string name, object parameters = null);
