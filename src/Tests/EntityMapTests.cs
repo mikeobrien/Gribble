@@ -220,10 +220,24 @@ namespace Tests
         }
 
         [Test]
+        public void should_case_insensitively_map_id_property_to_column_name()
+        {
+            var mapping = new EntityMapping(new GuidEntityMap());
+            mapping.Column.GetStaticPropertyName("Entity_Id").ShouldEqual("Id");
+        }
+
+        [Test]
         public void Column_Non_Id_Property_Mapping_Test()
         {
             var mapping = new EntityMapping(new GuidEntityMap());
             mapping.Column.GetStaticPropertyName("entity_name").ShouldEqual("Name");
+        }
+
+        [Test]
+        public void should_case_insensitively_map_static_property_to_column_name()
+        {
+            var mapping = new EntityMapping(new GuidEntityMap());
+            mapping.Column.GetStaticPropertyName("Entity_Name").ShouldEqual("Name");
         }
 
         [Test]

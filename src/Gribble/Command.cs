@@ -41,7 +41,7 @@ namespace Gribble
         { return (T)ExecuteScalar(connectionManager); }
 
         public object ExecuteScalar(IConnectionManager connectionManager)
-        { return Execute(() => CreateCommand(connectionManager).ExecuteScalar()); }
+        { return Execute(() => CreateCommand(connectionManager).ExecuteScalar().FromDb<object>()); }
 
         public int ExecuteNonQuery(IConnectionManager connectionManager)
         {

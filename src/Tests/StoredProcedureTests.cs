@@ -61,6 +61,7 @@ namespace Tests
             Database.ExecuteNonQuery("CREATE PROCEDURE GetOne @Id int AS BEGIN SELECT TOP 1 * FROM {0} WHERE Id=@Id END", Database.FirstTable.Name);
             Database.ExecuteNonQuery("CREATE PROCEDURE GetCount AS BEGIN SELECT COUNT(*) FROM {0} END", Database.FirstTable.Name);
             Database.ExecuteNonQuery("CREATE PROCEDURE DeleteOne @Id int AS BEGIN DELETE FROM {0} WHERE Id=@Id END", Database.FirstTable.Name);
+            Database.ExecuteNonQuery("CREATE PROCEDURE Echo @Value int AS BEGIN SELECT @Value END", Database.FirstTable.Name);
             StoredProcedure = Gribble.StoredProcedure.Create(Database.Connection, MappingCollection, profiler: Profiler);
         }
 
@@ -126,6 +127,27 @@ namespace Tests
         public void should_execute_non_query_return()
         {
             StoredProcedure.Execute<int>("ReturnValue").ShouldEqual(42);
+        }
+
+        [Test]
+        public void should_allow_case_insensitive_params()
+        {
+            var result = StoredProcedure.ExecuteScalar<int>("Echo", new { VALUE = 5 });
+            result.ShouldEqual(5);
+        }
+
+        [Test]
+        public void should_allow_nullable_params()
+        {
+            int? value = 5;
+            StoredProcedure.ExecuteScalar<int?>("Echo", new { Value = value }).ShouldEqual(5); 
+        }
+
+        [Test]
+        public void should_return_nullable_scalar()
+        {
+            int? value = null;
+            StoredProcedure.ExecuteScalar<int?>("Echo", new { Value = value }).ShouldEqual(null);
         }
     }
 }

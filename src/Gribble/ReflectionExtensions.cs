@@ -9,11 +9,11 @@ namespace Gribble
     {
         private static readonly Func<Type, IEnumerable<PropertyInfo>> PrimitiveProperties = 
             Func.Memoize<Type, IEnumerable<PropertyInfo>>(t => t.GetProperties()
-                .Where(x => x.PropertyType.IsPrimitive || 
+                .Where(x => x.PropertyType.IsPrimitive(true) ||
                             x.PropertyType == typeof(string) ||
-                            x.PropertyType == typeof(Guid) || 
-                            x.PropertyType == typeof(DateTime) || 
-                            x.PropertyType == typeof(TimeSpan))); 
+                            x.PropertyType.IsType<Guid>(true) || 
+                            x.PropertyType.IsType<DateTime>(true) ||
+                            x.PropertyType.IsType<TimeSpan>(true))); 
 
         public static IDictionary<string, object> ToDictionary(this object source)
         {

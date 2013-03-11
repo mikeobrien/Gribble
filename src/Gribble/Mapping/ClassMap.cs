@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace Gribble.Mapping
@@ -7,7 +8,7 @@ namespace Gribble.Mapping
     public abstract class ClassMap<T> : IClassMap
     {
         private readonly Dictionary<string, string> _propertyColumnMapping = new Dictionary<string, string>();
-        private readonly Dictionary<string, string> _columnPropertyMapping = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> _columnPropertyMapping = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         public IDictionary<string, string> PropertyColumMapping { get { return _propertyColumnMapping; } }
         public IDictionary<string, string> ColumPropertyMapping { get { return _columnPropertyMapping; } }
@@ -48,11 +49,13 @@ namespace Gribble.Mapping
 
         private void AddMapping(string columnName, string propertyName)
         {
-            if (_propertyColumnMapping.ContainsKey(propertyName)) _propertyColumnMapping[propertyName] = columnName;
-            else _propertyColumnMapping.Add(propertyName, columnName);
+            _propertyColumnMapping.Where(x => x.Value == columnName).ToList()
+                .ForEach(x => _propertyColumnMapping.Remove(x.Key));
+            _columnPropertyMapping.Where(x => x.Value == propertyName).ToList()
+                .ForEach(x => _columnPropertyMapping.Remove(x.Key));
 
-            if (_columnPropertyMapping.ContainsKey(columnName)) _columnPropertyMapping[columnName] = propertyName;
-            else _columnPropertyMapping.Add(columnName, propertyName);
+            _propertyColumnMapping[propertyName] = columnName;
+            _columnPropertyMapping[columnName] = propertyName;
         }
 
         private void AddKeyMapping(PrimaryKeyType type, string columnName, string propertyName)
