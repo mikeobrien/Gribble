@@ -27,6 +27,41 @@ namespace Gribble.Mapping
             return new IdentityKeyMapping(GetPropertyName(property), this);
         }
 
+        public IdentityKeyMapping Id(Expression<Func<T, uint>> property)
+        {
+            return new IdentityKeyMapping(GetPropertyName(property), this);
+        }
+
+        public IdentityKeyMapping Id(Expression<Func<T, long>> property)
+        {
+            return new IdentityKeyMapping(GetPropertyName(property), this);
+        }
+
+        public IdentityKeyMapping Id(Expression<Func<T, ulong>> property)
+        {
+            return new IdentityKeyMapping(GetPropertyName(property), this);
+        }
+
+        public IdentityKeyMapping Id(Expression<Func<T, decimal>> property)
+        {
+            return new IdentityKeyMapping(GetPropertyName(property), this);
+        }
+
+        public IdentityKeyMapping Id(Expression<Func<T, float>> property)
+        {
+            return new IdentityKeyMapping(GetPropertyName(property), this);
+        }
+
+        public IdentityKeyMapping Id(Expression<Func<T, short>> property)
+        {
+            return new IdentityKeyMapping(GetPropertyName(property), this);
+        }
+
+        public IdentityKeyMapping Id(Expression<Func<T, ushort>> property)
+        {
+            return new IdentityKeyMapping(GetPropertyName(property), this);
+        }
+
         public GuidKeyMapping Id(Expression<Func<T, Guid>> property)
         {
             return new GuidKeyMapping(GetPropertyName(property), this);

@@ -1,0 +1,99 @@
+﻿<#@ include file="Gribble.Core.ttinclude" #>
+<#
+    // Settings
+    ConnectionStringName = "";			// Uses last connection string in config if not specified
+    Namespace = "MyProject.DB.SP";
+    ClassPrefix = "";
+    ClassSuffix = "";
+
+    // Read schema
+    var sps = LoadSPs();
+
+    // Generate output
+    if (sps.Count>0)
+    {
+#>
+<#
+if (string.IsNullOrEmpty(Namespace)) Namespace=ConnectionStringName;
+if (string.IsNullOrEmpty(Namespace)) Namespace="Gribble.SP";
+#>
+using System;
+using System.Data.Common;
+using System.Data;
+using System.Collections.Generic;
+using Gribble;
+using Gribble.Mapping;
+
+//Total Number of SP Functions Generated - <#=sps.Count()#>
+
+
+namespace <#=Namespace #>
+{
+    public class PreparedStoredProcedure
+    {
+        IStoredProcedure sp;
+        public string Name {get;set;}
+        public object Parameters  {get;set;} 
+        public EntityMappingCollection mapping  {get;set;} 
+
+        public PreparedStoredProcedure(GribbleSPList sp,EntityMappingCollection mapping = null)
+        {
+            this.sp = StoredProcedure.Create(sp.ConnectionManager,mapping ?? GribbleDB.EntityMapping);
+        }
+
+        public TReturn Execute<TReturn>()
+        {
+            return sp.Execute<TReturn>(Name,Parameters);
+        }
+
+        public int Execute()
+        {
+            return sp.Execute(Name,Parameters);
+        }
+
+        public T ExecuteScalar<T>()
+        {
+            return sp.ExecuteScalar<T>(Name,Parameters);
+        }
+        
+        public TEntity ExecuteSingle<TEntity>()
+        {
+            return sp.ExecuteSingle<TEntity>(Name,Parameters);
+        }
+        
+        public TEntity ExecuteSingleOrNone<TEntity>()
+        {
+            return sp.ExecuteSingleOrNone<TEntity>(Name,Parameters);
+        }
+
+        public IEnumerable<TEntity> ExecuteMany<TEntity>()
+        {
+            return sp.ExecuteMany<TEntity>(Name,Parameters);
+        }
+    }
+
+    public static class SPList 
+    {
+<#foreach(var sp in sps){#>
+        
+        public static PreparedStoredProcedure <#=sp.Name#>(this GribbleSPList spList <#foreach(var param in sp.Parameters){#> , <#=param.NullableSysType#> <#=Inflector.MakeInitialLowerCase(param.Name)#>  = null <#}#>)
+        {
+            PreparedStoredProcedure sp = new PreparedStoredProcedure(spList);
+            sp.Name = "<#=sp.Name#>";
+            sp.Parameters = <# if(sp.Parameters.Count == 0 ) {#> null <# } else { #> new {<#bool start = true; foreach(var param in sp.Parameters){#> <#if (!start) { #>, <#} else { start = false;} #><#=param.Name#> = <#=Inflector.MakeInitialLowerCase(param.Name)#><#}#>}<# }#>;
+            return sp;
+        }
+
+        public static PreparedStoredProcedure <#=sp.Name#>(this GribbleSPList spList, EntityMappingCollection mapping  <#foreach(var param in sp.Parameters){#> , <#=param.NullableSysType#> <#=Inflector.MakeInitialLowerCase(param.Name)#>  = null <#}#>)
+        {
+            PreparedStoredProcedure sp = new PreparedStoredProcedure(spList,mapping);
+            sp.Name = "<#=sp.Name#>";
+            sp.Parameters = <# if(sp.Parameters.Count == 0 ) {#> null <# } else { #> new {<#bool start = true; foreach(var param in sp.Parameters){#> <#if (!start) { #>, <#} else { start = false;} #><#=param.Name#> = <#=Inflector.MakeInitialLowerCase(param.Name)#><#}#>}<# }#>;
+            return sp;
+        }
+
+<#}#>
+    }
+}
+<# } #>
+
