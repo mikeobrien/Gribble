@@ -418,6 +418,13 @@ Installation
 
     PM> Install-Package gribble  
     PM> Install-Package gribble.nhibernate
+
+Contributors
+------------
+
+| [![Guru Kathiresan](http://www.gravatar.com/avatar/af0a1c7a98f6584a90b8ed49708d6218.jpg?s=144)](https://github.com/gkathire) |
+|:---:|
+| [Guru Kathiresan](https://github.com/gkathire) |
 	
 Props
 ------------
