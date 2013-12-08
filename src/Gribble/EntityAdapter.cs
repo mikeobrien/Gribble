@@ -65,6 +65,12 @@ namespace Gribble
                 if (value == null) return null;
                 var arguments = type.GetGenericArguments();
                 if (arguments.Any(x => x.IsEnum)) return Enum.ToObject(arguments.First(x => x.IsEnum), value);
+                var targetType = Nullable.GetUnderlyingType(type);
+                value = Convert.ChangeType(value, targetType);
+            }
+            else if ((type == typeof(string)) && (value!= null))
+            {
+                return value.ToString();
             }
             return value;
         }

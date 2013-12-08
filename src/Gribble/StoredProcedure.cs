@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
 using Gribble.Mapping;
 using Gribble.TransactSql;
+using System.Data;
 
 namespace Gribble
 {
@@ -20,7 +20,7 @@ namespace Gribble
             _map = map;
         }
 
-        public static IStoredProcedure Create(SqlConnection connection, TimeSpan? commandTimeout = null, IProfiler profiler = null)
+        public static IStoredProcedure Create(IDbConnection connection, TimeSpan? commandTimeout = null, IProfiler profiler = null)
         {
             return Create(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), profiler);
         }
@@ -30,7 +30,7 @@ namespace Gribble
             return new StoredProcedure(connectionManager, new EntityMappingCollection(Enumerable.Empty<IClassMap>()), profiler ?? new ConsoleProfiler());
         }
 
-        public static IStoredProcedure Create(SqlConnection connection, string keyColumn, TimeSpan? commandTimeout = null, IProfiler profiler = null)
+        public static IStoredProcedure Create(IDbConnection connection, string keyColumn, TimeSpan? commandTimeout = null, IProfiler profiler = null)
         {
             return Create(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), keyColumn, profiler);
         }
@@ -40,7 +40,7 @@ namespace Gribble
             return new StoredProcedure(connectionManager, new EntityMappingCollection(new IClassMap[] { new GuidKeyEntityMap(keyColumn), new IntKeyEntityMap(keyColumn) }), profiler ?? new ConsoleProfiler());
         }
 
-        public static IStoredProcedure Create(SqlConnection connection, EntityMappingCollection mappingCollection, TimeSpan? commandTimeout = null, IProfiler profiler = null)
+        public static IStoredProcedure Create(IDbConnection connection, EntityMappingCollection mappingCollection, TimeSpan? commandTimeout = null, IProfiler profiler = null)
         {
             return Create(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), mappingCollection, profiler);
         }

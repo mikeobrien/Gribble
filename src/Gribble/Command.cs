@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using Gribble.TransactSql;
+using System.Data.Common;
 
 namespace Gribble
 {
@@ -53,19 +53,29 @@ namespace Gribble
             return Execute(() => {
                 const string parameterName = "@__return__";
                 var command = CreateCommand(connectionManager);
-                command.Parameters.Add(new SqlParameter {
-                        ParameterName = parameterName, Direction = ParameterDirection.ReturnValue });
+                var param = command.CreateParameter();
+                param.ParameterName = parameterName;
+                param.Direction = ParameterDirection.ReturnValue;
+                command.Parameters.Add(param);
                 command.ExecuteNonQuery();
-                return (TReturn)command.Parameters[parameterName].Value;
+                return (TReturn)((IDbDataParameter)command.Parameters[parameterName]).Value;
             });
         }
 
-        private SqlCommand CreateCommand(IConnectionManager connectionManager)
+        private IDbDataParameter CreateParameter(IDbCommand command, string parameterName, object parameterValue)
+        {
+            var param = command.CreateParameter();
+            param.ParameterName = parameterName;
+            param.Value = parameterValue;
+            return param;
+        }
+
+        private IDbCommand CreateCommand(IConnectionManager connectionManager)
         {
             var command = connectionManager.CreateCommand();
             command.CommandText = Statement.Text;
             command.CommandType = Statement.Type == Statement.StatementType.Text ? CommandType.Text : CommandType.StoredProcedure;
-            Statement.Parameters.Select(x => new SqlParameter(x.Key, x.Value ?? DBNull.Value)).ToList().ForEach(y => command.Parameters.Add(y));
+            Statement.Parameters.Select(x => CreateParameter(command,x.Key, x.Value ?? DBNull.Value)).ToList().ForEach(y => command.Parameters.Add(y));
             return command;
         }
 

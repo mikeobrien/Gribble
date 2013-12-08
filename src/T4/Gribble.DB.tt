@@ -1,26 +1,24 @@
 ﻿<#@ include file="Gribble.Core.ttinclude" #>
 <#
     // Settings
-    ConnectionStringName = "";			// Uses last connection string in config if not specified
+    ConnectionStringName = "";          // Uses last connection string in config if not specified
     Namespace = "MyProject.DB";
     string PocoNamespace = "MyProject.Models";
     ClassPrefix = "";
     ClassSuffix = "";
-    bool SplitIntoMultipleFiles = false;		// if true: Generates one file for every class
-    bool MakeSingular = true;			// if true: Changes the classname to singular if tablename is not singular
+    bool MakeSingular = true;           // if true: Changes the classname to singular if tablename is not singular
     IncludeViews = true;
-    bool UseIdAsPK = false;				// if true: Changes the primary key property name to Id
-    bool GenerateConstructor = false;		// if true: Generates the default empty constructor 
+    bool UseIdAsPK = false;             // if true: Changes the primary key property name to Id
 
     // Read schema
     var tables = LoadTables(MakeSingular);
 /*
     // Tweak Schema
-    tables["tablename"].Ignore = true;							// To ignore a table
-    tables["tablename"].ClassName = "newname";					// To change the class name of a table
-    tables["tablename"]["columnname"].Ignore = true;			// To ignore a column
-    tables["tablename"]["columnname"].PropertyName="newname";	// To change the property name of a column
-    tables["tablename"]["columnname"].PropertyType="bool";		// To change the property type of a column
+    tables["tablename"].Ignore = true;                          // To ignore a table
+    tables["tablename"].ClassName = "newname";                  // To change the class name of a table
+    tables["tablename"]["columnname"].Ignore = true;            // To ignore a column
+    tables["tablename"]["columnname"].PropertyName="newname";   // To change the property name of a column
+    tables["tablename"]["columnname"].PropertyType="bool";      // To change the property type of a column
 */
 
     // Generate output
@@ -44,64 +42,37 @@ using System.Text;
 using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using System.Configuration;
-using Gribble.Mapping;
+using System.Data;
+using System.Data.Common;
 using Gribble;
+using Gribble.Mapping;
 using <#=PocoNamespace#>;
 
 namespace <#=Namespace #>
 {
-    public class GribbleSPList
+
+
+    public class GribbleDB : BaseGribbleDB
     {
-        GribbleDB db;
 
-        public ConnectionManager ConnectionManager {get{ return db.ConnectionManager;}}
-
-        public GribbleSPList(GribbleDB db)
+        public GribbleDB(ConnectionManager connectionManager, IProfiler profiler = null) :base(connectionManager, profiler)
         {
-            this.db = db;
         }
-    }
 
+        public GribbleDB(string connectionString, string providerName, IProfiler profiler = null):base(connectionString, providerName, profiler)
+        {
+        }
 
-    public class GribbleDB : IDisposable
-    {
-        private ConnectionManager connectionManager;
-        public ConnectionManager ConnectionManager {get{ return connectionManager;}}
-        private IProfiler profiler;
+        public GribbleDB(string connectionString, DbProviderFactory provider, IProfiler profiler = null):base(connectionString, provider, profiler)
+        {
+        }
 
-        private GribbleSPList sp;
-        public GribbleSPList SP { get { return sp; } }
+        public GribbleDB(IDbConnection connection, IProfiler profiler = null):base(connection, profiler)
+        {
+        }
         
-
-        public GribbleDB(ConnectionManager connectionManager, IProfiler profiler = null)
+        public GribbleDB(string connectionStringName, IProfiler profiler = null):base(connectionStringName, profiler)
         {
-            this.connectionManager = connectionManager;
-            this.profiler = profiler ?? new NullProfiler();
-            sp = new GribbleSPList(this);
-
-        }
-
-        public GribbleDB(string connectionString, IProfiler profiler = null)
-        {
-            this.connectionManager = new ConnectionManager(connectionString);
-            this.profiler = profiler ?? new NullProfiler();
-            sp = new GribbleSPList(this);
-        }
-
-        public static GribbleDB CreateFromConnectionName(string connectionStringName = "<#= ConnectionStringName #>", IProfiler profiler = null)
-        {
-            if (ConfigurationManager.ConnectionStrings[connectionStringName] == null)
-            {
-                throw new Exception("Connection Name not found in Config");
-            }
-            var connectionString = ConfigurationManager.ConnectionStrings[connectionStringName].ConnectionString;
-            var connectionManager = new ConnectionManager(connectionString);
-            return new GribbleDB(connectionManager,profiler);
-        }        
-
-        public void Dispose()
-        {
-            connectionManager.Dispose();
         }
 
         #region Table Properties
@@ -109,7 +80,7 @@ namespace <#=Namespace #>
 foreach(Table tbl in from t in tables where !t.Ignore select t)
 {
 #>
-        public ITable<<#=tbl.ClassName#>> <#=tbl.ClassName#> {get { return new  Table<<#=tbl.ClassName#>>(connectionManager, "<#=tbl.Name#>",  <#=tbl.ClassName#>_EntityMapping, profiler); } }
+        public ITable<<#=tbl.ClassName#>> <#=tbl.ClassName#> {get { return new  Table<<#=tbl.ClassName#>>(_connectionManager, "<#=tbl.Name#>",  <#=tbl.ClassName#>_EntityMapping, _profiler); } }
 <#
 }
 #>
@@ -127,31 +98,34 @@ foreach(Table tbl in from t in tables where !t.Ignore select t)
 #>
         #endregion MapConstants
 
-        private static EntityMappingCollection mapping = new EntityMappingCollection(new IClassMap[] { <#bool start = true; foreach(Table tbl in from t in tables where !t.Ignore select t) { #> <#if (!start) { #>, <#} else { start = false;} #> <#=tbl.ClassName#>_ClassMap<#}#> });
-        public static EntityMappingCollection EntityMapping {get {return mapping;}}
-
+        private static EntityMappingCollection _mapping = new EntityMappingCollection(new IClassMap[] { <#bool start = true; foreach(Table tbl in from t in tables where !t.Ignore select t) { #> <#if (!start) { #>, <#} else { start = false;} #> <#=tbl.ClassName#>_ClassMap<#}#> });
+        protected override EntityMappingCollection GetEntityMapping()
+        {
+            return _mapping;
+        }
 
 <#
 foreach(Table tbl in from t in tables where !t.Ignore select t)
 {
 #>
-    public partial class <#=tbl.ClassName#>Map: ClassMap<<#=tbl.ClassName#>><#if (tbl.HasPK() && UseIdAsPK) { #> , IHasId<<#=tbl.PK.PropertyType#>><#}#> 
-    {
-        public <#=tbl.ClassName#>Map()
+        public partial class <#=tbl.ClassName#>Map: ClassMap<<#=tbl.ClassName#>><#if (tbl.HasPK() && UseIdAsPK) { #> , IHasId<<#=tbl.PK.PropertyType#>><#}#> 
         {
-    <#
+            public <#=tbl.ClassName#>Map()
+            {
+<#
     foreach(Column col in from c in tbl.Columns where !c.Ignore select c)
     {
     if (col.IsPK){#>
-            Id(x=>x.<#=col.PropertyName#>).Column("<#=col.Name#>")<# if (col.PropertyType == "Guid" && col.IsAutoIncrement) {  #>.Generated()<# }#>;
-    <# } else { #>
-            Map(x=>x.<#=col.PropertyName#>).Column("<#=col.Name#>");
-    <# } #>
-    <# } #>
-        }
-    }
+                Id(x=>x.<#=col.PropertyName#>).Column("<#=col.Name#>")<# if (col.PropertyType == "Guid" && col.IsAutoIncrement) {  #>.Generated()<# }#>;
+<# } else { #>
+                Map(x=>x.<#=col.PropertyName#>).Column("<#=col.Name#>");
 <# } #>
-}
+<# } #>
+                Map(x => x.Values).Dynamic();
+            }
+        }
+<# } #>
+    }
 }
 #pragma warning restore 1591
 <# } #>

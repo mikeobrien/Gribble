@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Linq.Expressions;
 using Gribble.Expressions;
 using Gribble.Mapping;
 using Gribble.Model;
 using Gribble.TransactSql;
+using System.Data;
 
 namespace Gribble
 {
@@ -34,7 +34,7 @@ namespace Gribble
         }
 
         public static ITable<TEntity> Create<TKey>(
-            SqlConnection connection, 
+            IDbConnection connection, 
             string tableName, 
             string keyColumn, 
             TimeSpan? commandTimeout = null, 
@@ -59,7 +59,7 @@ namespace Gribble
         }
 
         public static ITable<TEntity> Create(
-            SqlConnection connection, 
+            IDbConnection connection, 
             string tableName, 
             IEntityMapping entityMapping, 
             TimeSpan? commandTimeout = null, 

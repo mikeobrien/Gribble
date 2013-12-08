@@ -1,5 +1,4 @@
 ﻿using System.Data;
-using System.Data.SqlClient;
 using NHibernate;
 using NHibernate.SqlCommand;
 using NHibernate.SqlTypes;
@@ -19,14 +18,14 @@ namespace Gribble.NHibernate
                                .GenerateCommand(CommandType.Text, new SqlString(), new SqlType[] { }).CommandTimeout;
         }
 
-        public SqlConnection Connection { get { return (SqlConnection)_session.Connection; } }
+        public IDbConnection Connection { get { return _session.Connection; } }
 
-        public SqlCommand CreateCommand()
+        public IDbCommand CreateCommand()
         {
             var command = _session.Connection.CreateCommand();
             command.CommandTimeout = _timeout;
             _session.Transaction.Enlist(command);
-            return (SqlCommand)command;
+            return command;
         }
 
         public void Dispose() { }

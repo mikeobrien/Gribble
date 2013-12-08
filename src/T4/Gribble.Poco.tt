@@ -1,25 +1,24 @@
 ﻿<#@ include file="Gribble.Core.ttinclude" #>
 <#
     // Settings
-    ConnectionStringName = "";			// Uses last connection string in config if not specified
+    ConnectionStringName = "";              // Uses last connection string in config if not specified
     Namespace = "MyProject.Models";
     ClassPrefix = "";
     ClassSuffix = "";
-    bool SplitIntoMultipleFiles = false;		// if true: Generates one file for every class
-    bool MakeSingular = true;			// if true: Changes the classname to singular if tablename is not singular
+    bool SplitIntoMultipleFiles = false;    // if true: Generates one file for every class
+    bool MakeSingular = true;               // if true: Changes the classname to singular if tablename is not singular
     IncludeViews = true;
-    bool UseIdAsPK = false;				// if true: Changes the primary key property name to Id
-    bool GenerateConstructor = false;		// if true: Generates the default empty constructor 
+    bool GenerateConstructor = false;       // if true: Generates the default empty constructor 
 
     // Read schema
     var tables = LoadTables(MakeSingular);
 /*
     // Tweak Schema
-    tables["tablename"].Ignore = true;							// To ignore a table
-    tables["tablename"].ClassName = "newname";					// To change the class name of a table
-    tables["tablename"]["columnname"].Ignore = true;			// To ignore a column
-    tables["tablename"]["columnname"].PropertyName="newname";	// To change the property name of a column
-    tables["tablename"]["columnname"].PropertyType="bool";		// To change the property type of a column
+    tables["tablename"].Ignore = true;                          // To ignore a table
+    tables["tablename"].ClassName = "newname";                  // To change the class name of a table
+    tables["tablename"]["columnname"].Ignore = true;            // To ignore a column
+    tables["tablename"]["columnname"].PropertyName="newname";   // To change the property name of a column
+    tables["tablename"]["columnname"].PropertyType="bool";      // To change the property type of a column
 */
 
     // Generate output
@@ -64,7 +63,7 @@ foreach(Table tbl in from t in tables where !t.Ignore select t)
 manager.StartNewFile(tbl.Name + ".cs");
 #>
     [Serializable]
-    public partial class <#=tbl.ClassName#>: ModelBase<#if (tbl.HasPK() && UseIdAsPK) { #> , IHasId<<#=tbl.PK.PropertyType#>><#}#> 
+    public partial class <#=tbl.ClassName#>: ModelBase 
     {
 <# if (GenerateConstructor) { #>
         public <#=tbl.ClassName#>()
@@ -80,7 +79,7 @@ manager.StartNewFile(tbl.Name + ".cs");
 <#
     foreach(Column col in from c in tbl.Columns where !c.Ignore select c)
     {#>
-         public const string COLUMN_<#=col.PropertyName#> = "<#=col.Name#>";
+        public const string COLUMN_<#=col.PropertyName#> = "<#=col.Name#>";
 <#
     }#>
         #endregion
@@ -98,8 +97,8 @@ foreach(Column col in from c in tbl.Columns where !c.Ignore select c)
 <# } #>
         public <#=col.ProperPropertyType#> <#=col.PropertyName#> { get; set;}
 <# } #>
+        public Dictionary<string, object> Values { get; set; }
         #endregion
-
 
         #region OverloadedFunctions
         public override object GetPrimaryKeyValue()
