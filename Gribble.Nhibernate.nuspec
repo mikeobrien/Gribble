@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+   <metadata>
+      <id>gribble.nhibernate</id>
+      <version>0.0.0.0</version>
+      <title>Gribble ORM NHibernate Integration</title>
+      <authors>Mike O'Brien</authors>
+      <description>Gribble NHibernate integration.</description>
+      <releaseNotes />
+      <copyright />
+      <language>en-US</language>
+      <licenseUrl>https://github.com/mikeobrien/Gribble/blob/master/LICENSE</licenseUrl>
+      <projectUrl>https://github.com/mikeobrien/Gribble</projectUrl>
+      <owners>Mike O'Brien</owners>
+      <summary>Gribble NHibernate integration.</summary>
+      <iconUrl>https://github.com/mikeobrien/Gribble/raw/master/misc/logo.png</iconUrl>
+      <tags>orm dal sql nhibernate</tags>
+      <dependencies>
+         <dependency id="gribble" version="1.0.0" />
+         <dependency id="NHibernate" version="3.1.0.4000" />
+      </dependencies>
+   </metadata>
+   <files>
+      <file src="src\Gribble.NHibernate\bin\Release\Gribble.NHibernate.*" target="lib" />
+   </files>
+</package>

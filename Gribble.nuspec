@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+   <metadata>
+      <id>gribble</id>
+      <version>0.0.0.0</version>
+      <title>Gribble ORM</title>
+      <authors>Mike O'Brien</authors>
+      <description>Gribble is a simple, Linq enabled ORM designed to work with dynamically created tables.</description>
+      <releaseNotes />
+      <copyright />
+      <language>en-US</language>
+      <licenseUrl>https://github.com/mikeobrien/Gribble/blob/master/LICENSE</licenseUrl>
+      <projectUrl>https://github.com/mikeobrien/Gribble</projectUrl>
+      <owners>Mike O'Brien</owners>
+      <summary>Gribble is a simple, Linq enabled ORM designed to work with dynamically created tables.</summary>
+      <iconUrl>https://github.com/mikeobrien/Gribble/raw/master/misc/logo.png</iconUrl>
+      <tags>orm dal sql</tags>
+   </metadata>
+   <files>
+      <file src="src\Gribble\bin\Release\Gribble.*" target="lib" />
+   </files>
+</package>
