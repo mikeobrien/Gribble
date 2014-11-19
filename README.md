@@ -1,6 +1,8 @@
 Gribble
 =============
 
+[![Nuget](http://img.shields.io/nuget/v/Gribble.svg)](http://www.nuget.org/packages/Gribble/) [![Nuget downloads](http://img.shields.io/nuget/dt/Gribble.svg)](http://www.nuget.org/packages/Gribble/)
+
 Gribble is a simple, Linq enabled ORM that was designed to work with dynamically created tables. It was not meant to be a replacement for a full fledged ORM like NHiberate but to handle a use case that other ORM's could not handle well. 
 
 Here is the skinny:
