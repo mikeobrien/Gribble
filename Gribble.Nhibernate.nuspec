@@ -20,7 +20,4 @@
          <dependency id="NHibernate" version="3.1.0.4000" />
       </dependencies>
    </metadata>
-   <files>
-      <file src="src\Gribble.NHibernate\bin\Release\Gribble.NHibernate.*" target="lib" />
-   </files>
 </package>

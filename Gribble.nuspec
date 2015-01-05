@@ -16,7 +16,4 @@
       <iconUrl>https://github.com/mikeobrien/Gribble/raw/master/misc/logo.png</iconUrl>
       <tags>orm dal sql</tags>
    </metadata>
-   <files>
-      <file src="src\Gribble\bin\Release\Gribble.*" target="lib" />
-   </files>
 </package>
