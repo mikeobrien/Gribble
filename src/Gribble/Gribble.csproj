@@ -32,6 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -40,8 +41,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BaseGribbleDB.cs" />
     <Compile Include="Command.cs" />
     <Compile Include="ConnectionManager.cs" />
+    <Compile Include="PreparedStoredProcedure.cs" />
     <Compile Include="Profilers.cs" />
     <Compile Include="StoredProcedure.cs" />
     <Compile Include="IStoredProcedure.cs" />
@@ -99,6 +102,7 @@
     <Compile Include="Table.cs" />
     <Compile Include="TableFactory.cs" />
     <Compile Include="ReflectionExtensions.cs" />
+    <Compile Include="TransactSql\GenericSqlWriter.cs" />
     <Compile Include="TransactSql\SyncWriter.cs" />
     <Compile Include="TransactSql\DataTypes.cs" />
     <Compile Include="TransactSql\DeleteWriter.cs" />

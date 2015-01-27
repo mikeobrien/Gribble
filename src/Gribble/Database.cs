@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
 using System.Linq;
 using Gribble.Model;
 using Gribble.TransactSql;
@@ -19,7 +18,7 @@ namespace Gribble
             _profiler = profiler;
         }
 
-        public static IDatabase Create(SqlConnection connection, TimeSpan? commandTimeout = null, IProfiler profiler = null)
+        public static IDatabase Create(IDbConnection connection, TimeSpan? commandTimeout = null, IProfiler profiler = null)
         {
             return Create(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), profiler);
         }

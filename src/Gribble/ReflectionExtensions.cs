@@ -13,6 +13,7 @@ namespace Gribble
                             x.PropertyType == typeof(string) ||
                             x.PropertyType.IsType<Guid>(true) || 
                             x.PropertyType.IsType<DateTime>(true) ||
+                            x.PropertyType.IsType<Decimal>(true) ||
                             x.PropertyType.IsType<TimeSpan>(true))); 
 
         public static IDictionary<string, object> ToDictionary(this object source)
