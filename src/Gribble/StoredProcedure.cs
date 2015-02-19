@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using Gribble.Extensions;
 using Gribble.Mapping;
 using Gribble.TransactSql;
 

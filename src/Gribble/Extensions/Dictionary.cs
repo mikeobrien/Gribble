@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
-namespace Gribble.TransactSql
+namespace Gribble.Extensions
 {
     public static class DictionaryExtensions
     {
@@ -12,6 +13,11 @@ namespace Gribble.TransactSql
             var name = "K" + Random.Next();
             dictionary.Add(name, value);
             return name;
+        }
+
+        public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> source, IEnumerable<KeyValuePair<TKey, TValue>> items)
+        {
+            items.ToList().ForEach(x => source.Add(x.Key, x.Value));
         }
     }
 }

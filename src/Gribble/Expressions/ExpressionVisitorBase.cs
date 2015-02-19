@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using Gribble.Extensions;
+using Queryable = Gribble.Extensions.Queryable;
 
 namespace Gribble.Expressions
 {
@@ -110,8 +112,8 @@ namespace Gribble.Expressions
                                     IEnumerable<ParameterExpression> variablesNotToVisit)
         {
             ValidateArguments(node);
-            if (visitExpressions && node.Expressions != null) Visit(Context.Create(node, expressionsState), node.Expressions.Except(expressionsNotToVisit));
-            if (visitVariables && node .Variables!= null) Visit(Context.Create(node, variablesState), node.Variables.Except(variablesNotToVisit));
+            if (visitExpressions && node.Expressions != null) Visit(Context.Create(node, expressionsState), Queryable.Except(node.Expressions, expressionsNotToVisit));
+            if (visitVariables && node .Variables!= null) Visit(Context.Create(node, variablesState), Queryable.Except(node.Variables, variablesNotToVisit));
         }
 
         protected virtual void VisitCatchBlock(Context context, CatchBlock node)
@@ -155,7 +157,7 @@ namespace Gribble.Expressions
         protected void VisitDynamic(DynamicExpression node, TState state, params Expression[] argsNotToVisit)
         {
             ValidateArguments(node);
-            if (node.Arguments != null) Visit(Context.Create(node, state), node.Arguments.Except(argsNotToVisit), Visit);
+            if (node.Arguments != null) Visit(Context.Create(node, state), Queryable.Except(node.Arguments, argsNotToVisit), Visit);
         }
 
         protected virtual void VisitElementInit(Context context, ElementInit node)
@@ -167,7 +169,7 @@ namespace Gribble.Expressions
         protected void VisitElementInit(ElementInit node, TState state, params Expression[] argsNotToVisit)
         {
             ValidateArguments(node);
-            if (node.Arguments != null) Visit(Context.Create(node, state), node.Arguments.Except(argsNotToVisit), Visit);
+            if (node.Arguments != null) Visit(Context.Create(node, state), Queryable.Except(node.Arguments, argsNotToVisit), Visit);
         }
 
         protected virtual void VisitGoto(Context context, GotoExpression node)
@@ -193,7 +195,7 @@ namespace Gribble.Expressions
         {
             ValidateArguments(node);
             if (visitObject && node.Object != null) Visit(Context.Create(node, objectState), node.Object);
-            if (visitArguments && node.Arguments != null) Visit(Context.Create(node, argumentsState), node.Arguments.Except(argsNotToVisit), Visit);
+            if (visitArguments && node.Arguments != null) Visit(Context.Create(node, argumentsState), Queryable.Except(node.Arguments, argsNotToVisit), Visit);
         }
 
         protected virtual void VisitInvocation(Context context, InvocationExpression node)
@@ -206,7 +208,7 @@ namespace Gribble.Expressions
         {
             ValidateArguments(node);
             if (visitExpression && node.Expression != null) Visit(Context.Create(node, expressionState), node.Expression);
-            if (visitArguments && node.Arguments != null) Visit(Context.Create(node, argumentsState), node.Arguments.Except(argsNotToVisit), Visit);
+            if (visitArguments && node.Arguments != null) Visit(Context.Create(node, argumentsState), Queryable.Except(node.Arguments, argsNotToVisit), Visit);
         }
 
         protected virtual void VisitLabel(Context context, LabelExpression node)
@@ -234,7 +236,7 @@ namespace Gribble.Expressions
         {
             ValidateArguments(node);
             if (visitBody && node.Body != null) Visit(Context.Create(node, bodyState), node.Body);
-            if (visitParameters && node.Parameters != null) Visit(Context.Create(node, parametersState), node.Parameters.Except(paramsNotToVisit), Visit);
+            if (visitParameters && node.Parameters != null) Visit(Context.Create(node, parametersState), Queryable.Except(node.Parameters, paramsNotToVisit), Visit);
         }
 
         protected virtual void VisitListInit(Context context, ListInitExpression node)
@@ -247,7 +249,7 @@ namespace Gribble.Expressions
         {
             ValidateArguments(node);
             if (visitNewExpression && node.NewExpression != null) Visit(Context.Create(node, newExpressionState), node.NewExpression);
-            if (visitInitializers && node.Initializers != null) Visit(Context.Create(node, initializerState), node.Initializers.Except(initializersNotToVisit), VisitElementInit);
+            if (visitInitializers && node.Initializers != null) Visit(Context.Create(node, initializerState), Queryable.Except(node.Initializers, initializersNotToVisit), VisitElementInit);
         }
 
         protected virtual void VisitLoop(Context context, LoopExpression node)
@@ -316,7 +318,7 @@ namespace Gribble.Expressions
         {
             ValidateArguments(node);
             if (visitNewExpression && node.NewExpression != null) Visit(Context.Create(node, newExpressionState), node.NewExpression);
-            if (visitBindings && node.Bindings != null) Visit(Context.Create(node, bindingsState), node.Bindings.Except(bindingsNotToVisit), VisitMemberBinding);
+            if (visitBindings && node.Bindings != null) Visit(Context.Create(node, bindingsState), Queryable.Except(node.Bindings, bindingsNotToVisit), VisitMemberBinding);
         }
 
         protected virtual void VisitMemberListBinding(Context context, MemberListBinding node)
@@ -328,7 +330,7 @@ namespace Gribble.Expressions
         protected void VisitMemberListBinding(MemberListBinding node, TState state, params ElementInit[] initializersNotToVisit)
         {
             ValidateArguments(node);
-            if (node.Initializers != null) Visit(Context.Create(node, state), node.Initializers.Except(initializersNotToVisit), VisitElementInit);
+            if (node.Initializers != null) Visit(Context.Create(node, state), Queryable.Except(node.Initializers, initializersNotToVisit), VisitElementInit);
         }
 
         protected virtual void VisitMemberMemberBinding(Context context, MemberMemberBinding node)
@@ -340,7 +342,7 @@ namespace Gribble.Expressions
         protected void VisitMemberMemberBinding(MemberMemberBinding node, TState state, params MemberBinding[] memberBindingsNotToVisit)
         {
             ValidateArguments(node);
-            if (node.Bindings != null) Visit(Context.Create(node, state), node.Bindings.Except(memberBindingsNotToVisit), VisitMemberBinding);
+            if (node.Bindings != null) Visit(Context.Create(node, state), Queryable.Except(node.Bindings, memberBindingsNotToVisit), VisitMemberBinding);
         }
 
         protected virtual void VisitMethodCall(Context context, MethodCallExpression node)
@@ -380,7 +382,7 @@ namespace Gribble.Expressions
         protected void VisitNew(NewExpression node, TState state, params Expression[] argumentsNotToVisit)
         {
             ValidateArguments(node);
-            if (node.Arguments != null) Visit(Context.Create(node, state), node.Arguments.Except(argumentsNotToVisit));
+            if (node.Arguments != null) Visit(Context.Create(node, state), Queryable.Except(node.Arguments, argumentsNotToVisit));
         }
 
         protected virtual void VisitNewArray(Context context, NewArrayExpression node)
@@ -392,7 +394,7 @@ namespace Gribble.Expressions
         protected void VisitNewArray(NewArrayExpression node, TState state, params Expression[] expressionsNotToVisit)
         {
             ValidateArguments(node);
-            if (node.Expressions != null) Visit(Context.Create(node, state), node.Expressions.Except(expressionsNotToVisit));
+            if (node.Expressions != null) Visit(Context.Create(node, state), Queryable.Except(node.Expressions, expressionsNotToVisit));
         }
 
         protected virtual void VisitParameter(Context context, ParameterExpression node) { }
@@ -406,7 +408,7 @@ namespace Gribble.Expressions
         protected void VisitRuntimeVariables(RuntimeVariablesExpression node, TState state, params ParameterExpression[] variablesNotToVisit)
         {
             ValidateArguments(node);
-            if (node.Variables != null) Visit(Context.Create(node, state), node.Variables.Except(variablesNotToVisit), Visit);
+            if (node.Variables != null) Visit(Context.Create(node, state), Queryable.Except(node.Variables, variablesNotToVisit), Visit);
         }
 
         protected virtual void VisitSwitch(Context context, SwitchExpression node)
@@ -419,7 +421,7 @@ namespace Gribble.Expressions
         {
             ValidateArguments(node);
             if (visitSwitchValue && node.SwitchValue != null) Visit(Context.Create(node, switchValueState), node.SwitchValue);
-            if (visitSwitchCases && node.Cases != null) Visit(Context.Create(node, switchCasesState), node.Cases.Except(switchCasesNotToVisit), VisitSwitchCase);
+            if (visitSwitchCases && node.Cases != null) Visit(Context.Create(node, switchCasesState), Queryable.Except(node.Cases, switchCasesNotToVisit), VisitSwitchCase);
             if (visitDefaultBody && node.DefaultBody != null) Visit(Context.Create(node, defaultBodyState), node.DefaultBody);
         }
 
@@ -432,7 +434,7 @@ namespace Gribble.Expressions
         protected void VisitSwitchCase(SwitchCase node, TState testValuesState, TState bodyState, bool visitTestValues, bool visitBody, params Expression[] testValuesNotToVisit)
         {
             ValidateArguments(node);
-            if (visitTestValues && node.TestValues != null) Visit(Context.Create(node, testValuesState), node.TestValues.Except(testValuesNotToVisit));
+            if (visitTestValues && node.TestValues != null) Visit(Context.Create(node, testValuesState), Queryable.Except(node.TestValues, testValuesNotToVisit));
             if (visitBody && node.Body != null) Visit(Context.Create(node, bodyState), node.Body);
         }
 
@@ -446,7 +448,7 @@ namespace Gribble.Expressions
         {
             ValidateArguments(node);
             if (visitBody && node.Body != null) Visit(Context.Create(node, bodyState), node.Body);
-            if (visitHandlers && node.Handlers != null) Visit(Context.Create(node, handlersState), node.Handlers.Except(catchBlocksNotToVisit), VisitCatchBlock);
+            if (visitHandlers && node.Handlers != null) Visit(Context.Create(node, handlersState), Queryable.Except(node.Handlers, catchBlocksNotToVisit), VisitCatchBlock);
             if (visitFinally && node.Finally != null) Visit(Context.Create(node, finallyState), node.Finally);
             if (visitFault && node.Fault != null) Visit(Context.Create(node, faultState), node.Fault);
         }

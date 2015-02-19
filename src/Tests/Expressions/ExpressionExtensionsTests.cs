@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using Gribble.Expressions;
+using Gribble.Extensions;
 using NUnit.Framework;
 using Should;
 

@@ -7,8 +7,9 @@ using System.Text;
 using Gribble.Model;
 using NUnit.Framework;
 using Gribble;
+using Gribble.Extensions;
 using Should;
-using Queryable = Gribble.Queryable;
+using Queryable = Gribble.Extensions.Queryable;
 
 namespace Tests
 {

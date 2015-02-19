@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Gribble.Expressions;
 using Gribble.Model;
 
-namespace Gribble
+namespace Gribble.Extensions
 {
     public enum SyncFields { Include, Exclude }
 

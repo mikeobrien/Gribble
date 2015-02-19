@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Gribble
+namespace Gribble.Extensions
 {
     public static class TypeExtensions
     {

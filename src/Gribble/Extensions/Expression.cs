@@ -3,7 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace Gribble.Expressions
+namespace Gribble.Extensions
 {
     public static class ExpressionExtensions
     {

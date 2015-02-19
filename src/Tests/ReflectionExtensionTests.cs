@@ -1,5 +1,6 @@
 ﻿using System;
 using Gribble;
+using Gribble.Extensions;
 using NUnit.Framework;
 using Should;
 

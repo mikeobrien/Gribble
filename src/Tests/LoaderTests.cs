@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Gribble;
 using Gribble.Expressions;
+using Gribble.Extensions;
 using Gribble.Mapping;
 using Gribble.Model;
 using Gribble.TransactSql;

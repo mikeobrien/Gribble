@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
+using Gribble.Extensions;
 using Gribble.TransactSql;
 
 namespace Gribble

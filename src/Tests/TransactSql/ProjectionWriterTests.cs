@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using Gribble;
 using Gribble.Expressions;
+using Gribble.Extensions;
 using Gribble.Mapping;
 using Gribble.TransactSql;
 using NUnit.Framework;
