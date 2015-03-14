@@ -18,8 +18,6 @@ Here is the skinny:
 * Interfaced based so you can test against in memory collections.
 * NHibernate session/transaction integration.
 	
-Working with Data
-------------
 
 Gribble allows you to work with data through the `Table` class which implements `ITable<T>` and `IQueryable<T>`.
 
@@ -83,7 +81,7 @@ The Gribble fluent mapping works the same as FNH. If the column is ommitted the 
 
 Note: Gribble also provides a stock entity (`Gribble.Entity<TKey>`) and class map (`Gribble.IntKeyEntityMap/GuidKeyEntityMap`) out of the box that only contains an `Id` and `Values` property. This is handy if you need to work with a table that is completely dynamic and do not want to create an entity and map. `Table` contains static factory methods, discussed next, that omit the mapping and will use the built in one (`Table.Create<TKey>(...)`).
 
-#### Creation
+#### Connection
 
 We create a `Table` by passing in a connection manager, a class map and an optional profiler. You can create a `Table` with the new keyword or one of the static factory methods. There is a connection manager that takes a `System.Data.SqlConnection` or connection string and one that takes an `NHibernate.ISession` (When using NHibernate integration). 
 
@@ -147,6 +145,8 @@ You can also get, add, modify, delete and delete many records:
     table.DeleteMany(x => x.State == "CO" && !x.Values["Active"]);
     
     table.DeleteMany(table.Duplicates(x => x.Values["Code"]));
+
+#### Dynamic Mapping
 
 In some cases you may want to map the raw column names to an alias at runtime. This may especially be so when allowing users to set values via an API. Lets say for example we had the following table:
 
