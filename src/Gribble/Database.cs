@@ -9,7 +9,7 @@ using Gribble.TransactSql;
 
 namespace Gribble
 {
-    public class Database : IDatabase
+    public class Database : ITableSchema
     {
         private readonly IConnectionManager _connectionManager;
         private readonly IProfiler _profiler;
@@ -20,12 +20,12 @@ namespace Gribble
             _profiler = profiler;
         }
 
-        public static IDatabase Create(SqlConnection connection, TimeSpan? commandTimeout = null, IProfiler profiler = null)
+        public static ITableSchema Create(SqlConnection connection, TimeSpan? commandTimeout = null, IProfiler profiler = null)
         {
             return Create(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), profiler);
         }
 
-        public static IDatabase Create(IConnectionManager connectionManager, IProfiler profiler = null)
+        public static ITableSchema Create(IConnectionManager connectionManager, IProfiler profiler = null)
         {
             return new Database(connectionManager, profiler ?? new ConsoleProfiler());
         }

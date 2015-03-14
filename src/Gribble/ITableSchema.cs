@@ -3,7 +3,7 @@ using Gribble.Model;
 
 namespace Gribble
 {
-    public interface IDatabase
+    public interface ITableSchema
     {
         void CreateTable(string tableName, params Column[] columns);
         void CreateTable(string tableName, string modelTable);

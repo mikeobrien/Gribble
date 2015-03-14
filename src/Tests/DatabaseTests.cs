@@ -17,7 +17,7 @@ namespace Tests
                              10, "name, hide, [timestamp]", "'oh hai', 0, GETDATE()");
 
         public static IProfiler Profiler = new ConsoleProfiler();
-        public IDatabase GribbleDatabase;
+        public ITableSchema GribbleDatabase;
 
         [TestFixtureSetUp]
         public void Setup()

@@ -59,7 +59,7 @@
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Func.cs" />
     <Compile Include="IConnectionManager.cs" />
-    <Compile Include="IDatabase.cs" />
+    <Compile Include="ITableSchema.cs" />
     <Compile Include="INamedQueryable.cs" />
     <Compile Include="IProfiler.cs" />
     <Compile Include="ITable.cs" />
