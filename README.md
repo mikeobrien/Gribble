@@ -216,7 +216,7 @@ Stored procedure parameters are passed in as objects where the property name is 
 
     var result = storedProcedure.ExecuteSingle<Entity>("GetAddress", new { id = 5 });
 
-Working with Schema
+Working with Table Schema
 ------------
 
 Gribble allows you to work with table schema through the `TableSchema` class which implements `ITableSchema`.
