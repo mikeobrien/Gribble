@@ -46,7 +46,7 @@
     <Compile Include="Profilers.cs" />
     <Compile Include="StoredProcedure.cs" />
     <Compile Include="IStoredProcedure.cs" />
-    <Compile Include="Database.cs" />
+    <Compile Include="TableSchema.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="EntityAdapter.cs" />
     <Compile Include="Extensions\Entity.cs" />

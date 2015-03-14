@@ -65,7 +65,7 @@
     <Compile Include="ClassMapTests.cs" />
     <Compile Include="ReflectionExtensionTests.cs" />
     <Compile Include="StoredProcedureTests.cs" />
-    <Compile Include="DatabaseTests.cs" />
+    <Compile Include="TableSchemaTests.cs" />
     <Compile Include="EntityAdapterTests.cs" />
     <Compile Include="EntityMapTests.cs" />
     <Compile Include="NHibernate\ConnectionManagerTests.cs" />

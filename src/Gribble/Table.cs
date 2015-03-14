@@ -222,7 +222,7 @@ namespace Gribble
             var hasIdentityKey = _map.Key.KeyType == PrimaryKeyType.IdentitySeed;
             var keyColumnName = _map.Key.GetColumnName();
             var columns = Command.Create(SchemaWriter.CreateSharedColumnsStatement(source, target), _profiler)
-                                 .ExecuteEnumerable(_connectionManager, r => new { Column = Database.ColumnFactory(r), IsNarrowing = (bool)r[SqlWriter.Aliases.IsNarrowing] })
+                                 .ExecuteEnumerable(_connectionManager, r => new { Column = TableSchema.ColumnFactory(r), IsNarrowing = (bool)r[SqlWriter.Aliases.IsNarrowing] })
                                  .Where(x => (!hasIdentityKey || !x.Column.Name.Equals(keyColumnName, StringComparison.OrdinalIgnoreCase)) && !x.Column.IsComputed);
             if (columns.Any(x => x.IsNarrowing)) throw new StringColumnNarrowingException(columns.Select(x => x.Column.Name));
             return columns.Select(x => x.Column).Select(x => new SelectProjection {

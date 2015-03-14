@@ -75,7 +75,7 @@ namespace Tests.NHibernate
             using (var transaction = session.BeginTransaction())
             {
                 var connectionManager = new ConnectionManager(session);
-                var database = Database.Create(connectionManager);
+                var database = TableSchema.Create(connectionManager);
                 database.CreateTable(TableName,
                     new Column("id", typeof(int), key: Column.KeyType.PrimaryKey, isIdentity: true),
                     new Column("name", typeof(string), length: 500));
@@ -93,7 +93,7 @@ namespace Tests.NHibernate
             using (var session = factory.OpenSession())
             {
                 var connectionManager = new ConnectionManager(session);
-                var database = Database.Create(connectionManager);
+                var database = TableSchema.Create(connectionManager);
                 database.CreateTable(TableName,
                     new Column("id", typeof(int), key: Column.KeyType.PrimaryKey, isIdentity: true),
                     new Column("name", typeof(string), length: 500));

@@ -9,12 +9,12 @@ using Gribble.TransactSql;
 
 namespace Gribble
 {
-    public class Database : ITableSchema
+    public class TableSchema : ITableSchema
     {
         private readonly IConnectionManager _connectionManager;
         private readonly IProfiler _profiler;
 
-        public Database(IConnectionManager connectionManager, IProfiler profiler)
+        public TableSchema(IConnectionManager connectionManager, IProfiler profiler)
         {
             _connectionManager = connectionManager;
             _profiler = profiler;
@@ -27,7 +27,7 @@ namespace Gribble
 
         public static ITableSchema Create(IConnectionManager connectionManager, IProfiler profiler = null)
         {
-            return new Database(connectionManager, profiler ?? new ConsoleProfiler());
+            return new TableSchema(connectionManager, profiler ?? new ConsoleProfiler());
         }
 
         public bool TableExists(string tableName)
@@ -133,6 +133,5 @@ namespace Gribble
 
         public void RemoveNonClusteredIndex(string tableName, string indexName)
         { Command.Create(SchemaWriter.CreateRemoveNonClusteredIndexStatement(tableName, indexName), _profiler).ExecuteNonQuery(_connectionManager); }
-
     }
 }
