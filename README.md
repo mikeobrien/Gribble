@@ -185,12 +185,12 @@ Gribble allows you to execute stored procedures through the `StoredProcedure` cl
         IEnumerable<TEntity> ExecuteMany<TEntity>(string name, object parameters = null);
     }
 
-We create a `StoredProcedure` by passing in a connection manager, an optional class map (Only used when returning entities) and an optional profiler. You can create a `StoredProcedure` with the new keyword or one of the static factory methods. There is a connection manager that takes a `System.Data.SqlConnection` or connection string and one that takes an `NHibernate.ISession` (When using NHibernate integration). 
+We create a `StoredProcedure` object by passing in a connection manager, an optional class map (Only used when returning entities) and an optional profiler. You can create a `StoredProcedure` object with the new keyword or one of the static factory methods. There is a connection manager that takes a `System.Data.SqlConnection` or connection string and one that takes an `NHibernate.ISession` (When using NHibernate integration). 
 
     // Connection string and console profiler
     using (var connectionManager = new ConnectionManager("server=localhost...")) 
     {
-        var database = Database.Create(connectionManager, profiler: new ConsoleProfiler());
+        var storedProcedure = StoredProcedure.Create(connectionManager, profiler: new ConsoleProfiler());
         ...
     }
 
@@ -200,7 +200,7 @@ We create a `StoredProcedure` by passing in a connection manager, an optional cl
         connection.Open();
         var connectionManager = new ConnectionManager(connection);
         var mapping = new EntityMappingCollection(new IClassMap[] { new AddressMap() })
-        var database = Database.Create(connectionManager, mapping);
+        var storedProcedure = StoredProcedure.Create(connectionManager, mapping);
         ...
     }
 
@@ -208,7 +208,7 @@ We create a `StoredProcedure` by passing in a connection manager, an optional cl
     using (var session = sessionFactory.OpenSession()) 
     {
         var connectionManager = new Gribble.NHibernate.ConnectionManager(session);
-        var database = Database.Create(connectionManager);
+        var storedProcedure = StoredProcedure.Create(connectionManager);
         ...
     }
 
@@ -219,9 +219,9 @@ Stored procedure parameters are passed in as objects where the property name is 
 Working with Schema
 ------------
 
-Gribble allows you to work with table schema through the `Database` class which implements `IDatabase`.
+Gribble allows you to work with table schema through the `TableSchema` class which implements `ITableSchema`.
 
-    public interface IDatabase
+    public interface ITableSchema
     {
         void CreateTable(string tableName, params Column[] columns);
         void CreateTable(string tableName, string modelTable);
@@ -239,12 +239,12 @@ Gribble allows you to work with table schema through the `Database` class which 
         void RemoveNonClusteredIndex(string tableName, string indexName);
     }
 
-We create a `Database` by passing in a connection manager and an optional profiler. You can create a `Database` with the new keyword or one of the static factory methods. There is a connection manager that takes a `System.Data.SqlConnection` or connection string and one that takes an `NHibernate.ISession` (When using NHibernate integration). 
+We create a `TableSchema` object by passing in a connection manager and an optional profiler. You can create a `TableSchema` object with the new keyword or one of the static factory methods. There is a connection manager that takes a `System.Data.SqlConnection` or connection string and one that takes an `NHibernate.ISession` (When using NHibernate integration). 
 
     // Connection string and console profiler
     using (var connectionManager = new ConnectionManager("server=localhost...")) 
     {
-        var database = Database.Create(connectionManager, profiler: new ConsoleProfiler());
+        var tableSchema = TableSchema.Create(connectionManager, profiler: new ConsoleProfiler());
         ...
     }
 
@@ -252,11 +252,11 @@ We create a `Database` by passing in a connection manager and an optional profil
     using (var session = sessionFactory.OpenSession()) 
     {
         var connectionManager = new Gribble.NHibernate.ConnectionManager(session);
-        var database = Database.Create(connectionManager);
+        var tableSchema = TableSchema.Create(connectionManager);
         ...
     }
 
-The database object allows you to do the following:
+The TableSchema object allows you to do the following:
 
 * Create a table: `CreateTable`
 * Create a table using an existing table schema as a template: `CreateTable`
@@ -278,7 +278,7 @@ Gribble integrates with NHibernate. More specifically it will use the NHibernate
     {
         var connectionManager = new Gribble.NHibernate.ConnectionManager(session);
         var table = new Table<Address>(connectionManager, "Address_F2A74B", new AddressMap());
-        var database = Database.Create(connectionManager);
+        var tableSchema = TableSchema.Create(connectionManager);
         ...
     }
 
@@ -305,19 +305,19 @@ Gribble was designed to be IoC friendly. The following demonstrates how to confi
             ForSingletonOf<EntityMappingCollection>().Use<EntityMappingCollection>();
             For<IConnectionManager>().Use<Gribble.NHibernate.ConnectionManager>();
             For<ITableFactory>().Use<TableFactory>();
-            For<IDatabase>().Use<Database>();
+            For<ITableSchema>().Use<TableSchema>();
         }
     }
     
     public class Data
     {
         private ITableFactory _tableFactory;
-        private IDatabase _database;
+        private ITableSchema _tableSchema;
         
-        public Data(ITableFactory tableFactory, IDatabase database) 
+        public Data(ITableFactory tableFactory, ITableSchema tableSchema) 
         {
             _tableFactory = tableFactory;
-            _database = database;
+            _tableSchema = tableSchema;
         }
         
         public T GetRecord<T>(string tableName, object id) 
@@ -328,7 +328,7 @@ Gribble was designed to be IoC friendly. The following demonstrates how to confi
         
         public IEnumerable<string> GetColumns(string tableName)
         {
-            return _database.GetColumns(tableName);
+            return _tableSchema.GetColumns(tableName);
         }
     }
     
