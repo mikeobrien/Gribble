@@ -7,17 +7,25 @@ Gribble is a simple, Linq enabled ORM that was designed to work with dynamically
 
 Here is the skinny:
 
-* Supports most Linq query operators.
+* [Supports most Linq query operators plus additional query operators for copying/syncing data and querying duplicate/distinct records.](#query-operators).
+* [Supports a number of additional extensions methods.](#extension-methods)
 * Supports POCO's.
-* Simple fluent mapping API (shamelessly ripped off from FluentNHibernate).
-* Assign dynamic fields to a dictionary property.
-* Only supports SQL Server.
-* Create, modify and delete tables, columns and indexes.
-* Execute stored procs and map results to entites.
-* Additional query operators for copying/syncing data and querying duplicate/distinct records.
-* Interfaced based so you can test against in memory collections.
-* NHibernate session/transaction integration.
+* [Supports column name aliases for dynamic fields.](#dynamic-mapping)
+* [Simple fluent mapping API](#mapping) (shamelessly ripped off from [Fluent NHibernate](http://www.fluentnhibernate.org/)).
+* Work with dynamic fields via dictionary property.
+* [Create, modify and delete tables, columns and indexes.](#working-with-table-schema)
+* [Execute stored procs and map results to entites.](#executing-stored-procedures)
+* [NHibernate session/transaction integration.](#nhibernate-integration)
+* [IoC Friendly](#ioc-configuration)
 	
+## Install
+
+Gribble can be found on [nuget](https://www.nuget.org/):
+
+    PM> Install-Package Gribble
+    PM> Install-Package Gribble.NHibernate
+
+## Overview
 
 Gribble allows you to work with data through the `Table` class which implements `ITable<T>` and `IQueryable<T>`.
 
