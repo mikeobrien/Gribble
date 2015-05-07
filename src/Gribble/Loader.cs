@@ -8,7 +8,7 @@ using Gribble.TransactSql;
 
 namespace Gribble
 {
-    public class Loader<TEntity>
+    public class Loader<TEntity> where TEntity : class 
     {
         private readonly Command _command;
         private readonly IEntityMapping _map;
@@ -31,21 +31,23 @@ namespace Gribble
             }
         }
 
-        private static IEnumerable<TEntity> LoadMultipleResults(IConnectionManager connectionManager, Command command, IEntityMapping map)
+        private static IEnumerable<TEntity> LoadMultipleResults(IConnectionManager connectionManager, 
+            Command command, IEntityMapping map)
         {
             using (var reader = command.ExecuteReader(connectionManager)) 
                 while (reader.Read()) 
                     yield return LoadEntity(reader, map);
         }
 
-        private static TEntity LoadSingleResult(IConnectionManager connectionManager, Command command, IEntityMapping map, bool failOnNoResults)
+        private static TEntity LoadSingleResult(IConnectionManager connectionManager, 
+            Command command, IEntityMapping map, bool failWhenNotSingleResult)
         {
-            using (var reader = command.ExecuteReader(connectionManager))
-            {
-                if (reader.Read()) return LoadEntity(reader, map);
-                if (failOnNoResults) throw new Exception("No result returned for query.");
-                return default(TEntity);
-            }
+            var results = LoadMultipleResults(connectionManager, command, map).ToList();
+            if (failWhenNotSingleResult && !results.Any())
+                throw new Exception("No result returned for query.");
+            if (failWhenNotSingleResult && results.Count > 1)
+                throw new Exception("More than one result returned for query.");
+            return results.FirstOrDefault();
         }
 
         private static TEntity LoadEntity(IDataRecord reader, IEntityMapping map)

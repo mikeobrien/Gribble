@@ -437,6 +437,72 @@ namespace Tests
         }
 
         [Test]
+        public void should_return_single()
+        {
+            var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);
+            query.Where(x => x.Id == 1).Single();
+            var result = GetResult(query);
+            result.ShouldBeType(typeof(Entity));
+            var entity = (Entity)result;
+            entity.Name.Length.ShouldBeGreaterThan(3);
+            entity.Id.ShouldBeGreaterThan(0);
+            entity.Values.Count.ShouldBeGreaterThan(2);
+            ((string)entity.Values["type"]).Trim().ShouldEqual("U");
+            ((DateTime)entity.Values["create_date"]).ShouldBeGreaterThan(DateTime.MinValue);
+        }
+
+        [Test]
+        public void should_return_single_with_filter()
+        {
+            var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);
+            query.Single(x => x.Id == 1);
+            var result = GetResult(query);
+            result.ShouldBeType(typeof(Entity));
+            var entity = (Entity)result;
+            entity.Name.Length.ShouldBeGreaterThan(3);
+            entity.Id.ShouldBeGreaterThan(0);
+            entity.Values.Count.ShouldBeGreaterThan(2);
+            ((string)entity.Values["type"]).Trim().ShouldEqual("U");
+            ((DateTime)entity.Values["create_date"]).ShouldBeGreaterThan(DateTime.MinValue);
+        }
+
+        [Test]
+        public void should_fail_single_if_no_results()
+        {
+            var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);
+            query.Where(x => x.Age == 99).Single();
+            Assert.Throws<Exception>(() => GetResult(query))
+                .Message.ShouldEqual("No result returned for query.");
+        }
+
+        [Test]
+        public void should_fail_single_with_filter_if_no_results()
+        {
+            var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);
+            query.Single(x => x.Age == 99);
+            Assert.Throws<Exception>(() => GetResult(query))
+                .Message.ShouldEqual("No result returned for query.");
+        }
+
+        [Test]
+        public void should_fail_single_if_more_than_one_result()
+        {
+            var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);
+            query.Single();
+            Assert.Throws<Exception>(() => GetResult(query))
+                .Message.ShouldEqual("More than one result returned for query.");
+        }
+
+        [Test]
+        public void should_fail_single_with_filter_if_more_than_one_result()
+        {
+            var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);
+            query.Single(x => x.Id > 0);
+            Assert.Throws<Exception>(() => GetResult(query))
+                .Message.ShouldEqual("More than one result returned for query.");
+        }
+
+        [Test]
         public void Select_First_Test()
         {
             var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);

@@ -358,7 +358,7 @@ Query Operators
 
 Gribble supports the following query operators:
 
-`Any`, `Count`, `CopyTo`, `First`, `FirstOrDefault`, `Distinct`, `Duplicates`, `Except`, `Intersect`, `OrderBy`, `OrderByDescending`, `Randomize`, `Skip`, `SyncWith`, `Take`, `TakePercent`, `Union`, `Where`
+`Any`, `Count`, `CopyTo`, `Single`, `First`, `FirstOrDefault`, `Distinct`, `Duplicates`, `Except`, `Intersect`, `OrderBy`, `OrderByDescending`, `Randomize`, `Skip`, `SyncWith`, `Take`, `TakePercent`, `Union`, `Where`
 
 Gribble adds the following custom query operators.
 

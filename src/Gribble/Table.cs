@@ -16,7 +16,7 @@ namespace Gribble
             base(string.Format("Unable to convert the following columns as a narrowing conversion would occur: {0}", columns.Aggregate((i,x) => i + ", " + x))) { }
     }
 
-    public class Table<TEntity> : QueryableBase<TEntity>, ITable<TEntity>
+    public class Table<TEntity> : QueryableBase<TEntity>, ITable<TEntity> where TEntity : class 
     {
         private readonly IConnectionManager _connectionManager;
         private readonly string _table;

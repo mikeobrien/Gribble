@@ -28,6 +28,7 @@ namespace Gribble.TransactSql
                 sql.Select.Flush();
 
                 if (select.First || select.FirstOrDefault) sql.Top(1);
+                else if (select.Single) sql.Top(2);
                 else if (select.HasTop && !select.HasStart) 
                     sql.Do(select.TopType == Select.TopValueType.Count, x => x.Top(select.Top), x => x.TopPercent(select.Top));
 
@@ -113,7 +114,7 @@ namespace Gribble.TransactSql
 
         public static Statement.ResultType GetResultType(Select select)
         {
-            if (select.First) return Statement.ResultType.Single;
+            if (select.First || select.Single) return Statement.ResultType.Single;
             if (select.FirstOrDefault) return Statement.ResultType.SingleOrNone;
             if (select.Count || select.Any) return Statement.ResultType.Scalar;
             return Statement.ResultType.Multiple;

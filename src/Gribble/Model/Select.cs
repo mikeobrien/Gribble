@@ -14,6 +14,8 @@ namespace Gribble.Model
         public int Start;
         public bool HasStart { get { return Start > 0; } }
 
+        public bool Single;
+
         public bool First;
         public bool FirstOrDefault;
 
@@ -45,8 +47,8 @@ namespace Gribble.Model
         public bool HasCompliments { get { return SetOperatons != null && SetOperatons.Any(x => x.Type == SetOperation.OperationType.Compliment); } }
 
         public bool HasConditions
-        { get { return HasTop || HasStart || First || FirstOrDefault || Count || Randomize || HasProjection ||
-                   HasWhere || HasDistinct || HasOrderBy || HasSetOperations; } }
+        { get { return HasTop || HasStart || Single || First || FirstOrDefault || Count || Randomize || 
+                   HasProjection || HasWhere || HasDistinct || HasOrderBy || HasSetOperations; } }
 
         public IEnumerable<Select> GetSourceTables()
         {

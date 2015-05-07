@@ -84,6 +84,17 @@ namespace Tests.Expressions
         }
 
         [Test]
+        public void should_set_single_flag()
+        {
+            var query = MockQueryable<Entity>.Create(TableName1);
+            query.Single();
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+
+            select.ShouldNotBeNull();
+            select.Single.ShouldEqual(true);
+        }
+
+        [Test]
         public void First_Test()
         {
             var query = MockQueryable<Entity>.Create(TableName1);

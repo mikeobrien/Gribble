@@ -77,8 +77,12 @@ namespace Gribble.Expressions
                     { query.Select.Top = node.ConstantArgumentAt<int>(2); query.Select.TopType = Select.TopValueType.Count; }
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.TakePercent(0)))
                     { query.Select.Top = node.ConstantArgumentAt<int>(2); query.Select.TopType = Select.TopValueType.Percent; }
-                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Skip(0))) 
+                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Skip(0)))
                     query.Select.Start = node.ConstantArgumentAt<int>(2) + 1;
+                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Single()))
+                    query.Select.Single = true;
+                else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Single(y => true)))
+                    { query.Select.Single = true; HandleWhere(query.Select, node); } 
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.First())) 
                     query.Select.First = true;
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.First(y => true)))

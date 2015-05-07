@@ -66,22 +66,22 @@ namespace Gribble
             return Command.Create(StoredProcedureWriter.CreateStatement(name, parameters.ToDictionary(), Statement.ResultType.Scalar), _profiler).ExecuteScalar<T>(_connectionManager);
         }
 
-        public TEntity ExecuteSingle<TEntity>(string name, object parameters = null)
+        public TEntity ExecuteSingle<TEntity>(string name, object parameters = null) where TEntity : class 
         {
             return Load<TEntity, TEntity>(Command.Create(StoredProcedureWriter.CreateStatement(name, parameters.ToDictionary(), Statement.ResultType.Single), _profiler));
         }
 
-        public TEntity ExecuteSingleOrNone<TEntity>(string name, object parameters = null)
+        public TEntity ExecuteSingleOrNone<TEntity>(string name, object parameters = null) where TEntity : class 
         {
             return Load<TEntity, TEntity>(Command.Create(StoredProcedureWriter.CreateStatement(name, parameters.ToDictionary(), Statement.ResultType.SingleOrNone), _profiler));
         }
 
-        public IEnumerable<TEntity> ExecuteMany<TEntity>(string name, object parameters = null)
+        public IEnumerable<TEntity> ExecuteMany<TEntity>(string name, object parameters = null) where TEntity : class 
         {
             return Load<TEntity, IEnumerable<TEntity>>(Command.Create(StoredProcedureWriter.CreateStatement(name, parameters.ToDictionary(), Statement.ResultType.Multiple), _profiler));
         }
 
-        private TResult Load<TEntity, TResult>(Command command)
+        private TResult Load<TEntity, TResult>(Command command) where TEntity : class 
         {
             return (TResult)new Loader<TEntity>(command, _map.GetEntityMapping<TEntity>()).Execute(_connectionManager);
         }
