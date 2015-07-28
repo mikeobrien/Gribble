@@ -41,7 +41,8 @@ namespace Gribble
             IProfiler profiler = null, 
             bool noLock = false)
         {
-            return Create<TKey>(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), keyColumn, tableName, profiler ?? new ConsoleProfiler(), noLock);
+            return Create<TKey>(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), 
+                keyColumn, tableName, profiler ?? new ConsoleProfiler(), noLock);
         }
 
         public static ITable<TEntity> Create<TKey>(
@@ -61,22 +62,25 @@ namespace Gribble
         public static ITable<TEntity> Create(
             SqlConnection connection, 
             string tableName, 
-            IEntityMapping entityMapping, 
+            IEntityMapping entityMapping = null, 
             TimeSpan? commandTimeout = null, 
             IProfiler profiler = null, 
             bool noLock = false)
         {
-            return Create(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), tableName, entityMapping, profiler ?? new ConsoleProfiler(), noLock);
+            return Create(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), 
+                tableName, entityMapping, profiler ?? new ConsoleProfiler(), noLock);
         }
 
         public static ITable<TEntity> Create(
             IConnectionManager connectionManager, 
             string tableName, 
-            IEntityMapping entityMapping, 
+            IEntityMapping entityMapping = null, 
             IProfiler profiler = null, 
             bool noLock = false)
         {
-            return new Table<TEntity>(connectionManager, tableName, entityMapping, profiler ?? new ConsoleProfiler(), noLock);
+            return new Table<TEntity>(connectionManager, tableName, 
+                entityMapping ?? new EntityMapping(new AutoClassMap<TEntity>()), 
+                profiler ?? new ConsoleProfiler(), noLock);
         }
 
         public string Name { get { return _table; } }

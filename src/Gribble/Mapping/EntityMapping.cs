@@ -10,7 +10,7 @@ namespace Gribble.Mapping
         {
             public enum MappingType { StaticColumn, StaticProperty, DynamicColumn, DynamicProperty }
             public InvalidMappingException(string name, MappingType type) :
-                base(string.Format("No {0} mapping found for '{1}'.", type, name)) { }
+                base($"No {type} mapping found for '{name}'.") { }
         }
 
         private readonly IClassMap _map;
@@ -26,10 +26,10 @@ namespace Gribble.Mapping
 
         // ----------------- IEntityMap Implementation -----------------
 
-        public IEntityKey Key { get { return this; } }
-        public IDynamicPropertyMap DynamicProperty { get { return this; } }
-        public IStaticPropertyMap StaticProperty { get { return this; } }
-        public IColumnMap Column { get { return this; } }
+        public IEntityKey Key => this;
+        public IDynamicPropertyMap DynamicProperty => this;
+        public IStaticPropertyMap StaticProperty => this;
+        public IColumnMap Column => this;
 
         // ----------------- IColumnMap Implementation -----------------
 
@@ -129,7 +129,7 @@ namespace Gribble.Mapping
 
         // ----------------- IEntityKey Implementation -----------------
 
-        public PrimaryKeyType KeyType { get { return _map.KeyType; } }
+        public PrimaryKeyType KeyType => _map.KeyType;
 
         Guid IEntityKey.GenerateGuidKey()
         {

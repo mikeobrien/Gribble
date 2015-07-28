@@ -56,7 +56,7 @@ namespace Tests.TransactSql
             
             statement.Parameters.Count().ShouldEqual(1);
             statement.Parameters.First().Value.ShouldEqual(10);
-            statement.Text.ShouldEqual(string.Format("(([age] = @{0}) AND (CAST([flag] AS int) IS NOT NULL))", statement.Parameters.First().Key));
+            statement.Text.ShouldEqual($"(([age] = @{statement.Parameters.First().Key}) AND ([flag] IS NOT NULL))");
         }
 
         [Test]
@@ -67,7 +67,7 @@ namespace Tests.TransactSql
             
             statement.Parameters.Count().ShouldEqual(1);
             statement.Parameters.First().Value.ShouldEqual(10);
-            statement.Text.ShouldEqual(string.Format("(([age] = @{0}) OR (CAST([flag] AS int) IS NOT NULL))", statement.Parameters.First().Key));
+            statement.Text.ShouldEqual($"(([age] = @{statement.Parameters.First().Key}) OR ([flag] IS NOT NULL))");
         }
 
         [Test]
@@ -77,7 +77,7 @@ namespace Tests.TransactSql
             var statement = WhereWriter<Entity>.CreateStatement(WhereVisitor<Entity>.CreateModel(expression.Body), Map);
             
             statement.Parameters.Count().ShouldEqual(0);
-            statement.Text.ShouldEqual("(CAST([flag] AS int) IS NULL)");
+            statement.Text.ShouldEqual("([flag] IS NULL)");
         }
 
         [Test]
@@ -87,7 +87,7 @@ namespace Tests.TransactSql
             var statement = WhereWriter<Entity>.CreateStatement(WhereVisitor<Entity>.CreateModel(expression.Body), Map);
             
             statement.Parameters.Count().ShouldEqual(0);
-            statement.Text.ShouldEqual("(CAST([flag] AS int) IS NOT NULL)");
+            statement.Text.ShouldEqual("([flag] IS NOT NULL)");
         }
 
         [Test]

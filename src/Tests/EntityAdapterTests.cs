@@ -8,7 +8,7 @@ using Should;
 namespace Tests
 {
     [TestFixture]
-    public class EntityAdapterTests
+    public class EntityAdapterMappedTests
     {
         public class Entity
         {

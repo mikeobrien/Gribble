@@ -10,17 +10,23 @@ namespace Gribble.Mapping
         private readonly Dictionary<string, string> _propertyColumnMapping = new Dictionary<string, string>();
         private readonly Dictionary<string, string> _columnPropertyMapping = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        public IDictionary<string, string> PropertyColumMapping { get { return _propertyColumnMapping; } }
-        public IDictionary<string, string> ColumPropertyMapping { get { return _columnPropertyMapping; } }
+        public IDictionary<string, string> PropertyColumMapping => _propertyColumnMapping;
+        public IDictionary<string, string> ColumPropertyMapping => _columnPropertyMapping;
 
         public string DynamicProperty { get; set; }
-        public bool HasDynamicProperty { get { return !string.IsNullOrEmpty(DynamicProperty); } }
+        public bool HasDynamicProperty => !string.IsNullOrEmpty(DynamicProperty);
 
         public PrimaryKeyType KeyType { get; set; }
         public string KeyColumn { get; set; }
         public string KeyProperty { get; set; }
 
-        public Type Type { get { return typeof(T); } }
+        public Type Type => typeof(T);
+
+        public void Id(string name, Type type)
+        {
+            if (type == typeof(int)) new IdentityKeyMapping(name, this).Column(name);
+            else new GuidKeyMapping(name, this).Column(name).Generated();
+        }
 
         public IdentityKeyMapping Id(Expression<Func<T, int>> property)
         {
@@ -67,9 +73,19 @@ namespace Gribble.Mapping
             return new GuidKeyMapping(GetPropertyName(property), this);
         }
 
+        public void Map(string name)
+        {
+            new ColumnMapping(name, this).Column(name);
+        }
+
         public ColumnMapping Map<TProperty>(Expression<Func<T, TProperty>> property)
         {
             return new ColumnMapping(GetPropertyName(property), this);
+        }
+
+        public void MapDynamic(string propertyName)
+        {
+            new DynamicMapping(propertyName, this).Dynamic();
         }
 
         public DynamicMapping Map(Expression<Func<T, Dictionary<string, object>>> property)

@@ -14,7 +14,7 @@ namespace Gribble
         public class SqlException : Exception
         {
             public SqlException(Exception exception, Statement statement) : 
-                base(string.Format("Error executing sql: {0}", exception.Message), exception)
+                base($"Error executing sql: {exception.Message}", exception)
             { Statement = statement; }
 
             public Statement Statement { get; private set; }
@@ -33,7 +33,7 @@ namespace Gribble
             return new Command(statement, profiler);
         }
 
-        public Statement Statement { get; private set; }
+        public Statement Statement { get; }
 
         public IDataReader ExecuteReader(IConnectionManager connectionManager)
         { return Execute(() => CreateCommand(connectionManager).ExecuteReader()); }
@@ -104,7 +104,7 @@ namespace Gribble
             var message = new StringBuilder();
             message.Append(statement.Text);
             if (statement.Type == Statement.StatementType.StoredProcedure && statement.Parameters.Count > 0)
-                message.Append(" " + statement.Parameters.Select(x => x.Key).Aggregate((a, i) => string.Format("{0}, {1}", a, i)));
+                message.Append(" " + statement.Parameters.Select(x => x.Key).Aggregate((a, i) => $"{a}, {i}"));
             profiler.Write(message.ToString());
         }
     }

@@ -27,7 +27,7 @@ namespace Gribble
             _map = mapping;
         }
 
-        public TEntity Entity { get; private set; }
+        public TEntity Entity { get; }
 
         public object Key
         {
@@ -37,9 +37,12 @@ namespace Gribble
 
         public IDictionary<string, object> GetValues()
         {
-            var properties = _properties.Select(x => new { Name = _map.StaticProperty.GetColumnName(x.Name), Value = x.GetValue(Entity, null)});
-            if (_hasDynamicProperty) properties = properties.Union(_dynamicValues.Where(x => _map.DynamicProperty.HasColumnMapping(x.Key)).
-                                                                                  Select(x => new { Name = _map.DynamicProperty.GetColumnName(x.Key), x.Value }));
+            var properties = _properties
+                .Select(x => new { Name = _map.StaticProperty.GetColumnName(x.Name), Value = x.GetValue(Entity, null)});
+            if (_hasDynamicProperty) properties = 
+                properties
+                    .Union(_dynamicValues.Where(x => _map.DynamicProperty.HasColumnMapping(x.Key))
+                    .Select(x => new { Name = _map.DynamicProperty.GetColumnName(x.Key), x.Value }));
             return properties.ToDictionary(x => x.Name, x => x.Value);
         }
 
@@ -49,13 +52,13 @@ namespace Gribble
                    Join(_properties, x => _map.Column.GetStaticPropertyName(x.Key), x => x.Name, (v, p) => new { v.Value, Property = p }).
                    ToList().ForEach(x => x.Property.SetValue(Entity, ConvertValue(x.Property.PropertyType, x.Value), null));
 
-            if (_hasDynamicProperty) values.Where(x => _map.Column.HasDynamicPropertyMapping(x.Key)).
-                                            Select(x => new { Name = _map.Column.GetDynamicPropertyName(x.Key), x.Value }).
-                                            ToList().ForEach(x =>
-                                                    {
-                                                        if (_dynamicValues.ContainsKey(x.Name)) _dynamicValues[x.Name] = x.Value;
-                                                        else _dynamicValues.Add(x.Name, x.Value);
-                                                    });
+            if (_hasDynamicProperty) values.Where(x => _map.Column.HasDynamicPropertyMapping(x.Key))
+                .Select(x => new { Name = _map.Column.GetDynamicPropertyName(x.Key), x.Value })
+                .ToList().ForEach(x =>
+                        {
+                            if (_dynamicValues.ContainsKey(x.Name)) _dynamicValues[x.Name] = x.Value;
+                            else _dynamicValues.Add(x.Name, x.Value);
+                        });
         }
 
         private static object ConvertValue(Type type, object value)
@@ -78,10 +81,10 @@ namespace Gribble
                 dynamicPropertyName = map.DynamicProperty.GetPropertyName();
                 _dynamicProperty = typeof(TEntity).GetProperties().First(x => x.CanRead && x.CanWrite && x.Name == dynamicPropertyName);
             }
-            _properties = typeof(TEntity).GetProperties().
-                                          Where(x => x.CanRead && x.CanWrite && 
-                                                     map.StaticProperty.HasColumnMapping(x.Name) && 
-                                                     x.Name != dynamicPropertyName).ToList();
+            _properties = typeof(TEntity).GetProperties()
+                .Where(x => x.CanRead && x.CanWrite && 
+                            map.StaticProperty.HasColumnMapping(x.Name) && 
+                            x.Name != dynamicPropertyName).ToList();
             _keyProperty = _properties.FirstOrDefault(x => x.Name == map.Key.GetPropertyName());
         }
 
