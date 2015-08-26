@@ -22,7 +22,7 @@ namespace Gribble.TransactSql
                 case Insert.SetType.Values:
                     writer.OpenBlock.Trim().FieldList(x => x.Comma.Flush(), insert.Values.Keys).Trim().CloseBlock.Flush();
                     parameters = new Dictionary<string, object>();
-                    writer.Values.OpenBlock.Trim().ParameterList(x => x.Comma.Flush(), insert.Values.Values.Select(x => parameters.AddWithRandomlyNamedKey(x))).
+                    writer.Values.OpenBlock.Trim().ParameterList(x => x.Comma.Flush(), insert.Values.Values.Select(x => parameters.AddWithUniquelyNamedKey(x))).
                                   Trim().CloseBlock.Flush();
                     if (insert.HasIdentityKey)
                     {

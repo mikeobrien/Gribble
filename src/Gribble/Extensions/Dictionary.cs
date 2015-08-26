@@ -6,12 +6,12 @@ namespace Gribble.Extensions
 {
     public static class DictionaryExtensions
     {
-        private static readonly Random Random = new Random();
+        private static ushort _uniqueIndex;
 
-        public static string AddWithRandomlyNamedKey<TValue>(
+        public static string AddWithUniquelyNamedKey<TValue>(
             this IDictionary<string, TValue> dictionary, TValue value)
         {
-            var name = "K" + Random.Next();
+            var name = "K" + _uniqueIndex++;
             dictionary.Add(name, value);
             return name;
         }

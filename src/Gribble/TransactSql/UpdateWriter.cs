@@ -14,7 +14,7 @@ namespace Gribble.TransactSql
             var parameters = new Dictionary<string, object>();
 
             writer.Update.QuotedName(update.Table.Name).Set.
-                ParameterAssignmentList(x => x.Comma.Flush(), update.Assignment.ToDictionary(x => x.Key, x => parameters.AddWithRandomlyNamedKey(x.Value)));
+                ParameterAssignmentList(x => x.Comma.Flush(), update.Assignment.ToDictionary(x => x.Key, x => parameters.AddWithUniquelyNamedKey(x.Value)));
 
             var where = WhereWriter<TEntity>.CreateStatement(update.Where, mapping);
             writer.Where.Write(where.Text);
