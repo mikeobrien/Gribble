@@ -101,7 +101,7 @@ Finally we can also map explicitly in the spirit of [James Gregory's FluentNHibe
     {
         public AddressMap()
         {
-            Id(x => x.Id).Column("YadaYadaId").Generated();
+            Id(x => x.Id).Column("YadaYadaId").Identity();
             Map(x => x.Street).Column("YadaYadaStreet");
             Map(x => x.City).Column("YadaYadaCity");
             Map(x => x.State);

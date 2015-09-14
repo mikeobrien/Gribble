@@ -46,6 +46,7 @@
     <Compile Include="Command.cs" />
     <Compile Include="ConnectionManager.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
+    <Compile Include="Extensions\GuidComb.cs" />
     <Compile Include="ISqlStatement.cs" />
     <Compile Include="Mapping\AutoClassMap.cs" />
     <Compile Include="Profilers.cs" />
@@ -77,7 +78,7 @@
     <Compile Include="Mapping\EntityMappingCollection.cs" />
     <Compile Include="Mapping\IClassMap.cs" />
     <Compile Include="Mapping\IEntityMapping.cs" />
-    <Compile Include="Mapping\PrimaryKeyType.cs" />
+    <Compile Include="Mapping\PrimaryKey.cs" />
     <Compile Include="Model\Distinct.cs" />
     <Compile Include="Model\Duplicates.cs" />
     <Compile Include="Model\Index.cs" />

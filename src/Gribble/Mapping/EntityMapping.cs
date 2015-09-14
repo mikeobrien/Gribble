@@ -130,19 +130,7 @@ namespace Gribble.Mapping
         // ----------------- IEntityKey Implementation -----------------
 
         public PrimaryKeyType KeyType => _map.KeyType;
-
-        Guid IEntityKey.GenerateGuidKey()
-        {
-            var destinationArray = Guid.NewGuid().ToByteArray();
-            var now = DateTime.Now;
-            var bytes = BitConverter.GetBytes(new TimeSpan(now.Ticks - new DateTime(0x76c, 1, 1).Ticks).Days);
-            var array = BitConverter.GetBytes((long)(now.TimeOfDay.TotalMilliseconds / 3.333333));
-            Array.Reverse(bytes);
-            Array.Reverse(array);
-            Array.Copy(bytes, bytes.Length - 2, destinationArray, destinationArray.Length - 6, 2);
-            Array.Copy(array, array.Length - 4, destinationArray, destinationArray.Length - 4, 4);
-            return new Guid(destinationArray);
-        }
+        public PrimaryKeyGeneration KeyGeneration => _map.KeyGeneration;
 
         string IEntityKey.GetColumnName()
         {

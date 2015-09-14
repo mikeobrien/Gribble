@@ -12,6 +12,7 @@ namespace Gribble.Mapping
         bool HasDynamicProperty { get; }
 
         PrimaryKeyType KeyType { get; }
+        PrimaryKeyGeneration KeyGeneration { get; }
         string KeyColumn { get; }
         string KeyProperty { get; }
 

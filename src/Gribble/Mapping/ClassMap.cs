@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using Gribble.Extensions;
 
 namespace Gribble.Mapping
 {
@@ -17,6 +18,7 @@ namespace Gribble.Mapping
         public bool HasDynamicProperty => !string.IsNullOrEmpty(DynamicProperty);
 
         public PrimaryKeyType KeyType { get; set; }
+        public PrimaryKeyGeneration KeyGeneration { get; set; }
         public string KeyColumn { get; set; }
         public string KeyProperty { get; set; }
 
@@ -24,53 +26,71 @@ namespace Gribble.Mapping
 
         public void Id(string name, Type type)
         {
-            if (type == typeof(int)) new IdentityKeyMapping(name, this).Column(name);
-            else new GuidKeyMapping(name, this).Column(name).Generated();
+            PrimaryKeyType keyType;
+
+            if (type.IsInteger()) keyType = PrimaryKeyType.Integer;
+            else if (type == typeof(Guid)) keyType = PrimaryKeyType.Guid;
+            else if (type == typeof(string)) keyType = PrimaryKeyType.String;
+            else throw new ArgumentException("Type must be an integer, guid or string.");
+
+            new KeyMapping(name, keyType, this).Column(name);
         }
 
-        public IdentityKeyMapping Id(Expression<Func<T, int>> property)
+        public IntegerKeyMapping Id(Expression<Func<T, int>> property)
         {
-            return new IdentityKeyMapping(GetPropertyName(property), this);
+            return IntegerId(GetPropertyName(property));
         }
 
-        public IdentityKeyMapping Id(Expression<Func<T, uint>> property)
+        public IntegerKeyMapping Id(Expression<Func<T, uint>> property)
         {
-            return new IdentityKeyMapping(GetPropertyName(property), this);
+            return IntegerId(GetPropertyName(property));
         }
 
-        public IdentityKeyMapping Id(Expression<Func<T, long>> property)
+        public IntegerKeyMapping Id(Expression<Func<T, long>> property)
         {
-            return new IdentityKeyMapping(GetPropertyName(property), this);
+            return IntegerId(GetPropertyName(property));
         }
 
-        public IdentityKeyMapping Id(Expression<Func<T, ulong>> property)
+        public IntegerKeyMapping Id(Expression<Func<T, ulong>> property)
         {
-            return new IdentityKeyMapping(GetPropertyName(property), this);
+            return IntegerId(GetPropertyName(property));
         }
 
-        public IdentityKeyMapping Id(Expression<Func<T, decimal>> property)
+        public IntegerKeyMapping Id(Expression<Func<T, decimal>> property)
         {
-            return new IdentityKeyMapping(GetPropertyName(property), this);
+            return IntegerId(GetPropertyName(property));
         }
 
-        public IdentityKeyMapping Id(Expression<Func<T, float>> property)
+        public IntegerKeyMapping Id(Expression<Func<T, float>> property)
         {
-            return new IdentityKeyMapping(GetPropertyName(property), this);
+            return IntegerId(GetPropertyName(property));
         }
 
-        public IdentityKeyMapping Id(Expression<Func<T, short>> property)
+        public IntegerKeyMapping Id(Expression<Func<T, short>> property)
         {
-            return new IdentityKeyMapping(GetPropertyName(property), this);
+            return IntegerId(GetPropertyName(property));
         }
 
-        public IdentityKeyMapping Id(Expression<Func<T, ushort>> property)
+        public IntegerKeyMapping Id(Expression<Func<T, ushort>> property)
         {
-            return new IdentityKeyMapping(GetPropertyName(property), this);
+            return IntegerId(GetPropertyName(property));
+        }
+
+        private IntegerKeyMapping IntegerId(string name)
+        {
+            return new IntegerKeyMapping(name, this).Column(name);
         }
 
         public GuidKeyMapping Id(Expression<Func<T, Guid>> property)
         {
-            return new GuidKeyMapping(GetPropertyName(property), this);
+            var name = GetPropertyName(property);
+            return new GuidKeyMapping(name, this).Column(name);
+        }
+
+        public KeyMapping Id(Expression<Func<T, string>> property)
+        {
+            var name = GetPropertyName(property);
+            return new KeyMapping(name, PrimaryKeyType.String, this).Column(name);
         }
 
         public void Map(string name)
@@ -113,6 +133,7 @@ namespace Gribble.Mapping
         {
             AddMapping(columnName, propertyName);
             KeyType = type;
+            KeyGeneration = PrimaryKeyGeneration.None;
             KeyColumn = columnName;
             KeyProperty = propertyName;
         }
@@ -120,7 +141,7 @@ namespace Gribble.Mapping
         private static string GetPropertyName<TProperty>(Expression<Func<T, TProperty>> property)
         {
             if (property.Body.NodeType != ExpressionType.MemberAccess)
-                throw new ArgumentException("Mapping must be a property.", "property");
+                throw new ArgumentException("Mapping must be a property.", nameof(property));
             return ((MemberExpression)property.Body).Member.Name;
         }
 
@@ -151,32 +172,53 @@ namespace Gribble.Mapping
             public void Dynamic() { Map.DynamicProperty = PropertyName; }
         }
 
-        public class IdentityKeyMapping : Mapping
+        public class KeyMapping : Mapping
         {
-            public IdentityKeyMapping(string propertyName, ClassMap<T> map) : base(propertyName, map)
+            private readonly PrimaryKeyType _type;
+
+            public KeyMapping(string propertyName, PrimaryKeyType type, ClassMap<T> map) : 
+                base(propertyName, map)
             {
-                Column(propertyName);
+                _type = type;
             }
 
-            public void Column(string name)
-            { Map.AddKeyMapping(PrimaryKeyType.IdentitySeed, name, PropertyName); }
+            public virtual KeyMapping Column(string name)
+            {
+                Map.AddKeyMapping(_type, name, PropertyName);
+                return this;
+            }
         }
 
-        public class GuidKeyMapping : Mapping
+        public class IntegerKeyMapping : KeyMapping
         {
-            public GuidKeyMapping(string propertyName, ClassMap<T> map) : base(propertyName, map)
+            public IntegerKeyMapping(string propertyName, ClassMap<T> map) :
+                base(propertyName, PrimaryKeyType.Integer, map) { }
+
+            public void Identity()
             {
-                Column(propertyName);
+                Map.KeyGeneration = PrimaryKeyGeneration.Server;
             }
 
-            public void Generated()
+            public new IntegerKeyMapping Column(string name)
             {
-                Map.KeyType = PrimaryKeyType.GuidClientGenerated;
+                base.Column(name);
+                return this;
+            }
+        }
+
+        public class GuidKeyMapping : KeyMapping
+        {
+            public GuidKeyMapping(string propertyName, ClassMap<T> map) :
+                base(propertyName, PrimaryKeyType.Guid, map) { }
+
+            public void GuidComb()
+            {
+                Map.KeyGeneration = PrimaryKeyGeneration.Client;
             }
 
-            public GuidKeyMapping Column(string name)
+            public new GuidKeyMapping Column(string name)
             {
-                Map.AddKeyMapping(PrimaryKeyType.GuidServerGenerated, name, PropertyName);
+                base.Column(name);
                 return this;
             }
         }

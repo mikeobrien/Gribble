@@ -33,7 +33,7 @@ namespace Tests
         {
             public IdentityEntityMap()
             {
-                Id(x => x.Id).Column("entity_id");
+                Id(x => x.Id).Column("entity_id").Identity();
                 Map(x => x.Name).Column("entity_name");
                 Map(x => x.Values).Dynamic();
             }
@@ -43,7 +43,7 @@ namespace Tests
         {
             public GuidEntityMap()
             {
-                Id(x => x.Id).Column("entity_id").Generated();
+                Id(x => x.Id).Column("entity_id").GuidComb();
                 Map(x => x.Name).Column("entity_name");
                 Map(x => x.Values).Dynamic();
             }
@@ -53,7 +53,7 @@ namespace Tests
         {
             public NonDynamicEntityMap()
             {
-                Id(x => x.Id).Column("entity_id").Generated();
+                Id(x => x.Id).Column("entity_id").GuidComb();
                 Map(x => x.Name).Column("entity_name");
             }
         }
@@ -62,14 +62,16 @@ namespace Tests
         public void Is_Identity_Key_Test()
         {
             var mapping = new EntityMapping(new IdentityEntityMap());
-            mapping.Key.KeyType.ShouldEqual(PrimaryKeyType.IdentitySeed);
+            mapping.KeyType.ShouldEqual(PrimaryKeyType.Integer);
+            mapping.KeyGeneration.ShouldEqual(PrimaryKeyGeneration.Server);
         }
 
         [Test]
         public void Is_Not_Identity_Key_Test()
         {
             var mapping = new EntityMapping(new GuidEntityMap());
-            mapping.Key.KeyType.ShouldEqual(PrimaryKeyType.GuidClientGenerated);
+            mapping.KeyType.ShouldEqual(PrimaryKeyType.Guid);
+            mapping.KeyGeneration.ShouldEqual(PrimaryKeyGeneration.Client);
         }
 
         [Test]
@@ -84,15 +86,6 @@ namespace Tests
         {
             var mapping = new EntityMapping(new GuidEntityMap());
             mapping.Key.GetPropertyName().ShouldEqual("Id");
-        }
-
-        [Test]
-        public void Key_Generate_Id_Test()
-        {
-            var mapping = new EntityMapping(new GuidEntityMap());
-            var key = mapping.Key.GenerateGuidKey();
-
-            key.ShouldNotEqual(Guid.Empty);
         }
 
         [Test]

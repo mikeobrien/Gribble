@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Gribble.Mapping
+﻿namespace Gribble.Mapping
 {
     public interface IEntityMapping
     {
@@ -13,7 +11,7 @@ namespace Gribble.Mapping
     public interface IEntityKey
     {
         PrimaryKeyType KeyType { get; }
-        Guid GenerateGuidKey();
+        PrimaryKeyGeneration KeyGeneration { get; }
         string GetColumnName();
         string GetPropertyName();
     }
