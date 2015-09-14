@@ -73,32 +73,37 @@ namespace Tests.ImplicitMapping
         public void Select_Test()
         {
             var results = _identityTable1.ToList();
-            results.Count().ShouldBeGreaterThan(2);
+            results.Count.ShouldBeGreaterThan(2);
             results.All(x => x.Name.Length > 3).ShouldEqual(true);
             results.All(x => x.Id > 0).ShouldEqual(true);
             results.First().Values.Count.ShouldBeGreaterThan(2);
             ((bool)results.First().Values["hide"]).ShouldEqual(false);
-            ((DateTime)results.First().Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+            ((DateTime)results.First().Values["timestamp"])
+                .ShouldBeGreaterThan(DateTime.MinValue);
         }
 
         [Test]
         public void should_select_records_with_nolock()
         {
-            var results = Table<IdentityEntity>.Create(_database.Connection, _database.FirstTable.Name, noLock: true).ToList();
-            results.Count().ShouldBeGreaterThan(2);
+            var results = Table<IdentityEntity>.Create(_database.Connection, 
+                _database.FirstTable.Name, noLock: true).ToList();
+            results.Count.ShouldBeGreaterThan(2);
             results.All(x => x.Name.Length > 3).ShouldEqual(true);
             results.All(x => x.Id > 0).ShouldEqual(true);
             results.First().Values.Count.ShouldBeGreaterThan(2);
             ((bool)results.First().Values["hide"]).ShouldEqual(false);
-            ((DateTime)results.First().Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+            ((DateTime)results.First().Values["timestamp"])
+                .ShouldBeGreaterThan(DateTime.MinValue);
         }
 
         [Test]
         public void should_union_records_with_nolock()
         {
-            var results = Table<IdentityEntity>.Create(_database.Connection, _database.FirstTable.Name, noLock: true)
-                .Union(Table<IdentityEntity>.Create(_database.Connection, _database.ThirdTable.Name, noLock: true)).ToList();
-            results.Count().ShouldBeGreaterThan(2);
+            var results = Table<IdentityEntity>.Create(_database.Connection, 
+                _database.FirstTable.Name, noLock: true)
+                .Union(Table<IdentityEntity>.Create(_database.Connection, 
+                _database.ThirdTable.Name, noLock: true)).ToList();
+            results.Count.ShouldBeGreaterThan(2);
             results.All(x => x.Name.Length > 3).ShouldEqual(true);
             results.All(x => x.Id > 0).ShouldEqual(true);
             results.First().Values.Count.ShouldBeGreaterThan(2);
@@ -108,8 +113,9 @@ namespace Tests.ImplicitMapping
         [Test]
         public void Select_Union()
         {
-            var results = _identityTable1.Where(x => x.Id > 2).Union(_identityTable2.Where(x => x.Id > 3)).ToList();
-            results.Count().ShouldEqual(10);
+            var results = _identityTable1.Where(x => x.Id > 2)
+                .Union(_identityTable2.Where(x => x.Id > 3)).ToList();
+            results.Count.ShouldEqual(10);
             results.All(x => x.Name.Length > 3).ShouldEqual(true);
             results.All(x => x.Id > 0).ShouldEqual(true);
             results.First().Values.Count.ShouldBeGreaterThan(0);
@@ -172,7 +178,8 @@ namespace Tests.ImplicitMapping
         public void should_delete_duplicates()
         {
             _database.CreateTables();
-            _identityTable1.DeleteMany(_identityTable1.Duplicates(x => x.Name, x => x.Id != 5, Order.Ascending)).ShouldEqual(9);
+            _identityTable1.DeleteMany(_identityTable1.Duplicates(
+                x => x.Name, x => x.Id != 5, Order.Ascending)).ShouldEqual(9);
             _identityTable1.Count().ShouldEqual(1);
             _identityTable1.First().Id.ShouldEqual(5);
         }
@@ -219,11 +226,15 @@ namespace Tests.ImplicitMapping
         [Test]
         public void Copy_Into_Existing_Test()
         {
-            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", _database.FirstTable.Name).ShouldEqual(10);
-            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", _database.ThirdTable.Name).ShouldEqual(5);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", 
+                _database.FirstTable.Name).ShouldEqual(10);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", 
+                _database.ThirdTable.Name).ShouldEqual(5);
             _identityTable1.Take(7).CopyTo(_identityTable2).Count().ShouldEqual(12);
-            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", _database.FirstTable.Name).ShouldEqual(10);
-            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", _database.ThirdTable.Name).ShouldEqual(12);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", 
+                _database.FirstTable.Name).ShouldEqual(10);
+            _database.ExecuteScalar<int>("SELECT COUNT(*) FROM {0}", 
+                _database.ThirdTable.Name).ShouldEqual(12);
         }
 
         [Test]

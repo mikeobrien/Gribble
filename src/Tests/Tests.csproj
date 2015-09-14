@@ -69,10 +69,11 @@
   <ItemGroup>
     <Compile Include="AutoClassMapTests.cs" />
     <Compile Include="ClassMapTests.cs" />
+    <Compile Include="Extensions\GuidCombTests.cs" />
     <Compile Include="ImplicitMapping\SqlStatementTests.cs" />
     <Compile Include="ImplicitMapping\StoredProcedureTests.cs" />
     <Compile Include="ImplicitMapping\TableTests.cs" />
-    <Compile Include="ReflectionExtensionTests.cs" />
+    <Compile Include="Extensions\ReflectionExtensionTests.cs" />
     <Compile Include="ExplicitMapping\SqlStatementTests.cs" />
     <Compile Include="ExplicitMapping\StoredProcedureTests.cs" />
     <Compile Include="TableSchemaTests.cs" />

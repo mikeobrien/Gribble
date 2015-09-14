@@ -40,7 +40,8 @@ namespace Tests
             map.PropertyColumMapping.ElementAt(2).Value.ShouldEqual("Age");
             map.HasDynamicProperty.ShouldEqual(true);
             map.DynamicProperty.ShouldEqual("Values");
-            map.KeyType.ShouldEqual(PrimaryKeyType.IdentitySeed);
+            map.KeyType.ShouldEqual(PrimaryKeyType.Integer);
+            map.KeyGeneration.ShouldEqual(PrimaryKeyGeneration.Server);
             map.KeyProperty.ShouldEqual("Id");
             map.KeyColumn.ShouldEqual("Id");
         }
@@ -59,7 +60,8 @@ namespace Tests
             map.PropertyColumMapping.ElementAt(2).Value.ShouldEqual("Age");
             map.HasDynamicProperty.ShouldEqual(true);
             map.DynamicProperty.ShouldEqual("Values");
-            map.KeyType.ShouldEqual(PrimaryKeyType.GuidClientGenerated);
+            map.KeyType.ShouldEqual(PrimaryKeyType.Guid);
+            map.KeyGeneration.ShouldEqual(PrimaryKeyGeneration.Client);
             map.KeyProperty.ShouldEqual("Id");
             map.KeyColumn.ShouldEqual("Id");
         }

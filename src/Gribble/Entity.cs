@@ -22,6 +22,15 @@ namespace Gribble
         }
     }
 
+    public class StringKeyEntityMap : ClassMap<Entity<string>>
+    {
+        public StringKeyEntityMap(string key)
+        {
+            Id(x => x.Id).Column(key);
+            Map(x => x.Values).Dynamic();
+        }
+    }
+
     public class Entity<TKey>
     {
         public Entity()

@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Gribble.Extensions;
 
 namespace Gribble.Mapping
 {
     public class AutoClassMap<T> : ClassMap<T>
     {
-        private static readonly Type DictionaryType = typeof(IDictionary<string, object>);
-        public AutoClassMap()
+        private static readonly Type DictionaryType = 
+            typeof(IDictionary<string, object>);
+
+        public AutoClassMap(string keyName = null)
         {
             var type = typeof(T);
             var properties = type.GetProperties(
@@ -19,9 +22,17 @@ namespace Gribble.Mapping
             if (dynamicProperty != null) MapDynamic(dynamicProperty.Name);
 
             var idProperty = properties.FirstOrDefault(x =>
-                x.Name.Equals("Id", StringComparison.OrdinalIgnoreCase) &&
-                (x.PropertyType == typeof(int) || x.PropertyType == typeof(Guid)));
-            if (idProperty != null) Id(idProperty.Name, idProperty.PropertyType);
+                x.Name.Equals(keyName ?? "Id", StringComparison.OrdinalIgnoreCase) &&
+                (x.PropertyType.IsInteger() || x.PropertyType.IsGuid() || 
+                 x.PropertyType.IsString()));
+            if (idProperty != null)
+            {
+                Id(idProperty.Name, idProperty.PropertyType);
+                if (idProperty.PropertyType.IsInteger())
+                    KeyGeneration = PrimaryKeyGeneration.Server;
+                if (idProperty.PropertyType.IsGuid())
+                    KeyGeneration = PrimaryKeyGeneration.Client;
+            }
 
             properties.Where(x => x != dynamicProperty && x != idProperty)
                 .ToList().ForEach(x => Map(x.Name));

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Gribble.Extensions;
 
 namespace Gribble.Mapping
@@ -16,6 +17,11 @@ namespace Gribble.Mapping
                     throw new Exception($"Duplicate class mapping found for type {classMap.Type.Name}.");
                 _classMappings.Add(classMap.Type, classMap);
             }
+        }
+
+        public static EntityMappingCollection Empty()
+        {
+            return new EntityMappingCollection(Enumerable.Empty<IClassMap>());
         }
 
         public IEntityMapping GetEntityMapping<TEntity>()

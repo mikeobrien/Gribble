@@ -10,15 +10,16 @@ namespace Gribble.Extensions
         private static readonly Func<Type, IEnumerable<PropertyInfo>> PrimitiveProperties = 
             Func.Memoize<Type, IEnumerable<PropertyInfo>>(t => t.GetProperties()
                 .Where(x => x.PropertyType.IsPrimitive(true) ||
-                            x.PropertyType == typeof(string) ||
-                            x.PropertyType.IsType<Guid>(true) || 
-                            x.PropertyType.IsType<DateTime>(true) ||
-                            x.PropertyType.IsType<TimeSpan>(true))); 
+                            x.PropertyType.IsString() ||
+                            x.PropertyType.IsGuid() || 
+                            x.PropertyType.IsDateTime() ||
+                            x.PropertyType.IsTimeSpan())); 
 
         public static IDictionary<string, object> ToDictionary(this object source)
         {
             return source == null ? new Dictionary<string, object>() : 
-                PrimitiveProperties(source.GetType()).ToDictionary(x => x.Name, x => x.GetValue(source, null));
+                PrimitiveProperties(source.GetType()).ToDictionary(x => 
+                    x.Name, x => x.GetValue(source, null));
         }
     }
 }

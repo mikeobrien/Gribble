@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Linq.Expressions;
 using Gribble.Expressions;
+using Gribble.Extensions;
 using Gribble.Mapping;
 using Gribble.Model;
 using Gribble.TransactSql;
@@ -13,7 +14,8 @@ namespace Gribble
     public class StringColumnNarrowingException : Exception
     {
         public StringColumnNarrowingException(IEnumerable<string> columns) :
-            base(string.Format("Unable to convert the following columns as a narrowing conversion would occur: {0}", columns.Aggregate((i,x) => i + ", " + x))) { }
+            base("Unable to convert the following columns as a narrowing conversion " +
+                 $"would occur: {columns.Aggregate((i, x) => i + ", " + x)}") { }
     }
 
     public class Table<TEntity> : QueryableBase<TEntity>, ITable<TEntity> where TEntity : class 
@@ -33,7 +35,7 @@ namespace Gribble
             _noLock = noLock;
         }
 
-        public static ITable<TEntity> Create<TKey>(
+        public static ITable<TEntity> Create(
             SqlConnection connection, 
             string tableName, 
             string keyColumn, 
@@ -41,22 +43,21 @@ namespace Gribble
             IProfiler profiler = null, 
             bool noLock = false)
         {
-            return Create<TKey>(new ConnectionManager(connection, commandTimeout ?? new TimeSpan(0, 5, 0)), 
-                keyColumn, tableName, profiler ?? new ConsoleProfiler(), noLock);
+            return Create(new ConnectionManager(connection, 
+                commandTimeout ?? new TimeSpan(0, 5, 0)), keyColumn, 
+                tableName, profiler ?? new ConsoleProfiler(), noLock);
         }
 
-        public static ITable<TEntity> Create<TKey>(
+        public static ITable<TEntity> Create(
             IConnectionManager connectionManager, 
             string tableName, 
             string keyColumn, 
             IProfiler profiler = null, 
             bool noLock = false)
         {
-            var mapping = new EntityMapping(
-                    typeof(Guid) == typeof(TKey) ? 
-                    new GuidKeyEntityMap(keyColumn) : 
-                    (typeof(int) == typeof(TKey) ? (IClassMap)new IntKeyEntityMap(keyColumn) : null));
-            return new Table<TEntity>(connectionManager, tableName, mapping, profiler ?? new ConsoleProfiler(), noLock);
+            var mapping = new EntityMapping(new AutoClassMap<TEntity>(keyColumn));
+            return new Table<TEntity>(connectionManager, tableName, 
+                mapping, profiler ?? new ConsoleProfiler(), noLock);
         }
 
         public static ITable<TEntity> Create(
@@ -83,7 +84,7 @@ namespace Gribble
                 profiler ?? new ConsoleProfiler(), noLock);
         }
 
-        public string Name { get { return _table; } }
+        public string Name => _table;
 
         public override QueryableBase<TEntity> CreateQuery()
         {
@@ -104,14 +105,27 @@ namespace Gribble
         public void Insert(TEntity entity)
         {
             var adapter = new EntityAdapter<TEntity>(entity, _map);
-            var hasIdentityKey = _map.Key.KeyType == PrimaryKeyType.IdentitySeed;
+            var hasIdentityKey = _map.Key.KeyType == PrimaryKeyType.Integer && 
+                _map.Key.KeyGeneration == PrimaryKeyGeneration.Server;
             var keyColumnName = _map.Key.GetColumnName();
-            if (_map.Key.KeyType == PrimaryKeyType.GuidClientGenerated) adapter.Key = _map.Key.GenerateGuidKey();
-            var values = adapter.GetValues().Where(x => !hasIdentityKey || (x.Key != keyColumnName)).ToDictionary(x => x.Key, x => x.Value);
-            var insert = new Insert { HasIdentityKey = hasIdentityKey, Type = Model.Insert.SetType.Values, Into = new Table {Name = _table}, Values = values};
-            var command = Command.Create(InsertWriter<TEntity>.CreateStatement(insert, _map), _profiler);
 
-            if (command.Statement.Result == Statement.ResultType.None) command.ExecuteNonQuery(_connectionManager);
+            if (_map.Key.KeyType == PrimaryKeyType.Guid && 
+                _map.Key.KeyGeneration == PrimaryKeyGeneration.Client)
+                adapter.Key = GuidComb.Create();
+
+            var values = adapter.GetValues().Where(x => !hasIdentityKey || 
+                (x.Key != keyColumnName)).ToDictionary(x => x.Key, x => x.Value);
+
+            var insert = new Insert { HasIdentityKey = hasIdentityKey,
+                Type = Model.Insert.SetType.Values, 
+                Into = new Table { Name = _table},
+                Values = values };
+
+            var command = Command.Create(InsertWriter<TEntity>
+                .CreateStatement(insert, _map), _profiler);
+
+            if (command.Statement.Result == Statement.ResultType.None)
+                command.ExecuteNonQuery(_connectionManager);
             else adapter.Key = command.ExecuteScalar(_connectionManager);
         }
 
@@ -155,7 +169,8 @@ namespace Gribble
 
         public int DeleteMany(IQueryable<TEntity> source)
         {
-            var query = QueryVisitor<TEntity>.CreateModel(source.Expression, x => ((Table<TEntity>) x).Name);
+            var query = QueryVisitor<TEntity>.CreateModel(source.Expression, 
+                x => ((Table<TEntity>) x).Name);
             return Command.Create(DeleteWriter<TEntity>.CreateStatement(
                 new Delete(_table, query.Select, true), _map), _profiler).
                     ExecuteNonQuery(_connectionManager);
@@ -174,7 +189,8 @@ namespace Gribble
             return Operator.Create.FieldEqualsConstant(field, id);
         }
 
-        private Operator CreateEntityKeyFilter(TEntity entity, EntityAdapter<TEntity> adapter = null)
+        private Operator CreateEntityKeyFilter(TEntity entity, 
+            EntityAdapter<TEntity> adapter = null)
         {
             var id = (adapter ?? new EntityAdapter<TEntity>(entity, _map)).Key;
             var field = _map.Key.GetPropertyName();
@@ -187,10 +203,13 @@ namespace Gribble
             if (select.From.HasQueries)
             {
                 var columnsStatement = SchemaWriter.CreateUnionColumnsStatement(select);
-                columns = Command.Create(columnsStatement, _profiler).ExecuteEnumerable<string>(_connectionManager);
+                columns = Command.Create(columnsStatement, _profiler)
+                    .ExecuteEnumerable<string>(_connectionManager);
             }
-            var selectStatement = SelectWriter<TEntity>.CreateStatement(select, _map, columns, _noLock);
-            return (TResult)(new Loader<TEntity>(Command.Create(selectStatement, _profiler), _map).Execute(_connectionManager));
+            var selectStatement = SelectWriter<TEntity>.CreateStatement(
+                select, _map, columns, _noLock);
+            return (TResult)(new Loader<TEntity>(Command.Create(selectStatement, 
+                _profiler), _map).Execute(_connectionManager));
         }
 
         private IQueryable<TEntity> CopyInto(Insert insert)
@@ -206,31 +225,43 @@ namespace Gribble
             if (!sync.Target.HasProjection)
             {
                 var fields = GetSharedColumns(sync.Source, sync.Target.From.Table);
-                Func<string, IList<SelectProjection>> createProjection = alias => fields.Select(x => new SelectProjection { 
-                    Projection = new Projection { Type = Projection.ProjectionType.Field, 
-                        Field = new Field { Name = x.Projection.Field.Name,
-                                            Key = x.Projection.Field.Key,
-                                            HasKey = x.Projection.Field.HasKey,
-                                            TableAlias = alias }}}).ToList();
+                Func<string, IList<SelectProjection>> createProjection = 
+                    alias => fields.Select(x => new SelectProjection { 
+                        Projection = new Projection { Type = Projection.ProjectionType.Field, 
+                            Field = new Field {
+                                Name = x.Projection.Field.Name,
+                                Key = x.Projection.Field.Key,
+                                HasKey = x.Projection.Field.HasKey,
+                                TableAlias = alias }}}).ToList();
                 sync.Target.Projection = createProjection(sync.Target.From.Alias);
                 sync.Source.Projection = createProjection(sync.Source.From.Alias);
             }
             
             var statement = SyncWriter<TEntity>.CreateStatement(sync, _map);
             Command.Create(statement, _profiler).ExecuteNonQuery(_connectionManager);
-            return new Table<TEntity>(_connectionManager, sync.Target.From.Table.Name, _map, _profiler, _noLock);
+            return new Table<TEntity>(_connectionManager, sync.Target
+                .From.Table.Name, _map, _profiler, _noLock);
         }
 
         private IList<SelectProjection> GetSharedColumns(Select source, Table target)
         {
-            var hasIdentityKey = _map.Key.KeyType == PrimaryKeyType.IdentitySeed;
+            var hasIdentityKey = _map.Key.KeyType == PrimaryKeyType.Integer && 
+                _map.Key.KeyGeneration == PrimaryKeyGeneration.Server;
             var keyColumnName = _map.Key.GetColumnName();
-            var columns = Command.Create(SchemaWriter.CreateSharedColumnsStatement(source, target), _profiler)
-                                 .ExecuteEnumerable(_connectionManager, r => new { Column = TableSchema.ColumnFactory(r), IsNarrowing = (bool)r[SqlWriter.Aliases.IsNarrowing] })
-                                 .Where(x => (!hasIdentityKey || !x.Column.Name.Equals(keyColumnName, StringComparison.OrdinalIgnoreCase)) && !x.Column.IsComputed);
-            if (columns.Any(x => x.IsNarrowing)) throw new StringColumnNarrowingException(columns.Select(x => x.Column.Name));
+            var columns = Command.Create(SchemaWriter
+                .CreateSharedColumnsStatement(source, target), _profiler)
+                .ExecuteEnumerable(_connectionManager, r => new
+                {
+                    Column = TableSchema.ColumnFactory(r),
+                    IsNarrowing = (bool)r[SqlWriter.Aliases.IsNarrowing]
+                })
+                .Where(x => (!hasIdentityKey || !x.Column.Name.Equals(keyColumnName, 
+                    StringComparison.OrdinalIgnoreCase)) && !x.Column.IsComputed);
+            if (columns.Any(x => x.IsNarrowing))
+                throw new StringColumnNarrowingException(columns.Select(x => x.Column.Name));
             return columns.Select(x => x.Column).Select(x => new SelectProjection {
-                Projection = Projection.Create.Field(_map.Column.GetPropertyName(x.Name), !_map.Column.HasStaticPropertyMapping(x.Name))}).ToList();
+                Projection = Projection.Create.Field(_map.Column.GetPropertyName(x.Name), 
+                    !_map.Column.HasStaticPropertyMapping(x.Name))}).ToList();
         } 
     }
 }

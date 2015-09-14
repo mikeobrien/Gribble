@@ -33,7 +33,7 @@ namespace Tests.ExplicitMapping
         {
             public IdentityEntityMap()
             {
-                Id(x => x.Id).Column("id");
+                Id(x => x.Id).Column("id").Identity();
                 Map(x => x.Name).Column("name");
                 Map(x => x.Values).Dynamic();
             }
@@ -43,7 +43,7 @@ namespace Tests.ExplicitMapping
         {
             public GuidEntityMap()
             {
-                Id(x => x.Id).Column("uid").Generated();
+                Id(x => x.Id).Column("uid").GuidComb();
                 Map(x => x.Name).Column("name");
                 Map(x => x.Values).Dynamic();
             }
@@ -101,7 +101,7 @@ namespace Tests.ExplicitMapping
         public void Select_Test()
         {
             var results = _identityTable1.ToList();
-            results.Count().ShouldBeGreaterThan(2);
+            results.Count.ShouldBeGreaterThan(2);
             results.All(x => x.Name.Length > 3).ShouldEqual(true);
             results.All(x => x.Id > 0).ShouldEqual(true);
             results.First().Values.Count.ShouldBeGreaterThan(2);
@@ -113,7 +113,7 @@ namespace Tests.ExplicitMapping
         public void should_select_records_with_nolock()
         {
             var results = Table<IdentityEntity>.Create(_database.Connection, _database.FirstTable.Name, IdentityMap, noLock: true).ToList();
-            results.Count().ShouldBeGreaterThan(2);
+            results.Count.ShouldBeGreaterThan(2);
             results.All(x => x.Name.Length > 3).ShouldEqual(true);
             results.All(x => x.Id > 0).ShouldEqual(true);
             results.First().Values.Count.ShouldBeGreaterThan(2);
@@ -126,7 +126,7 @@ namespace Tests.ExplicitMapping
         {
             var results = Table<IdentityEntity>.Create(_database.Connection, _database.FirstTable.Name, IdentityMap, noLock: true)
                 .Union(Table<IdentityEntity>.Create(_database.Connection, _database.ThirdTable.Name, IdentityMap, noLock: true)).ToList();
-            results.Count().ShouldBeGreaterThan(2);
+            results.Count.ShouldBeGreaterThan(2);
             results.All(x => x.Name.Length > 3).ShouldEqual(true);
             results.All(x => x.Id > 0).ShouldEqual(true);
             results.First().Values.Count.ShouldBeGreaterThan(2);
@@ -137,7 +137,7 @@ namespace Tests.ExplicitMapping
         public void Select_Union()
         {
             var results = _identityTable1.Where(x => x.Id > 2).Union(_identityTable2.Where(x => x.Id > 3)).ToList();
-            results.Count().ShouldEqual(10);
+            results.Count.ShouldEqual(10);
             results.All(x => x.Name.Length > 3).ShouldEqual(true);
             results.All(x => x.Id > 0).ShouldEqual(true);
             results.First().Values.Count.ShouldBeGreaterThan(0);
