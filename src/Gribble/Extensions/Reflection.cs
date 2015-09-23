@@ -17,9 +17,21 @@ namespace Gribble.Extensions
 
         public static IDictionary<string, object> ToDictionary(this object source)
         {
-            return source == null ? new Dictionary<string, object>() : 
-                PrimitiveProperties(source.GetType()).ToDictionary(x => 
-                    x.Name, x => x.GetValue(source, null));
+            var dictionary = new Dictionary<string, object>();
+            if (source == null) return dictionary;
+            PrimitiveProperties(source.GetType()).ToList().ForEach(x =>
+            {
+                try
+                {
+                    dictionary.Add(x.Name, x.GetValue(source, null));
+                }
+                catch (Exception exception)
+                {
+                    throw new Exception($"Error converting object {source.GetType()} " +
+                        $"to dictionary. Property {x.Name} failed.", exception);
+                }
+            });
+            return dictionary;
         }
     }
 }
