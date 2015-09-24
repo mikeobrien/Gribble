@@ -13,25 +13,13 @@ namespace Gribble.Extensions
                             x.PropertyType.IsString() ||
                             x.PropertyType.IsGuid() || 
                             x.PropertyType.IsDateTime() ||
-                            x.PropertyType.IsTimeSpan())); 
+                            x.PropertyType.IsTimeSpan()));
 
         public static IDictionary<string, object> ToDictionary(this object source)
         {
-            var dictionary = new Dictionary<string, object>();
-            if (source == null) return dictionary;
-            PrimitiveProperties(source.GetType()).ToList().ForEach(x =>
-            {
-                try
-                {
-                    dictionary.Add(x.Name, x.GetValue(source, null));
-                }
-                catch (Exception exception)
-                {
-                    throw new Exception($"Error converting object {source.GetType()} " +
-                        $"to dictionary. Property {x.Name} failed.", exception);
-                }
-            });
-            return dictionary;
+            return source == null ? new Dictionary<string, object>() :
+                PrimitiveProperties(source.GetType()).ToDictionary(x =>
+                    x.Name, x => x.GetValue(source, null));
         }
     }
 }
