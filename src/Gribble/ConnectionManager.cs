@@ -1,9 +1,13 @@
 ﻿using System;
-using System.Data;
 using System.Data.SqlClient;
 
 namespace Gribble
 {
+    public interface IConnectionManager : IDisposable
+    {
+        SqlCommand CreateCommand();
+    }
+
     public class ConnectionManager : IConnectionManager
     {
         private readonly Lazy<SqlConnection> _connection;
@@ -18,16 +22,14 @@ namespace Gribble
         public ConnectionManager(string connectionString, TimeSpan? commandTimeout = null)
         {
             _connection = new Lazy<SqlConnection>(() =>
-                        {
-                            var connection = new SqlConnection(connectionString);
-                            connection.Open();
-                            return connection;
-                        });
+                {
+                    var connection = new SqlConnection(connectionString);
+                    connection.Open();
+                    return connection;
+                });
             _commandTimeout = commandTimeout ?? new TimeSpan(0, 5, 0);
         }
-
-        public SqlConnection Connection { get { return _connection.Value; } }
-
+        
         public SqlCommand CreateCommand()
         {
             var command = _connection.Value.CreateCommand();

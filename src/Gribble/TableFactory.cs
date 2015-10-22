@@ -4,6 +4,14 @@ using Gribble.Mapping;
 
 namespace Gribble
 {
+    public interface ITableFactory
+    {
+        ITable<TEntity> CreateFor<TEntity>(string tableName, bool noLock = false)
+            where TEntity : class, new();
+        ITable<TEntity> CreateFor<TEntity>(string tableName, IEnumerable<ColumnMapping> mapping, bool noLock = false)
+            where TEntity : class, new();
+    }
+
     public class TableFactory : ITableFactory
     {
         private readonly EntityMappingCollection _mappingCollection;

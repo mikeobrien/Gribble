@@ -2,6 +2,11 @@
 
 namespace Gribble
 {
+    public interface IProfiler
+    {
+        void Write(string format, params object[] args);
+    }
+
     public class ConsoleProfiler : IProfiler
     {
         public void Write(string format, params object[] args)

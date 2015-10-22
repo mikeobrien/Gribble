@@ -47,12 +47,10 @@
     <Compile Include="ConnectionManager.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Extensions\GuidComb.cs" />
-    <Compile Include="ISqlStatement.cs" />
     <Compile Include="Mapping\AutoClassMap.cs" />
     <Compile Include="Profilers.cs" />
     <Compile Include="SqlStatement.cs" />
     <Compile Include="StoredProcedure.cs" />
-    <Compile Include="IStoredProcedure.cs" />
     <Compile Include="TableSchema.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="EntityAdapter.cs" />
@@ -65,12 +63,7 @@
     <Compile Include="Expressions\WhereVisitor.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Func.cs" />
-    <Compile Include="IConnectionManager.cs" />
-    <Compile Include="ITableSchema.cs" />
     <Compile Include="INamedQueryable.cs" />
-    <Compile Include="IProfiler.cs" />
-    <Compile Include="ITable.cs" />
-    <Compile Include="ITableFactory.cs" />
     <Compile Include="Loader.cs" />
     <Compile Include="Mapping\ClassMap.cs" />
     <Compile Include="Mapping\ColumnMapping.cs" />

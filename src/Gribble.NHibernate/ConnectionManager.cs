@@ -19,7 +19,7 @@ namespace Gribble.NHibernate
                                .GenerateCommand(CommandType.Text, new SqlString(), new SqlType[] { }).CommandTimeout;
         }
 
-        public SqlConnection Connection { get { return (SqlConnection)_session.Connection; } }
+        public SqlConnection Connection => (SqlConnection)_session.Connection;
 
         public SqlCommand CreateCommand()
         {
