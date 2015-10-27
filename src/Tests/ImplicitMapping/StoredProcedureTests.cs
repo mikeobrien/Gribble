@@ -37,6 +37,7 @@ namespace Tests.ImplicitMapping
         {
             Database.SetUp();
             Database.CreateTables();
+            Database.ExecuteNonQuery("CREATE PROCEDURE ExistingProcedure AS BEGIN RETURN 0 END", Database.FirstTable.Name);
             Database.ExecuteNonQuery("CREATE PROCEDURE ReturnValue AS BEGIN RETURN 42 END", Database.FirstTable.Name);
             Database.ExecuteNonQuery("CREATE PROCEDURE GetAll AS BEGIN SELECT * FROM {0} END", Database.FirstTable.Name);
             Database.ExecuteNonQuery("CREATE PROCEDURE GetOne @Id int AS BEGIN SELECT TOP 1 * FROM {0} WHERE Id=@Id END", Database.FirstTable.Name);
@@ -51,6 +52,14 @@ namespace Tests.ImplicitMapping
 
         [SetUp]
         public void TestSetup() { Database.CreateTables(); }
+
+        [Test]
+        [TestCase("ExistingProcedure", true)]
+        [TestCase("MissingProcedure", false)]
+        public void should_indicate_if_procedure_is_missing(string name, bool exists)
+        {
+            StoredProcedure.Exists(name).ShouldEqual(exists);
+        }
 
         [Test]
         public void should_get_multiple_results()

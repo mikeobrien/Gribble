@@ -49,10 +49,16 @@ namespace Gribble
         }
 
         public bool TableExists(string tableName)
-        { return Command.Create(SchemaWriter.CreateTableExistsStatement(tableName), _profiler).ExecuteScalar<bool>(_connectionManager); }
+        {
+            return Command.Create(SchemaWriter.CreateTableExistsStatement(tableName), _profiler)
+                .ExecuteScalar<bool>(_connectionManager);
+        }
 
         public void CreateTable(string tableName, params Column[] columns)
-        { Command.Create(SchemaWriter.CreateTableCreateStatement(tableName, columns), _profiler).ExecuteNonQuery(_connectionManager); }
+        {
+            Command.Create(SchemaWriter.CreateTableCreateStatement(tableName, columns), _profiler)
+                .ExecuteNonQuery(_connectionManager);
+        }
 
         public void CreateTable(string tableName, string modelTable)
         {
@@ -63,9 +69,11 @@ namespace Gribble
         }
 
         public void DeleteTable(string tableName)
-        { Command.Create(SchemaWriter.CreateDeleteTableStatement(tableName), _profiler).ExecuteNonQuery(_connectionManager); }
+        {
+            Command.Create(SchemaWriter.CreateDeleteTableStatement(tableName), _profiler)
+                .ExecuteNonQuery(_connectionManager);
+        }
 
-        
         public IEnumerable<Column> GetColumns(string tableName)
         {
             var statement = SchemaWriter.CreateTableColumnsStatement(tableName);
@@ -98,7 +106,10 @@ namespace Gribble
         }
 
         public void AddColumn(string tableName, Column column)
-        { Command.Create(SchemaWriter.CreateAddColumnStatement(tableName, column), _profiler).ExecuteNonQuery(_connectionManager); }
+        {
+            Command.Create(SchemaWriter.CreateAddColumnStatement(tableName, column), _profiler)
+                .ExecuteNonQuery(_connectionManager);
+        }
 
         public void AddColumns(string tableName, params Column[] columns)
         {

@@ -10,6 +10,7 @@ namespace Gribble
 {
     public interface IStoredProcedure
     {
+        bool Exists(string name);
         int Execute(string name, object parameters = null);
         TReturn Execute<TReturn>(string name, object parameters = null);
         T ExecuteScalar<T>(string name, object parameters = null);
@@ -77,6 +78,12 @@ namespace Gribble
         {
             return new StoredProcedure(connectionManager, mappingCollection, 
                 profiler ?? new ConsoleProfiler());
+        }
+
+        public bool Exists(string name)
+        {
+            return Command.Create(SchemaWriter.CreateProcedureExistsStatement(name), _profiler)
+                .ExecuteScalar<bool>(_connectionManager);
         }
 
         public int Execute(string name, object parameters = null)

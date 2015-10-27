@@ -279,6 +279,7 @@ Gribble allows you to execute stored procedures through the `StoredProcedure` cl
 
     public interface IStoredProcedure
     {
+        bool Exists(string name); // Checks if the procedure exists
         TReturn Execute<TReturn>(string name, object parameters = null); // Returns the return value
         int Execute(string name, object parameters = null); // Returns the number of records affected
         T ExecuteScalar<T>(string name, object parameters = null);

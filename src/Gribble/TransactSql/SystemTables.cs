@@ -4,7 +4,14 @@
     {
         public static string Alias(this string column, string alias)
         {
-            return string.Format("{0}.[{1}]", alias, column);
+            return $"{alias}.[{column}]";
+        }
+
+        public static class Objects
+        {
+            public static string TableName = "[sys].[objects]";
+            public static string Name = "name";
+            public static string Type = "type";
         }
 
         public static class Tables

@@ -136,9 +136,15 @@ namespace Gribble.TransactSql
             return new Statement(writer.ToString(), Statement.StatementType.Text, Statement.ResultType.None);
         }
 
-        public static Statement CreateTableExistsStatement(string tableName)
+        public static Statement CreateTableExistsStatement(string name)
         {
-            var writer = SqlWriter.CreateWriter().Select.TableExistsValue(tableName);
+            var writer = SqlWriter.CreateWriter().Select.TableExistsValue(name);
+            return new Statement(writer.ToString(), Statement.StatementType.Text, Statement.ResultType.Scalar);
+        }
+
+        public static Statement CreateProcedureExistsStatement(string name)
+        {
+            var writer = SqlWriter.CreateWriter().Select.ProcedureExistsValue(name);
             return new Statement(writer.ToString(), Statement.StatementType.Text, Statement.ResultType.Scalar);
         }
 
