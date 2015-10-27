@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Gribble;
-using Gribble.Mapping;
 using NUnit.Framework;
 using Should;
 
@@ -65,7 +64,7 @@ namespace Tests.ImplicitMapping
         public void should_get_multiple_results()
         {
             var results = StoredProcedure.ExecuteMany<Entity>("GetAll").ToList();
-            results.Count().ShouldEqual(10);
+            results.Count.ShouldEqual(10);
             results.All(x => x.Name.Length > 3).ShouldEqual(true);
             results.All(x => x.Id > -1).ShouldEqual(true);
             results.First().Values.Count.ShouldEqual(2);
@@ -77,7 +76,7 @@ namespace Tests.ImplicitMapping
         public void should_get_multiple_results_without_an_id()
         {
             var results = StoredProcedure.ExecuteMany<NoIdEntity>("GetAll").ToList();
-            results.Count().ShouldEqual(10);
+            results.Count.ShouldEqual(10);
             results.All(x => x.Name.Length > 3).ShouldEqual(true);
             results.First().Values.Count.ShouldEqual(3);
             ((int)results.First().Values["id"]).ShouldBeGreaterThan(-1);
@@ -136,8 +135,7 @@ namespace Tests.ImplicitMapping
         [Test]
         public void should_return_nullable_scalar()
         {
-            int? value = null;
-            StoredProcedure.ExecuteScalar<int?>("Echo", new { Value = value }).ShouldEqual(null);
+            StoredProcedure.ExecuteScalar<int?>("Echo", new { Value = (int?)null }).ShouldEqual(null);
         }
     }
 }

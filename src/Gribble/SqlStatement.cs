@@ -75,44 +75,67 @@ namespace Gribble
 
         public int Execute(string commandText, object parameters = null)
         {
-            return Command.Create(StatementWriter.CreateStatement(
-                commandText, parameters.ToDictionary(), Statement.ResultType.None), _profiler)
-                    .ExecuteNonQuery(_connectionManager);
+            return ExecuteBatches(commandText, parameters, x => ExecuteNonQuery(x, parameters));
         }
 
         public T ExecuteScalar<T>(string commandText, object parameters = null)
         {
-            return Command.Create(StatementWriter.CreateStatement(
-                commandText, parameters.ToDictionary(), Statement.ResultType.Scalar), _profiler)
-                .ExecuteScalar<T>(_connectionManager);
+            return ExecuteBatches(commandText, parameters, x =>
+                Command.Create(StatementWriter.CreateStatement(x, 
+                    parameters.ToDictionary(), Statement.ResultType.Scalar), _profiler)
+                .ExecuteScalar<T>(_connectionManager));
         }
 
         public TEntity ExecuteSingle<TEntity>(string commandText,
-            object parameters = null) where TEntity : class 
+            object parameters = null) where TEntity : class
         {
-            return Load<TEntity, TEntity>(Command.Create(StatementWriter.CreateStatement(
-                commandText, parameters.ToDictionary(), Statement.ResultType.Single), _profiler));
+            return ExecuteBatches(commandText, parameters, x =>
+                Load<TEntity, TEntity>(Command.Create(StatementWriter.CreateStatement(x, 
+                    parameters.ToDictionary(), Statement.ResultType.Single), _profiler)));
         }
 
         public TEntity ExecuteSingleOrNone<TEntity>(string commandText,
-            object parameters = null) where TEntity : class 
+            object parameters = null) where TEntity : class
         {
-            return Load<TEntity, TEntity>(Command.Create(StatementWriter.CreateStatement(
-                commandText, parameters.ToDictionary(), Statement.ResultType.SingleOrNone), _profiler));
+            return ExecuteBatches(commandText, parameters, x =>
+                Load<TEntity, TEntity>(Command.Create(StatementWriter.CreateStatement(x, 
+                    parameters.ToDictionary(), Statement.ResultType.SingleOrNone), _profiler)));
         }
 
         public IEnumerable<TEntity> ExecuteMany<TEntity>(string commandText,
-            object parameters = null) where TEntity : class 
+            object parameters = null) where TEntity : class
         {
-            return Load<TEntity, IEnumerable<TEntity>>(
-                Command.Create(StatementWriter.CreateStatement(commandText, 
-                    parameters.ToDictionary(), Statement.ResultType.Multiple), _profiler));
+            return ExecuteBatches(commandText, parameters, x =>
+                Load<TEntity, IEnumerable<TEntity>>(
+                Command.Create(StatementWriter.CreateStatement(x, parameters.ToDictionary(), 
+                    Statement.ResultType.Multiple), _profiler)));
         }
 
         private TResult Load<TEntity, TResult>(Command command) where TEntity : class 
         {
             return (TResult)new Loader<TEntity>(command, _map.GetEntityMapping<TEntity>())
                 .Execute(_connectionManager);
+        }
+
+        private T ExecuteBatches<T>(string commandText, object parameters, Func<string, T> command)
+        {
+            var commands = SplitBatches(commandText);
+            if (commands.Length > 1)
+                commands.Take(commands.Length - 1).ToList()
+                    .ForEach(x => ExecuteNonQuery(x, parameters));
+            return command(commands.Last());
+        }
+
+        private int ExecuteNonQuery(string commandText, object parameters = null)
+        {
+            return Command.Create(StatementWriter.CreateStatement(commandText,
+                    parameters.ToDictionary(), Statement.ResultType.None), _profiler)
+                    .ExecuteNonQuery(_connectionManager);
+        }
+
+        private static string[] SplitBatches(string commandText)
+        {
+            return commandText.Split(new[] { "\r\nGO\r\n" }, StringSplitOptions.RemoveEmptyEntries);
         }
     }
 }

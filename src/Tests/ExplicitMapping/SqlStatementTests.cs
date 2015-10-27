@@ -11,6 +11,7 @@ namespace Tests.ExplicitMapping
     [TestFixture]
     public class SqlStatementTests
     {
+        private const string FirstBatch = "SELECT 1\r\nGO\r\n";
         private static readonly TestDatabase Database =
             new TestDatabase("[id] [int] IDENTITY(1,1) NOT NULL, [name] [varchar] (500) NULL, " + 
                     "[hide] [bit] NULL, [timestamp] [datetime] NULL",
@@ -71,10 +72,11 @@ namespace Tests.ExplicitMapping
         public void TestSetup() { Database.CreateTables(); }
 
         [Test]
-        public void should_get_multiple_results()
+        public void should_get_multiple_results(
+            [Values(FirstBatch, "")] string firstBatch)
         {
-            var results = SqlStatement.ExecuteMany<Entity>($"SELECT * FROM {Database.FirstTable.Name}").ToList();
-            results.Count().ShouldEqual(10);
+            var results = SqlStatement.ExecuteMany<Entity>($"{firstBatch}SELECT * FROM {Database.FirstTable.Name}").ToList();
+            results.Count.ShouldEqual(10);
             results.All(x => x.Name.Length > 3).ShouldEqual(true);
             results.All(x => x.Id > -1).ShouldEqual(true);
             results.First().Values.Count.ShouldEqual(2);
@@ -83,10 +85,11 @@ namespace Tests.ExplicitMapping
         }
 
         [Test]
-        public void should_get_multiple_results_without_an_id()
+        public void should_get_multiple_results_without_an_id(
+            [Values(FirstBatch, "")] string firstBatch)
         {
-            var results = SqlStatement.ExecuteMany<NoIdEntity>($"SELECT * FROM {Database.FirstTable.Name}").ToList();
-            results.Count().ShouldEqual(10);
+            var results = SqlStatement.ExecuteMany<NoIdEntity>($"{firstBatch}SELECT * FROM {Database.FirstTable.Name}").ToList();
+            results.Count.ShouldEqual(10);
             results.All(x => x.Name.Length > 3).ShouldEqual(true);
             results.First().Values.Count.ShouldEqual(3);
             ((int)results.First().Values["id"]).ShouldBeGreaterThan(-1);
@@ -95,9 +98,10 @@ namespace Tests.ExplicitMapping
         }
 
         [Test]
-        public void should_get_one_result()
+        public void should_get_one_result(
+            [Values(FirstBatch, "")] string firstBatch)
         {
-            var result = SqlStatement.ExecuteSingle<Entity>($"SELECT TOP 1 * FROM {Database.FirstTable.Name} WHERE Id=@Id", new { Id = 5 });
+            var result = SqlStatement.ExecuteSingle<Entity>($"{firstBatch}SELECT TOP 1 * FROM {Database.FirstTable.Name} WHERE Id=@Id", new { Id = 5 });
             result.ShouldNotBeNull();
             result.Name.Length.ShouldBeGreaterThan(3);
             result.Id.ShouldEqual(5);
@@ -107,19 +111,30 @@ namespace Tests.ExplicitMapping
         }
 
         [Test]
-        public void should_get_scalar_result()
+        public void should_get_scalar_result(
+            [Values(FirstBatch, "")] string firstBatch)
         {
-            var result = SqlStatement.ExecuteScalar<int>($"SELECT COUNT(*) FROM {Database.FirstTable.Name}");
+            var result = SqlStatement.ExecuteScalar<int>($"{firstBatch}SELECT COUNT(*) FROM {Database.FirstTable.Name}");
             result.ShouldBeGreaterThan(8);
         }
 
         [Test]
-        public void should_execute_non_query()
+        public void should_execute_non_query(
+            [Values(FirstBatch, "")] string firstBatch)
         {
-            SqlStatement.Execute($"DELETE FROM {Database.FirstTable.Name} WHERE Id=@Id", new { Id = 6 }).ShouldEqual(1);
+            SqlStatement.Execute($"{firstBatch}DELETE FROM {Database.FirstTable.Name} WHERE Id=@Id", new { Id = 6 }).ShouldEqual(1);
 
             var result = SqlStatement.ExecuteScalar<int>($"SELECT COUNT(*) FROM {Database.FirstTable.Name}");
             result.ShouldEqual(9);
+        }
+
+        [Test]
+        public void should_execute_multiple_batches()
+        {
+            var result = SqlStatement.ExecuteScalar<int>(
+                $"INSERT INTO {Database.FirstTable.Name} (name) VALUES ('fark')" +
+                $"\r\nGO\r\nSELECT COUNT(*) FROM {Database.FirstTable.Name} WHERE name = 'fark'");
+            result.ShouldEqual(1);
         }
 
         [Test]
@@ -139,8 +154,8 @@ namespace Tests.ExplicitMapping
         [Test]
         public void should_return_nullable_scalar()
         {
-            int? value = null;
-            SqlStatement.ExecuteScalar<int?>("SELECT @Value", new { Value = value }).ShouldEqual(null);
+            SqlStatement.ExecuteScalar<int?>("SELECT @Value", 
+                new { Value = (int?)null }).ShouldEqual(null);
         }
     }
 }

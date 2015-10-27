@@ -14,7 +14,7 @@ Here is the skinny:
 * [Simple fluent mapping API](#mapping) (shamelessly ripped off from [Fluent NHibernate](http://www.fluentnhibernate.org/)).
 * Work with dynamic fields via dictionary property.
 * [Create, modify and delete tables, columns and indexes.](#working-with-table-schema)
-* [Execute raw SQL and map results to entites.](#executing-sql-statements)
+* [Execute raw SQL and map results to entites. Supports the `GO` keyword for batching.](#executing-sql-statements)
 * [Execute stored procs and map results to entites.](#executing-stored-procedures)
 * [NHibernate session/transaction integration.](#nhibernate-integration)
 * [IoC Friendly](#ioc-configuration)
@@ -232,7 +232,7 @@ Gribble allows you to execute SQL statements through the `SqlStatement` class wh
         IEnumerable<TEntity> ExecuteMany<TEntity>(string commandText, object parameters = null);
     }
 
-We create a `SqlStatement` object by passing in a connection manager, an optional class map (Only used when returning entities) and an optional profiler. You can create a `SqlStatement` object with the new keyword or one of the static factory methods. There is a connection manager that takes a `System.Data.SqlConnection` or connection string and one that takes an `NHibernate.ISession` (When using NHibernate integration). 
+We create a `SqlStatement` object by passing in a connection manager, an optional class map (Only used when returning entities) and an optional profiler. You can create a `SqlStatement` object with the new keyword or one of the static factory methods. There is a connection manager that takes a `System.Data.SqlConnection` or connection string and one that takes an `NHibernate.ISession` (When using NHibernate integration). Gribble supports the `GO` keyword and will automatically split the statement into seperate batches. It uses the last batch for return values, preceding batches are executed non query.
 
     // Connection string and console profiler
     using (var connectionManager = new ConnectionManager("server=localhost...")) 
