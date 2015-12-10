@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Gribble.Extensions;
@@ -7,7 +8,7 @@ namespace Gribble.Mapping
 {
     public class EntityMappingCollection
     {
-        private readonly IDictionary<Type, IClassMap> _classMappings = new Dictionary<Type, IClassMap>();
+        private readonly ConcurrentDictionary<Type, IClassMap> _classMappings = new ConcurrentDictionary<Type, IClassMap>();
 
         public EntityMappingCollection(IEnumerable<IClassMap> classMappings)
         {
@@ -15,7 +16,7 @@ namespace Gribble.Mapping
             {
                 if (_classMappings.ContainsKey(classMap.Type)) 
                     throw new Exception($"Duplicate class mapping found for type {classMap.Type.Name}.");
-                _classMappings.Add(classMap.Type, classMap);
+                _classMappings.TryAdd(classMap.Type, classMap);
             }
         }
 
@@ -37,9 +38,9 @@ namespace Gribble.Mapping
         private IClassMap GetMappingOrDefault<TEntity>()
         {
             var type = typeof (TEntity);
-            return _classMappings.ContainsKey(type)
-                ? _classMappings[type]
-                : _classMappings.AddItem(type, new AutoClassMap<TEntity>());
+            if (!_classMappings.ContainsKey(type))
+                _classMappings.TryAdd(type, new AutoClassMap<TEntity>());
+            return _classMappings[type];
         }
     }
 }
