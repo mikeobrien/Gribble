@@ -61,6 +61,15 @@ namespace Tests.ImplicitMapping
         }
 
         [Test]
+        public void should_get_multiple_simple_results(
+            [Values(FirstBatch, "")] string firstBatch)
+        {
+            var results = SqlStatement.ExecuteMany<string>($"{firstBatch}SELECT Name FROM {Database.FirstTable.Name}").ToList();
+            results.Count.ShouldEqual(10);
+            results.All(x => x == "oh hai").ShouldEqual(true);
+        }
+
+        [Test]
         public void should_get_multiple_results_without_an_id(
             [Values(FirstBatch, "")] string firstBatch)
         {

@@ -21,5 +21,12 @@ namespace Gribble.Extensions
                 PrimitiveProperties(source.GetType()).ToDictionary(x =>
                     x.Name, x => x.GetValue(source, null));
         }
+
+        public static bool IsSimpleType(this Type type)
+        {
+            Func<Type, bool> isSimpleType = x => x.IsPrimitive || x == typeof(string) || 
+                x == typeof(decimal) || x == typeof(DateTime) || x == typeof(Guid);
+            return isSimpleType(type) || (type.IsNullable() && isSimpleType(Nullable.GetUnderlyingType(type)));
+        }
     }
 }

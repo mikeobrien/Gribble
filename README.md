@@ -223,7 +223,7 @@ Instead of referencing the dynamic fields like `address.Values["F2A74B_active"]`
 Executing SQL Statements
 ------------
 
-Gribble allows you to execute SQL statements through the `SqlStatement` class which implements `ISqlStatement`.
+Gribble allows you to execute SQL statements through the `SqlStatement` class which implements `ISqlStatement`. Simple return types like numeric, `DateTime` and `Guid` are supported by all methods in addition to reference types.
 
     public interface ISqlStatement
     {
@@ -277,7 +277,7 @@ SQL statement parameters are passed in as objects where the property name is the
 Executing Stored Procedures
 ------------
 
-Gribble allows you to execute stored procedures through the `StoredProcedure` class which implements `IStoredProcedure`.
+Gribble allows you to execute stored procedures through the `StoredProcedure` class which implements `IStoredProcedure`. Simple return types like numeric, `DateTime` and `Guid` are supported by all methods in addition to reference types.
 
     public interface IStoredProcedure
     {

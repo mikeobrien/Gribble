@@ -6,7 +6,7 @@ using Gribble.Mapping;
 
 namespace Gribble
 {
-    public class EntityAdapter<TEntity>
+    public class EntityAdapter<TEntity> : ILoadAdapter<TEntity>
     {
         private static IList<PropertyInfo> _properties;
         private static PropertyInfo _keyProperty;

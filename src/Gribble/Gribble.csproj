@@ -47,6 +47,7 @@
     <Compile Include="ConnectionManager.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Extensions\GuidComb.cs" />
+    <Compile Include="ILoadAdapter.cs" />
     <Compile Include="Mapping\AutoClassMap.cs" />
     <Compile Include="Profilers.cs" />
     <Compile Include="SqlStatement.cs" />
@@ -114,6 +115,7 @@
     <Compile Include="TransactSql\UpdateWriter.cs" />
     <Compile Include="TransactSql\WhereWriter.cs" />
     <Compile Include="Extensions\Type.cs" />
+    <Compile Include="ValueLoadAdapter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

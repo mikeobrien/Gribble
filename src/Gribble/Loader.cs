@@ -52,7 +52,9 @@ namespace Gribble
 
         private static TEntity LoadEntity(IDataRecord reader, IEntityMapping map)
         {
-            var adapter = new EntityAdapter<TEntity>(map);
+            var adapter = typeof(TEntity).IsSimpleType() ? 
+                (ILoadAdapter<TEntity>)new ValueLoadAdapter<TEntity>() :
+                new EntityAdapter<TEntity>(map);
             var values = Enumerable.Range(0, reader.FieldCount).
                 Select(x => new { ColumnName = reader.GetName(x), Value = reader[x].FromDb<object>() }).
                 ToDictionary(value => value.ColumnName, value => value.Value);
