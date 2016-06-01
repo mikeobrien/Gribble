@@ -1,7 +1,7 @@
 Gribble
 =============
 
-[![Nuget](http://img.shields.io/nuget/v/Gribble.svg?style=flat)](http://www.nuget.org/packages/Gribble/) [![Nuget downloads](http://img.shields.io/nuget/dt/Gribble.svg?style=flat)](http://www.nuget.org/packages/Gribble/) [![TeamCity Build Status](https://img.shields.io/teamcity/http/build.mikeobrien.net/s/gribble.svg?style=flat)](http://build.mikeobrien.net/viewType.html?buildTypeId=gribble&guest=1)
+[![Nuget](http://img.shields.io/nuget/v/Gribble.svg?style=flat)](http://www.nuget.org/packages/Gribble/) [![TeamCity Build Status](https://img.shields.io/teamcity/http/build.mikeobrien.net/s/gribble.svg?style=flat)](http://build.mikeobrien.net/viewType.html?buildTypeId=gribble&guest=1)
 
 <img src="https://raw.github.com/mikeobrien/Gribble/master/misc/logo.png"/> 
 
