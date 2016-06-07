@@ -27,7 +27,7 @@ namespace Gribble
 
         public ITable<TEntity> CreateFor<TEntity>(string tableName, bool noLock = false) where TEntity : class, new()
         {
-            return new Table<TEntity>(
+            return Table<TEntity>.Create(
                 _connectionManager,
                 tableName,
                 _mappingCollection.GetEntityMapping<TEntity>(),
@@ -37,7 +37,7 @@ namespace Gribble
 
         public ITable<TEntity> CreateFor<TEntity>(string tableName, IEnumerable<ColumnMapping> mapping, bool noLock = false) where TEntity : class, new()
         {
-            return new Table<TEntity>(
+            return Table<TEntity>.Create(
                 _connectionManager, 
                 tableName, 
                 _mappingCollection.GetEntityMapping<TEntity>(mapping.Select(x => new ColumnMapping(x.ColumnName, x.Name))), 

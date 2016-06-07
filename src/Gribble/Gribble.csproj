@@ -52,6 +52,7 @@
     <Compile Include="Profilers.cs" />
     <Compile Include="SqlStatement.cs" />
     <Compile Include="StoredProcedure.cs" />
+    <Compile Include="TableNamingConvention.cs" />
     <Compile Include="TableSchema.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="EntityAdapter.cs" />
