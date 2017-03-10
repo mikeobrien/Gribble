@@ -13,7 +13,7 @@ namespace Gribble.Expressions
         public class MemberTypeNotSupportedException : Exception
         {
             public MemberTypeNotSupportedException(string name, MemberTypes type) :
-                base(string.Format("Member type of {0} not supported. Member name: {1}.", type, name)) { }
+                base($"Member type of {type} not supported. Member name: {name}.") { }
         }
 
         private readonly string _tableAlias;
