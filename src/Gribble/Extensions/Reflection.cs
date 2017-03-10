@@ -28,5 +28,22 @@ namespace Gribble.Extensions
                 x == typeof(decimal) || x == typeof(DateTime) || x == typeof(Guid);
             return isSimpleType(type) || (type.IsNullable() && isSimpleType(Nullable.GetUnderlyingType(type)));
         }
+
+        public static bool IsSameType(this Type source, Type compare)
+        {
+            return source.UnderlyingSystemType == compare.UnderlyingSystemType;
+        }
+
+        public static bool IsSameNullableType(this Type source, Type compare)
+        {
+            var sourceNullableType = source.GetNullableType()?.UnderlyingSystemType;
+            var compareNullableType = compare.GetNullableType()?.UnderlyingSystemType;
+            return sourceNullableType != null && sourceNullableType == compareNullableType;
+        }
+
+        public static Type GetNullableType(this Type type)
+        {
+            return Nullable.GetUnderlyingType(type);
+        }
     }
 }
