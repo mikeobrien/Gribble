@@ -189,8 +189,16 @@ namespace Gribble.TransactSql
         
         public SqlWriter DataTypeId(int typeId) { return Write(typeId); }
 
-        public SqlWriter DataTypeDefinition(Type type, int? length, int? precision, int? scale) { return DataTypeDefinition(type.GetSqlTypeName(), length, precision, scale); }
-        public SqlWriter DataTypeDefinition(SqlDbType type, int? length, int? precision, int? scale) { return DataTypeDefinition(type.GetSqlTypeName(), length, precision, scale); }
+        public SqlWriter DataTypeDefinition(Type type, int? length, int? precision, int? scale)
+        {
+            return DataTypeDefinition(type.GetSqlTypeName(), length, precision, scale);
+        }
+
+        public SqlWriter DataTypeDefinition(SqlDbType type, int? length, int? precision, int? scale)
+        {
+            return DataTypeDefinition(type.GetSqlTypeName(), length, precision, scale);
+        }
+
         public SqlWriter DataTypeDefinition(string typeName, int? length, int? precision, int? scale)
         {
             var writer = Write(typeName);
