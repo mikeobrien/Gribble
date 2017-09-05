@@ -1,13 +1,12 @@
 ﻿using System;
+using Gribble.Extensions;
 
 namespace Gribble.Model
 {
     public class SelectProjection
     {
-        private static readonly Random Random = new Random();
-
         public Projection Projection;
-        public string Alias = string.Format("@F{0}", Random.Next());
+        public string Alias = string.Format("@F{0}", Unique.Next());
 
         public static SelectProjection Create(Projection projection)
         {

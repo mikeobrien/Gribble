@@ -1,13 +1,12 @@
 ﻿using System;
+using Gribble.Extensions;
 using Gribble.Mapping;
 
 namespace Gribble.Model
 {
     public class Field
     {
-        private static readonly Random Random = new Random();
-
-        public string Alias = string.Format("F{0}", Random.Next());
+        public string Alias = string.Format("F{0}", Unique.Next());
         public string Name;
         public bool HasKey;
         public string Key;

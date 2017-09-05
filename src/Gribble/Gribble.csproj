@@ -47,6 +47,7 @@
     <Compile Include="ConnectionManager.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Extensions\GuidComb.cs" />
+    <Compile Include="Extensions\Unique.cs" />
     <Compile Include="ILoadAdapter.cs" />
     <Compile Include="Mapping\AutoClassMap.cs" />
     <Compile Include="Profilers.cs" />

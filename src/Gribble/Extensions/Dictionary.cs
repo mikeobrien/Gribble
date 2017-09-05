@@ -6,12 +6,10 @@ namespace Gribble.Extensions
 {
     public static class DictionaryExtensions
     {
-        private static ushort _uniqueIndex;
-
         public static string AddWithUniquelyNamedKey<TValue>(
             this IDictionary<string, TValue> dictionary, TValue value)
         {
-            var name = "K" + _uniqueIndex++;
+            var name = "K" + Unique.Next();
             dictionary.Add(name, value);
             return name;
         }
