@@ -31,7 +31,7 @@ namespace Tests.ImplicitMapping
         public static IProfiler Profiler = new ConsoleProfiler();
         public IStoredProcedure StoredProcedure;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
             Database.SetUp();
@@ -46,7 +46,7 @@ namespace Tests.ImplicitMapping
             StoredProcedure = Gribble.StoredProcedure.Create(Database.Connection, profiler: Profiler);
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void TearDown() { Database.TearDown(); }
 
         [SetUp]

@@ -19,7 +19,7 @@ namespace Tests
         public static IProfiler Profiler = new ConsoleProfiler();
         public ITableSchema GribbleDatabase;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
             Database.SetUp();
@@ -27,7 +27,7 @@ namespace Tests
             GribbleDatabase = Gribble.TableSchema.Create(Database.Connection, profiler: Profiler);
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void TearDown() { Database.TearDown(); }
 
         [SetUp]

@@ -10,11 +10,14 @@ namespace Gribble
 {
     public interface ISqlStatement
     {
-        int Execute(string commandText, object parameters = null);
-        T ExecuteScalar<T>(string commandText, object parameters = null);
-        TEntity ExecuteSingle<TEntity>(string commandText, object parameters = null) where TEntity : class;
-        TEntity ExecuteSingleOrNone<TEntity>(string commandText, object parameters = null) where TEntity : class;
-        IEnumerable<TEntity> ExecuteMany<TEntity>(string commandText, object parameters = null) where TEntity : class;
+        int Execute(string commandText, IDictionary<string, object> parameters = null);
+        T ExecuteScalar<T>(string commandText, IDictionary<string, object> parameters = null);
+        TEntity ExecuteSingle<TEntity>(string commandText, 
+            IDictionary<string, object> parameters = null) where TEntity : class;
+        TEntity ExecuteSingleOrNone<TEntity>(string commandText, 
+            IDictionary<string, object> parameters = null) where TEntity : class;
+        IEnumerable<TEntity> ExecuteMany<TEntity>(string commandText, 
+            IDictionary<string, object> parameters = null) where TEntity : class;
     }
 
     public class SqlStatement : ISqlStatement
@@ -73,42 +76,42 @@ namespace Gribble
             return new SqlStatement(connectionManager, mappingCollection, profiler ?? new ConsoleProfiler());
         }
 
-        public int Execute(string commandText, object parameters = null)
+        public int Execute(string commandText, IDictionary<string, object> parameters = null)
         {
             return ExecuteBatches(commandText, parameters, x => ExecuteNonQuery(x, parameters));
         }
 
-        public T ExecuteScalar<T>(string commandText, object parameters = null)
+        public T ExecuteScalar<T>(string commandText, IDictionary<string, object> parameters = null)
         {
             return ExecuteBatches(commandText, parameters, x =>
-                Command.Create(StatementWriter.CreateStatement(x, 
-                    parameters.ToDictionary(), Statement.ResultType.Scalar), _profiler)
-                .ExecuteScalar<T>(_connectionManager));
+                Command.Create(StatementWriter.CreateStatement(x,
+                        parameters, Statement.ResultType.Scalar), _profiler)
+                    .ExecuteScalar<T>(_connectionManager));
         }
 
         public TEntity ExecuteSingle<TEntity>(string commandText,
-            object parameters = null) where TEntity : class
+            IDictionary<string, object> parameters = null) where TEntity : class
         {
             return ExecuteBatches(commandText, parameters, x =>
-                Load<TEntity, TEntity>(Command.Create(StatementWriter.CreateStatement(x, 
-                    parameters.ToDictionary(), Statement.ResultType.Single), _profiler)));
+                Load<TEntity, TEntity>(Command.Create(StatementWriter.CreateStatement(x,
+                    parameters, Statement.ResultType.Single), _profiler)));
         }
 
         public TEntity ExecuteSingleOrNone<TEntity>(string commandText,
-            object parameters = null) where TEntity : class
+            IDictionary<string, object> parameters = null) where TEntity : class
         {
             return ExecuteBatches(commandText, parameters, x =>
-                Load<TEntity, TEntity>(Command.Create(StatementWriter.CreateStatement(x, 
-                    parameters.ToDictionary(), Statement.ResultType.SingleOrNone), _profiler)));
+                Load<TEntity, TEntity>(Command.Create(StatementWriter.CreateStatement(x,
+                    parameters, Statement.ResultType.SingleOrNone), _profiler)));
         }
 
         public IEnumerable<TEntity> ExecuteMany<TEntity>(string commandText,
-            object parameters = null) where TEntity : class
+            IDictionary<string, object> parameters = null) where TEntity : class
         {
             return ExecuteBatches(commandText, parameters, x =>
                 Load<TEntity, IEnumerable<TEntity>>(
-                Command.Create(StatementWriter.CreateStatement(x, parameters.ToDictionary(), 
-                    Statement.ResultType.Multiple), _profiler)));
+                    Command.Create(StatementWriter.CreateStatement(x, parameters,
+                        Statement.ResultType.Multiple), _profiler)));
         }
 
         private TResult Load<TEntity, TResult>(Command command) where TEntity : class 
@@ -117,7 +120,7 @@ namespace Gribble
                 .Execute(_connectionManager);
         }
 
-        private T ExecuteBatches<T>(string commandText, object parameters, Func<string, T> command)
+        private T ExecuteBatches<T>(string commandText, IDictionary<string, object> parameters, Func<string, T> command)
         {
             var commands = SplitBatches(commandText);
             if (commands.Length > 1)
@@ -126,16 +129,49 @@ namespace Gribble
             return command(commands.Last());
         }
 
-        private int ExecuteNonQuery(string commandText, object parameters = null)
+        private int ExecuteNonQuery(string commandText, IDictionary<string, object> parameters = null)
         {
             return Command.Create(StatementWriter.CreateStatement(commandText,
-                    parameters.ToDictionary(), Statement.ResultType.None), _profiler)
+                    parameters, Statement.ResultType.None), _profiler)
                     .ExecuteNonQuery(_connectionManager);
         }
 
         private static string[] SplitBatches(string commandText)
         {
             return commandText.Split(new[] { "\r\nGO\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+        }
+    }
+
+    public static class ISqlStatementExtensions
+    {
+        public static int Execute(this ISqlStatement sqlStatement, 
+            string commandText, object parameters)
+        {
+            return sqlStatement.Execute(commandText, parameters.ToDictionary());
+        }
+
+        public static T ExecuteScalar<T>(this ISqlStatement sqlStatement,
+            string commandText, object parameters)
+        {
+            return sqlStatement.ExecuteScalar<T>(commandText, parameters.ToDictionary());
+        }
+
+        public static TEntity ExecuteSingle<TEntity>(this ISqlStatement sqlStatement,
+            string commandText, object parameters) where TEntity : class
+        {
+            return sqlStatement.ExecuteSingle<TEntity>(commandText, parameters.ToDictionary());
+        }
+
+        public static TEntity ExecuteSingleOrNone<TEntity>(this ISqlStatement sqlStatement,
+            string commandText, object parameters) where TEntity : class
+        {
+            return sqlStatement.ExecuteSingleOrNone<TEntity>(commandText, parameters.ToDictionary());
+        }
+
+        public static IEnumerable<TEntity> ExecuteMany<TEntity>(this ISqlStatement sqlStatement,
+            string commandText, object parameters) where TEntity : class
+        {
+            return sqlStatement.ExecuteMany<TEntity>(commandText, parameters.ToDictionary());
         }
     }
 }

@@ -11,12 +11,15 @@ namespace Gribble
     public interface IStoredProcedure
     {
         bool Exists(string name);
-        int Execute(string name, object parameters = null);
-        TReturn Execute<TReturn>(string name, object parameters = null);
-        T ExecuteScalar<T>(string name, object parameters = null);
-        TEntity ExecuteSingle<TEntity>(string name, object parameters = null) where TEntity : class;
-        TEntity ExecuteSingleOrNone<TEntity>(string name, object parameters = null) where TEntity : class;
-        IEnumerable<TEntity> ExecuteMany<TEntity>(string name, object parameters = null) where TEntity : class;
+        int Execute(string name, IDictionary<string, object> parameters = null);
+        TReturn Execute<TReturn>(string name, IDictionary<string, object> parameters = null);
+        T ExecuteScalar<T>(string name, IDictionary<string, object> parameters = null);
+        TEntity ExecuteSingle<TEntity>(string name, 
+            IDictionary<string, object> parameters = null) where TEntity : class;
+        TEntity ExecuteSingleOrNone<TEntity>(string name, 
+            IDictionary<string, object> parameters = null) where TEntity : class;
+        IEnumerable<TEntity> ExecuteMany<TEntity>(string name, 
+            IDictionary<string, object> parameters = null) where TEntity : class;
     }
 
     public class StoredProcedure : IStoredProcedure
@@ -86,48 +89,48 @@ namespace Gribble
                 .ExecuteScalar<bool>(_connectionManager);
         }
 
-        public int Execute(string name, object parameters = null)
+        public int Execute(string name, IDictionary<string, object> parameters = null)
         {
-            return Command.Create(StatementWriter.CreateStoredProcedure(name, 
-                parameters.ToDictionary(), Statement.ResultType.None), _profiler)
-                    .ExecuteNonQuery(_connectionManager);
+            return Command.Create(StatementWriter.CreateStoredProcedure(name,
+                    parameters, Statement.ResultType.None), _profiler)
+                .ExecuteNonQuery(_connectionManager);
         }
 
-        public TReturn Execute<TReturn>(string name, object parameters = null)
+        public TReturn Execute<TReturn>(string name, IDictionary<string, object> parameters = null)
         {
-            return Command.Create(StatementWriter.CreateStoredProcedure(name, 
-                parameters.ToDictionary(), Statement.ResultType.None), _profiler)
-                    .ExecuteNonQuery<TReturn>(_connectionManager);
+            return Command.Create(StatementWriter.CreateStoredProcedure(name,
+                    parameters, Statement.ResultType.None), _profiler)
+                .ExecuteNonQuery<TReturn>(_connectionManager);
         }
 
-        public T ExecuteScalar<T>(string name, object parameters = null)
+        public T ExecuteScalar<T>(string name, IDictionary<string, object> parameters = null)
         {
-            return Command.Create(StatementWriter.CreateStoredProcedure(name, 
-                parameters.ToDictionary(), Statement.ResultType.Scalar), _profiler)
-                    .ExecuteScalar<T>(_connectionManager);
+            return Command.Create(StatementWriter.CreateStoredProcedure(name,
+                    parameters, Statement.ResultType.Scalar), _profiler)
+                .ExecuteScalar<T>(_connectionManager);
         }
 
-        public TEntity ExecuteSingle<TEntity>(string name, 
-            object parameters = null) where TEntity : class 
+        public TEntity ExecuteSingle<TEntity>(string name,
+            IDictionary<string, object> parameters = null) where TEntity : class
         {
             return Load<TEntity, TEntity>(Command.Create(StatementWriter
-                .CreateStoredProcedure(name, parameters.ToDictionary(), 
+                .CreateStoredProcedure(name, parameters,
                     Statement.ResultType.Single), _profiler));
         }
 
-        public TEntity ExecuteSingleOrNone<TEntity>(string name, 
-            object parameters = null) where TEntity : class 
+        public TEntity ExecuteSingleOrNone<TEntity>(string name,
+            IDictionary<string, object> parameters = null) where TEntity : class
         {
             return Load<TEntity, TEntity>(Command.Create(StatementWriter
-                .CreateStoredProcedure(name, parameters.ToDictionary(), 
+                .CreateStoredProcedure(name, parameters,
                     Statement.ResultType.SingleOrNone), _profiler));
         }
 
-        public IEnumerable<TEntity> ExecuteMany<TEntity>(string name, 
-            object parameters = null) where TEntity : class 
+        public IEnumerable<TEntity> ExecuteMany<TEntity>(string name,
+            IDictionary<string, object> parameters = null) where TEntity : class
         {
             return Load<TEntity, IEnumerable<TEntity>>(Command.Create(
-                StatementWriter.CreateStoredProcedure(name, parameters.ToDictionary(), 
+                StatementWriter.CreateStoredProcedure(name, parameters,
                     Statement.ResultType.Multiple), _profiler));
         }
 
@@ -136,5 +139,48 @@ namespace Gribble
             return (TResult)new Loader<TEntity>(command, _map.GetEntityMapping<TEntity>())
                 .Execute(_connectionManager);
         }
+    }
+
+    public static class IStoredProcedureExtensions
+    {
+        public static int Execute(this IStoredProcedure storedProcedure,
+            string name, object parameters)
+        {
+            return storedProcedure.Execute(name, parameters.ToDictionary());
+        }
+
+        public static TReturn Execute<TReturn>(this IStoredProcedure storedProcedure,
+            string name, object parameters)
+        {
+            return storedProcedure.Execute<TReturn>(name, parameters.ToDictionary());
+        }
+
+        public static T ExecuteScalar<T>(this IStoredProcedure storedProcedure,
+            string name, object parameters)
+        {
+            return storedProcedure.ExecuteScalar<T>(name, parameters.ToDictionary());
+        }
+
+        public static TEntity ExecuteSingle<TEntity>(
+            this IStoredProcedure storedProcedure, string name,
+            object parameters) where TEntity : class
+        {
+            return storedProcedure.ExecuteSingle<TEntity>(name, parameters.ToDictionary());
+        }
+
+        public static TEntity ExecuteSingleOrNone<TEntity>(
+            this IStoredProcedure storedProcedure,
+            string name, object parameters) where TEntity : class
+        {
+            return storedProcedure.ExecuteSingleOrNone<TEntity>(name, parameters.ToDictionary());
+        }
+
+        public static IEnumerable<TEntity> ExecuteMany<TEntity>(
+            this IStoredProcedure storedProcedure,
+            string name, object parameters) where TEntity : class
+        {
+            return storedProcedure.ExecuteMany<TEntity>(name, parameters.ToDictionary());
+        }
+
     }
 }

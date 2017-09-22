@@ -33,7 +33,7 @@ namespace Tests.ImplicitMapping
         public static IProfiler Profiler = new ConsoleProfiler();
         public ISqlStatement SqlStatement;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
             Database.SetUp();
@@ -41,7 +41,7 @@ namespace Tests.ImplicitMapping
             SqlStatement = Gribble.SqlStatement.Create(Database.Connection, profiler: Profiler);
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void TearDown() { Database.TearDown(); }
 
         [SetUp]
