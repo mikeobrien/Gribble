@@ -52,10 +52,10 @@ namespace Tests
 
         public static IProfiler Profiler = new ConsoleProfiler();
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Setup() { Database.SetUp(); }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void TearDown() { Database.TearDown(); }
 
         [SetUp]

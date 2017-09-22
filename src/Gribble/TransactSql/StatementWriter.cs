@@ -12,7 +12,7 @@ namespace Gribble.TransactSql
                 Statement.StatementType.StoredProcedure, 
                 result, parameters);
         }
-
+        
         public static Statement CreateStatement(
             string name, IDictionary<string, object> parameters,
             Statement.ResultType result)

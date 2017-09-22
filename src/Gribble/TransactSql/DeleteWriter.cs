@@ -28,7 +28,8 @@ namespace Gribble.TransactSql
                     break;
             }
 
-            return new Statement(writer.ToString(), Statement.StatementType.Text, Statement.ResultType.None, statement.Parameters);
+            return new Statement(writer.ToString(), Statement.StatementType.Text, 
+                Statement.ResultType.None, statement.Parameters);
         }
     }
 }
