@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using Gribble.Extensions;
 using Gribble.Mapping;
@@ -50,13 +51,13 @@ namespace Gribble
             return results.FirstOrDefault();
         }
 
-        private static TEntity LoadEntity(IDataRecord reader, IEntityMapping map)
+        private static TEntity LoadEntity(IDataRecord record, IEntityMapping map)
         {
             var adapter = typeof(TEntity).IsSimpleType() ? 
                 (ILoadAdapter<TEntity>)new ValueLoadAdapter<TEntity>() :
                 new EntityAdapter<TEntity>(map);
-            var values = Enumerable.Range(0, reader.FieldCount).
-                Select(x => new { ColumnName = reader.GetName(x), Value = reader[x].FromDb<object>() }).
+            var values = Enumerable.Range(0, record.FieldCount).
+                Select(x => new { ColumnName = record.GetName(x), Value = record[x].FromDb<object>() }).
                 ToDictionary(value => value.ColumnName, value => value.Value);
             adapter.SetValues(values);
             return adapter.Entity;

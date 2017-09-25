@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using Gribble.Extensions;
@@ -20,6 +21,8 @@ namespace Gribble
             IDictionary<string, object> parameters = null) where TEntity : class;
         IEnumerable<TEntity> ExecuteMany<TEntity>(string name, 
             IDictionary<string, object> parameters = null) where TEntity : class;
+        DataTable ExecuteTable(string tableName, string name,
+            IDictionary<string, object> parameters = null);
     }
 
     public class StoredProcedure : IStoredProcedure
@@ -132,6 +135,14 @@ namespace Gribble
             return Load<TEntity, IEnumerable<TEntity>>(Command.Create(
                 StatementWriter.CreateStoredProcedure(name, parameters,
                     Statement.ResultType.Multiple), _profiler));
+        }
+
+        public DataTable ExecuteTable(string tableName, string name,
+            IDictionary<string, object> parameters = null)
+        {
+            return Command.Create(StatementWriter.CreateStoredProcedure(name, 
+                    parameters, Statement.ResultType.Multiple), _profiler)
+                .ExecuteTable(tableName, _connectionManager);
         }
 
         private TResult Load<TEntity, TResult>(Command command) where TEntity : class 

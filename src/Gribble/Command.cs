@@ -17,7 +17,7 @@ namespace Gribble
                 base($"Error executing sql: {exception.Message}", exception)
             { Statement = statement; }
 
-            public Statement Statement { get; private set; }
+            public Statement Statement { get; }
         }
 
         private readonly IProfiler _profiler;
@@ -36,38 +36,55 @@ namespace Gribble
         public Statement Statement { get; }
 
         public IDataReader ExecuteReader(IConnectionManager connectionManager)
-        { return Execute(() => CreateCommand(connectionManager).ExecuteReader()); }
+        {
+            return Execute(() =>
+            {
+                using (var command = CreateCommand(connectionManager))
+                {
+                    return command.ExecuteReader();
+                }
+            });
+        }
 
         public T ExecuteScalar<T>(IConnectionManager connectionManager)
-        { return (T)ExecuteScalar(connectionManager); }
+        {
+            return (T)ExecuteScalar(connectionManager);
+        }
 
         public object ExecuteScalar(IConnectionManager connectionManager)
-        { return Execute(() => CreateCommand(connectionManager).ExecuteScalar().FromDb<object>()); }
+        {
+            return Execute(() =>
+            {
+                using (var command = CreateCommand(connectionManager))
+                {
+                    return command.ExecuteScalar().FromDb<object>();
+                }
+            });
+        }
 
         public int ExecuteNonQuery(IConnectionManager connectionManager)
         {
-            return Execute(() => CreateCommand(connectionManager).ExecuteNonQuery());
+            return Execute(() =>
+            {
+                using (var command = CreateCommand(connectionManager))
+                {
+                    return command.ExecuteNonQuery();
+                }
+            });
         }
 
         public TReturn ExecuteNonQuery<TReturn>(IConnectionManager connectionManager)
         {
             return Execute(() => {
                 const string parameterName = "@__return__";
-                var command = CreateCommand(connectionManager);
-                command.Parameters.Add(new SqlParameter {
-                        ParameterName = parameterName, Direction = ParameterDirection.ReturnValue });
-                command.ExecuteNonQuery();
-                return (TReturn)command.Parameters[parameterName].Value;
+                using (var command = CreateCommand(connectionManager))
+                {
+                    command.Parameters.Add(new SqlParameter {
+                            ParameterName = parameterName, Direction = ParameterDirection.ReturnValue });
+                    command.ExecuteNonQuery();
+                    return (TReturn)command.Parameters[parameterName].Value;
+                }
             });
-        }
-
-        private SqlCommand CreateCommand(IConnectionManager connectionManager)
-        {
-            var command = connectionManager.CreateCommand();
-            command.CommandText = Statement.Text;
-            command.CommandType = Statement.Type == Statement.StatementType.Text ? CommandType.Text : CommandType.StoredProcedure;
-            Statement.Parameters.Select(x => new SqlParameter(x.Key, x.Value ?? DBNull.Value)).ToList().ForEach(y => command.Parameters.Add(y));
-            return command;
         }
 
         public IEnumerable<T> ExecuteEnumerable<T>(IConnectionManager connectionManager)
@@ -84,6 +101,28 @@ namespace Gribble
                     while (reader.Read()) values.Add(createItem(reader));
                 return values;
             });
+        }
+
+        public DataTable ExecuteTable(string tableName, IConnectionManager connectionManager)
+        {
+            return Execute(() =>
+            {
+                using (var command = CreateCommand(connectionManager))
+                {
+                    var table = new DataTable(tableName);
+                    new SqlDataAdapter(command).Fill(table);
+                    return table;
+                } 
+            });
+        }
+
+        private SqlCommand CreateCommand(IConnectionManager connectionManager)
+        {
+            var command = connectionManager.CreateCommand();
+            command.CommandText = Statement.Text;
+            command.CommandType = Statement.Type == Statement.StatementType.Text ? CommandType.Text : CommandType.StoredProcedure;
+            Statement.Parameters.Select(x => new SqlParameter(x.Key, x.Value ?? DBNull.Value)).ToList().ForEach(y => command.Parameters.Add(y));
+            return command;
         }
 
         private T Execute<T>(Func<T> command)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using Gribble;
 using Gribble.Mapping;
@@ -82,6 +83,21 @@ namespace Tests.ExplicitMapping
             results.First().Values.Count.ShouldEqual(2);
             ((bool)results.First().Values["hide"]).ShouldEqual(false);
             ((DateTime)results.First().Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+        }
+
+        [Test]
+        public void should_get_table(
+            [Values(FirstBatch, "")] string firstBatch)
+        {
+            var table = SqlStatement.ExecuteTable("fark", $"{firstBatch}SELECT * FROM {Database.FirstTable.Name}");
+            table.TableName.ShouldEqual("fark");
+            var rows = table.Rows.Cast<DataRow>().ToList();
+            rows.Count.ShouldEqual(10);
+            rows.All(x => ((string)x["Name"]).Length > 3).ShouldEqual(true);
+            rows.All(x => (int)x["Id"] > -1).ShouldEqual(true);
+            rows.First().ItemArray.Length.ShouldEqual(4);
+            ((bool)rows.First()["hide"]).ShouldEqual(false);
+            ((DateTime)rows.First()["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
         }
 
         [Test]

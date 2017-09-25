@@ -34,10 +34,10 @@ namespace Gribble.TransactSql
             Parameters = parameters ?? new Dictionary<string, object>();
         }
 
-        public string Text;
-        public StatementType Type;
-        public ResultType Result;
-        public IDictionary<string, object> Parameters;
+        public string Text { get; set; }
+        public StatementType Type { get; set; }
+        public ResultType Result { get; set; }
+        public IDictionary<string, object> Parameters { get; set; }
 
         public Statement MergeParameters(IDictionary<string, object> parameters)
         {

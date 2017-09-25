@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using Gribble.Extensions;
@@ -18,6 +19,8 @@ namespace Gribble
             IDictionary<string, object> parameters = null) where TEntity : class;
         IEnumerable<TEntity> ExecuteMany<TEntity>(string commandText, 
             IDictionary<string, object> parameters = null) where TEntity : class;
+        DataTable ExecuteTable(string tableName, string commandText,
+            IDictionary<string, object> parameters = null);
     }
 
     public class SqlStatement : ISqlStatement
@@ -114,13 +117,23 @@ namespace Gribble
                         Statement.ResultType.Multiple), _profiler)));
         }
 
+        public DataTable ExecuteTable(string tableName, string commandText,
+            IDictionary<string, object> parameters = null)
+        {
+            return ExecuteBatches(commandText, parameters, x =>
+                Command.Create(StatementWriter.CreateStatement(x, parameters,
+                    Statement.ResultType.Multiple), _profiler)
+                        .ExecuteTable(tableName, _connectionManager));
+        }
+
         private TResult Load<TEntity, TResult>(Command command) where TEntity : class 
         {
             return (TResult)new Loader<TEntity>(command, _map.GetEntityMapping<TEntity>())
                 .Execute(_connectionManager);
         }
 
-        private T ExecuteBatches<T>(string commandText, IDictionary<string, object> parameters, Func<string, T> command)
+        private T ExecuteBatches<T>(string commandText, IDictionary<string, object> parameters, 
+            Func<string, T> command)
         {
             var commands = SplitBatches(commandText);
             if (commands.Length > 1)
