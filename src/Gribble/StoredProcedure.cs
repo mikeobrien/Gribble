@@ -21,7 +21,9 @@ namespace Gribble
             IDictionary<string, object> parameters = null) where TEntity : class;
         IEnumerable<TEntity> ExecuteMany<TEntity>(string name, 
             IDictionary<string, object> parameters = null) where TEntity : class;
-        DataTable ExecuteTable(string tableName, string name,
+        DataSet ExecuteDataSet(string name,
+            IDictionary<string, object> parameters = null);
+        DataTable ExecuteDataTable(string tableName, string name,
             IDictionary<string, object> parameters = null);
     }
 
@@ -137,12 +139,20 @@ namespace Gribble
                     Statement.ResultType.Multiple), _profiler));
         }
 
-        public DataTable ExecuteTable(string tableName, string name,
+        public DataSet ExecuteDataSet(string name,
+            IDictionary<string, object> parameters = null)
+        {
+            return Command.Create(StatementWriter.CreateStoredProcedure(name,
+                    parameters, Statement.ResultType.Multiple), _profiler)
+                .ExecuteDataSet(_connectionManager);
+        }
+
+        public DataTable ExecuteDataTable(string tableName, string name,
             IDictionary<string, object> parameters = null)
         {
             return Command.Create(StatementWriter.CreateStoredProcedure(name, 
                     parameters, Statement.ResultType.Multiple), _profiler)
-                .ExecuteTable(tableName, _connectionManager);
+                .ExecuteDataTable(tableName, _connectionManager);
         }
 
         private TResult Load<TEntity, TResult>(Command command) where TEntity : class 
@@ -193,5 +203,16 @@ namespace Gribble
             return storedProcedure.ExecuteMany<TEntity>(name, parameters.ToDictionary());
         }
 
+        public static DataSet ExecuteDataSet(this IStoredProcedure storedProcedure,
+            string name, object parameters)
+        {
+            return storedProcedure.ExecuteDataSet(name, parameters.ToDictionary());
+        }
+
+        public static DataTable ExecuteDataTable(this IStoredProcedure storedProcedure,
+            string tableName, string name, object parameters)
+        {
+            return storedProcedure.ExecuteDataTable(tableName, name, parameters.ToDictionary());
+        }
     }
 }

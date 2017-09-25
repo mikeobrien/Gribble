@@ -86,11 +86,28 @@ namespace Tests.ExplicitMapping
         }
 
         [Test]
-        public void should_get_table(
+        public void should_get_data_table(
             [Values(FirstBatch, "")] string firstBatch)
         {
-            var table = SqlStatement.ExecuteTable("fark", $"{firstBatch}SELECT * FROM {Database.FirstTable.Name}");
+            var table = SqlStatement.ExecuteDataTable("fark", $"{firstBatch}SELECT * FROM {Database.FirstTable.Name}");
             table.TableName.ShouldEqual("fark");
+            var rows = table.Rows.Cast<DataRow>().ToList();
+            rows.Count.ShouldEqual(10);
+            rows.All(x => ((string)x["Name"]).Length > 3).ShouldEqual(true);
+            rows.All(x => (int)x["Id"] > -1).ShouldEqual(true);
+            rows.First().ItemArray.Length.ShouldEqual(4);
+            ((bool)rows.First()["hide"]).ShouldEqual(false);
+            ((DateTime)rows.First()["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+        }
+
+        [Test]
+        public void should_get_data_set(
+            [Values(FirstBatch, "")] string firstBatch)
+        {
+            var tables = SqlStatement.ExecuteDataSet($"{firstBatch}SELECT * FROM {Database.FirstTable.Name}");
+            tables.Tables.Count.ShouldEqual(1);
+            var table = tables.Tables.Cast<DataTable>().First();
+            table.TableName.ShouldEqual("Table");
             var rows = table.Rows.Cast<DataRow>().ToList();
             rows.Count.ShouldEqual(10);
             rows.All(x => ((string)x["Name"]).Length > 3).ShouldEqual(true);

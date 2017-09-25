@@ -102,8 +102,20 @@ namespace Gribble
                 return values;
             });
         }
-
-        public DataTable ExecuteTable(string tableName, IConnectionManager connectionManager)
+        
+        public DataSet ExecuteDataSet(IConnectionManager connectionManager)
+        {
+            return Execute(() =>
+            {
+                using (var command = CreateCommand(connectionManager))
+                {
+                    var dataSet = new DataSet();
+                    new SqlDataAdapter(command).Fill(dataSet);
+                    return dataSet;
+                }
+            });
+        }
+        public DataTable ExecuteDataTable(string tableName, IConnectionManager connectionManager)
         {
             return Execute(() =>
             {

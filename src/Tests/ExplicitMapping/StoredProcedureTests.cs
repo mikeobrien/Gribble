@@ -85,10 +85,26 @@ namespace Tests.ExplicitMapping
         }
 
         [Test]
-        public void should_get_table()
+        public void should_get_data_table()
         {
-            var table = StoredProcedure.ExecuteTable("fark", "GetAll");
+            var table = StoredProcedure.ExecuteDataTable("fark", "GetAll");
             table.TableName.ShouldEqual("fark");
+            var rows = table.Rows.Cast<DataRow>().ToList();
+            rows.Count.ShouldEqual(10);
+            rows.All(x => ((string)x["Name"]).Length > 3).ShouldEqual(true);
+            rows.All(x => (int)x["Id"] > -1).ShouldEqual(true);
+            rows.First().ItemArray.Length.ShouldEqual(4);
+            ((bool)rows.First()["hide"]).ShouldEqual(false);
+            ((DateTime)rows.First()["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+        }
+
+        [Test]
+        public void should_get_data_set()
+        {
+            var tables = StoredProcedure.ExecuteDataSet("GetAll");
+            tables.Tables.Count.ShouldEqual(1);
+            var table = tables.Tables.Cast<DataTable>().First();
+            table.TableName.ShouldEqual("Table");
             var rows = table.Rows.Cast<DataRow>().ToList();
             rows.Count.ShouldEqual(10);
             rows.All(x => ((string)x["Name"]).Length > 3).ShouldEqual(true);

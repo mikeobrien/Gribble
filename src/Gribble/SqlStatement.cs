@@ -19,7 +19,9 @@ namespace Gribble
             IDictionary<string, object> parameters = null) where TEntity : class;
         IEnumerable<TEntity> ExecuteMany<TEntity>(string commandText, 
             IDictionary<string, object> parameters = null) where TEntity : class;
-        DataTable ExecuteTable(string tableName, string commandText,
+        DataSet ExecuteDataSet(string commandText,
+            IDictionary<string, object> parameters = null);
+        DataTable ExecuteDataTable(string tableName, string commandText,
             IDictionary<string, object> parameters = null);
     }
 
@@ -117,13 +119,22 @@ namespace Gribble
                         Statement.ResultType.Multiple), _profiler)));
         }
 
-        public DataTable ExecuteTable(string tableName, string commandText,
+        public DataSet ExecuteDataSet(string commandText,
+            IDictionary<string, object> parameters = null)
+        {
+            return ExecuteBatches(commandText, parameters, x =>
+                Command.Create(StatementWriter.CreateStatement(x, parameters,
+                        Statement.ResultType.Multiple), _profiler)
+                    .ExecuteDataSet(_connectionManager));
+        }
+
+        public DataTable ExecuteDataTable(string tableName, string commandText,
             IDictionary<string, object> parameters = null)
         {
             return ExecuteBatches(commandText, parameters, x =>
                 Command.Create(StatementWriter.CreateStatement(x, parameters,
                     Statement.ResultType.Multiple), _profiler)
-                        .ExecuteTable(tableName, _connectionManager));
+                        .ExecuteDataTable(tableName, _connectionManager));
         }
 
         private TResult Load<TEntity, TResult>(Command command) where TEntity : class 
@@ -185,6 +196,18 @@ namespace Gribble
             string commandText, object parameters) where TEntity : class
         {
             return sqlStatement.ExecuteMany<TEntity>(commandText, parameters.ToDictionary());
+        }
+
+        public static DataSet ExecuteDataSet(this ISqlStatement sqlStatement,
+            string commandText, object parameters)
+        {
+            return sqlStatement.ExecuteDataSet(commandText, parameters.ToDictionary());
+        }
+
+        public static DataTable ExecuteDataTable(this ISqlStatement sqlStatement,
+            string tableName, string commandText, object parameters)
+        {
+            return sqlStatement.ExecuteDataTable(tableName, commandText, parameters.ToDictionary());
         }
     }
 }
