@@ -9,11 +9,7 @@ namespace Gribble.Extensions
     {
         private static readonly Func<Type, IEnumerable<PropertyInfo>> SimpleTypeProperties = 
             Func.Memoize<Type, IEnumerable<PropertyInfo>>(t => t.GetProperties()
-                .Where(x => x.PropertyType.IsPrimitive(true) ||
-                            x.PropertyType.IsString() ||
-                            x.PropertyType.IsGuid() || 
-                            x.PropertyType.IsDateTime() ||
-                            x.PropertyType.IsTimeSpan()));
+                .Where(x => x.PropertyType.IsSimpleType()));
 
         public static IDictionary<string, object> ToDictionary(this object source)
         {
@@ -24,9 +20,12 @@ namespace Gribble.Extensions
 
         public static bool IsSimpleType(this Type type)
         {
-            Func<Type, bool> isSimpleType = x => x.IsPrimitive || x == typeof(string) || 
-                x == typeof(decimal) || x == typeof(DateTime) || x == typeof(Guid);
-            return isSimpleType(type) || (type.IsNullable() && isSimpleType(Nullable.GetUnderlyingType(type)));
+            bool SimpleType(Type x) => x.IsPrimitive(true) || x == typeof(string) || 
+                x == typeof(decimal) || x == typeof(DateTime) || x == typeof(Guid) || 
+                x == typeof(TimeSpan);
+
+            return SimpleType(type) || (type.IsNullable() && 
+                SimpleType(Nullable.GetUnderlyingType(type)));
         }
 
         public static bool IsSameTypeAs(this Type source, Type compare)
