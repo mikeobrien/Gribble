@@ -48,7 +48,13 @@ namespace Gribble
 
         public T ExecuteScalar<T>(IConnectionManager connectionManager)
         {
-            return (T)ExecuteScalar(connectionManager);
+            return Execute(() =>
+            {
+                using (var command = CreateCommand(connectionManager))
+                {
+                    return command.ExecuteScalar().FromDb<T>();
+                }
+            });
         }
 
         public object ExecuteScalar(IConnectionManager connectionManager)
@@ -89,7 +95,7 @@ namespace Gribble
 
         public IEnumerable<T> ExecuteEnumerable<T>(IConnectionManager connectionManager)
         {
-            return ExecuteEnumerable(connectionManager, x => (T)x[0]);
+            return ExecuteEnumerable(connectionManager, x => x[0].FromDb<T>());
         }
 
         public IEnumerable<T> ExecuteEnumerable<T>(IConnectionManager connectionManager, Func<IDataReader, T> createItem)
