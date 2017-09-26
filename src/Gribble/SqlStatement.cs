@@ -171,43 +171,43 @@ namespace Gribble
         public static int Execute(this ISqlStatement sqlStatement, 
             string commandText, object parameters)
         {
-            return sqlStatement.Execute(commandText, parameters.ToDictionary());
+            return sqlStatement.Execute(commandText, parameters.AsDictionary());
         }
 
         public static T ExecuteScalar<T>(this ISqlStatement sqlStatement,
             string commandText, object parameters)
         {
-            return sqlStatement.ExecuteScalar<T>(commandText, parameters.ToDictionary());
+            return sqlStatement.ExecuteScalar<T>(commandText, parameters.AsDictionary());
         }
 
         public static TEntity ExecuteSingle<TEntity>(this ISqlStatement sqlStatement,
             string commandText, object parameters) where TEntity : class
         {
-            return sqlStatement.ExecuteSingle<TEntity>(commandText, parameters.ToDictionary());
+            return sqlStatement.ExecuteSingle<TEntity>(commandText, parameters.AsDictionary());
         }
 
         public static TEntity ExecuteSingleOrNone<TEntity>(this ISqlStatement sqlStatement,
             string commandText, object parameters) where TEntity : class
         {
-            return sqlStatement.ExecuteSingleOrNone<TEntity>(commandText, parameters.ToDictionary());
+            return sqlStatement.ExecuteSingleOrNone<TEntity>(commandText, parameters.AsDictionary());
         }
 
         public static IEnumerable<TEntity> ExecuteMany<TEntity>(this ISqlStatement sqlStatement,
             string commandText, object parameters) where TEntity : class
         {
-            return sqlStatement.ExecuteMany<TEntity>(commandText, parameters.ToDictionary());
+            return sqlStatement.ExecuteMany<TEntity>(commandText, parameters.AsDictionary());
         }
 
         public static DataSet ExecuteDataSet(this ISqlStatement sqlStatement,
             string commandText, object parameters)
         {
-            return sqlStatement.ExecuteDataSet(commandText, parameters.ToDictionary());
+            return sqlStatement.ExecuteDataSet(commandText, parameters.AsDictionary());
         }
 
         public static DataTable ExecuteDataTable(this ISqlStatement sqlStatement,
             string tableName, string commandText, object parameters)
         {
-            return sqlStatement.ExecuteDataTable(tableName, commandText, parameters.ToDictionary());
+            return sqlStatement.ExecuteDataTable(tableName, commandText, parameters.AsDictionary());
         }
     }
 }

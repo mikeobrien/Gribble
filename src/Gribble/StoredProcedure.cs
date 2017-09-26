@@ -167,52 +167,52 @@ namespace Gribble
         public static int Execute(this IStoredProcedure storedProcedure,
             string name, object parameters)
         {
-            return storedProcedure.Execute(name, parameters.ToDictionary());
+            return storedProcedure.Execute(name, parameters.AsDictionary());
         }
 
         public static TReturn Execute<TReturn>(this IStoredProcedure storedProcedure,
             string name, object parameters)
         {
-            return storedProcedure.Execute<TReturn>(name, parameters.ToDictionary());
+            return storedProcedure.Execute<TReturn>(name, parameters.AsDictionary());
         }
 
         public static T ExecuteScalar<T>(this IStoredProcedure storedProcedure,
             string name, object parameters)
         {
-            return storedProcedure.ExecuteScalar<T>(name, parameters.ToDictionary());
+            return storedProcedure.ExecuteScalar<T>(name, parameters.AsDictionary());
         }
 
         public static TEntity ExecuteSingle<TEntity>(
             this IStoredProcedure storedProcedure, string name,
             object parameters) where TEntity : class
         {
-            return storedProcedure.ExecuteSingle<TEntity>(name, parameters.ToDictionary());
+            return storedProcedure.ExecuteSingle<TEntity>(name, parameters.AsDictionary());
         }
 
         public static TEntity ExecuteSingleOrNone<TEntity>(
             this IStoredProcedure storedProcedure,
             string name, object parameters) where TEntity : class
         {
-            return storedProcedure.ExecuteSingleOrNone<TEntity>(name, parameters.ToDictionary());
+            return storedProcedure.ExecuteSingleOrNone<TEntity>(name, parameters.AsDictionary());
         }
 
         public static IEnumerable<TEntity> ExecuteMany<TEntity>(
             this IStoredProcedure storedProcedure,
             string name, object parameters) where TEntity : class
         {
-            return storedProcedure.ExecuteMany<TEntity>(name, parameters.ToDictionary());
+            return storedProcedure.ExecuteMany<TEntity>(name, parameters.AsDictionary());
         }
 
         public static DataSet ExecuteDataSet(this IStoredProcedure storedProcedure,
             string name, object parameters)
         {
-            return storedProcedure.ExecuteDataSet(name, parameters.ToDictionary());
+            return storedProcedure.ExecuteDataSet(name, parameters.AsDictionary());
         }
 
         public static DataTable ExecuteDataTable(this IStoredProcedure storedProcedure,
             string tableName, string name, object parameters)
         {
-            return storedProcedure.ExecuteDataTable(tableName, name, parameters.ToDictionary());
+            return storedProcedure.ExecuteDataTable(tableName, name, parameters.AsDictionary());
         }
     }
 }

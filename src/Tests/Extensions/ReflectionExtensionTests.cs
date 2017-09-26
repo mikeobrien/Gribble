@@ -52,7 +52,7 @@ namespace Tests
                  NullableTimeSpan = (TimeSpan?)TimeSpan.FromSeconds(15)
              };
 
-             var result = values.ToDictionary();
+             var result = values.AsDictionary();
              result.Count.ShouldEqual(36);
 
              result["String"].ShouldEqual("Neils");
