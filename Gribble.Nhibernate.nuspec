@@ -17,7 +17,7 @@
       <tags>orm dal sql nhibernate</tags>
       <dependencies>
          <dependency id="gribble" version="1.0.0" />
-         <dependency id="NHibernate" version="4.0.3.4000" />
+         <dependency id="NHibernate" version="5.1.0" />
       </dependencies>
    </metadata>
 </package>
