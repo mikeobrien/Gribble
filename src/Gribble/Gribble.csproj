@@ -54,6 +54,7 @@
     <Compile Include="Profilers.cs" />
     <Compile Include="Queryable.cs" />
     <Compile Include="QueryProvider.cs" />
+    <Compile Include="SqlException.cs" />
     <Compile Include="SqlStatement.cs" />
     <Compile Include="StoredProcedure.cs" />
     <Compile Include="TableNamingConvention.cs" />

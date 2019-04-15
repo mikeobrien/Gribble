@@ -44,5 +44,10 @@ namespace Gribble.TransactSql
             parameters.AddRange(Parameters);
             return this;
         }
+
+        public override string ToString()
+        {
+            return base.ToString();
+        }
     }
 }

@@ -11,15 +11,6 @@ namespace Gribble
 {
     public class Command
     {
-        public class SqlException : Exception
-        {
-            public SqlException(Exception exception, Statement statement) : 
-                base($"Error executing sql: {exception.Message}", exception)
-            { Statement = statement; }
-
-            public Statement Statement { get; }
-        }
-
         private readonly IProfiler _profiler;
 
         public Command(Statement statement, IProfiler profiler)
