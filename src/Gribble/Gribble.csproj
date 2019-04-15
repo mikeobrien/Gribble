@@ -50,7 +50,10 @@
     <Compile Include="Extensions\Unique.cs" />
     <Compile Include="ILoadAdapter.cs" />
     <Compile Include="Mapping\AutoClassMap.cs" />
+    <Compile Include="Operations.cs" />
     <Compile Include="Profilers.cs" />
+    <Compile Include="Queryable.cs" />
+    <Compile Include="QueryProvider.cs" />
     <Compile Include="SqlStatement.cs" />
     <Compile Include="StoredProcedure.cs" />
     <Compile Include="TableNamingConvention.cs" />
@@ -83,7 +86,6 @@
     <Compile Include="Model\Sync.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Extensions\Queryable.cs" />
-    <Compile Include="QueryableBase.cs" />
     <Compile Include="Model\Column.cs" />
     <Compile Include="Model\Constant.cs" />
     <Compile Include="Model\Data.cs" />

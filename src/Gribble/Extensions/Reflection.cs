@@ -43,5 +43,10 @@ namespace Gribble.Extensions
         {
             return Nullable.GetUnderlyingType(type);
         }
+
+        public static bool HasDefaultCtor(this Type type)
+        {
+            return type.GetConstructor(Type.EmptyTypes) != null;
+        }
     }
 }

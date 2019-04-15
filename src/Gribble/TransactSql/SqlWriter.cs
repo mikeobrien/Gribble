@@ -30,6 +30,12 @@ namespace Gribble.TransactSql
             return this;
         }
 
+        public SqlWriter Space()
+        {
+            _whitespace = true;
+            return this;
+        }
+
         public void Flush() {}
 
         public SqlWriter Do(Action<SqlWriter> action)
@@ -53,7 +59,13 @@ namespace Gribble.TransactSql
 
         public override string ToString()
         {
-            return _text.ToString().NormalizeWhitespace().Trim();
+            return ToString(true);
+        }
+
+        public string ToString(bool trim)
+        {
+            var text = _text.ToString().NormalizeWhitespace();
+            return trim ? text.Trim() : text;
         }
 
         // ------------------------ Transact Sql --------------------------------
@@ -172,6 +184,8 @@ namespace Gribble.TransactSql
             { return FieldList(seperator, fields.AsEnumerable()); }
         public SqlWriter FieldList(Action<SqlWriter> seperator, IEnumerable<string> fields) 
             { return WriteList(seperator, fields.Select<string, Action<SqlWriter>>(x => y => QuotedName(x))); }
+        public SqlWriter ProjectionList(Action<SqlWriter> seperator, IEnumerable<string> fields) 
+            { return WriteList(seperator, fields.Select<string, Action<SqlWriter>>(x => y => Write(x))); }
 
         public SqlWriter ExpressionList<T>(Action<SqlWriter> seperator, IEnumerable<T> values, Action<T, SqlWriter> expression)
             { return ExpressionList(seperator, values.Select<T, Action<SqlWriter>>(x => y => expression(x, y))); }

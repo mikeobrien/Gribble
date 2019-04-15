@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Gribble.Extensions;
 using Gribble.Mapping;
 
 namespace Gribble
@@ -12,27 +13,33 @@ namespace Gribble
         private static PropertyInfo _keyProperty;
         private static bool _hasDynamicProperty;
         private static PropertyInfo _dynamicProperty;
+        private static bool _defaultCtor;
+        private static ConstructorInfo _ctor;
+        private static ParameterInfo[] _ctorParameters;
 
         private readonly IEntityMapping _map;
         private readonly IDictionary<string, object> _dynamicValues;
+        private TEntity _entity;
 
         public EntityAdapter(IEntityMapping mapping) : 
-            this(Activator.CreateInstance<TEntity>(), mapping) { }
+            this(default(TEntity), mapping) { }
 
         public EntityAdapter(TEntity entity, IEntityMapping mapping)
         {
             if (_properties == null) Initialize(mapping);
-            if (_hasDynamicProperty) _dynamicValues = GetDynamicValues(entity);
-            Entity = entity;
+            _entity = entity == null && _defaultCtor
+                ? Activator.CreateInstance<TEntity>()
+                : entity;
+            if (_hasDynamicProperty) _dynamicValues = GetDynamicValues(_entity);
             _map = mapping;
         }
 
-        public TEntity Entity { get; }
+        public TEntity Entity => _entity;
 
         public object Key
         {
-            get { return _keyProperty.GetValue(Entity, null); }
-            set { _keyProperty.SetValue(Entity, value, null); }
+            get => _keyProperty.GetValue(Entity, null);
+            set => _keyProperty.SetValue(Entity, value, null);
         }
 
         public IDictionary<string, object> GetValues()
@@ -48,9 +55,22 @@ namespace Gribble
 
         public void SetValues(IDictionary<string, object> values)
         {
-            values.Where(x => _map.Column.HasStaticPropertyMapping(x.Key)).
-                   Join(_properties, x => _map.Column.GetStaticPropertyName(x.Key), x => x.Name, (v, p) => new { v.Value, Property = p }).
-                   ToList().ForEach(x => x.Property.SetValue(Entity, ConvertValue(x.Property.PropertyType, x.Value), null));
+            if (_defaultCtor)
+            {
+                values.Where(x => _map.Column.HasStaticPropertyMapping(x.Key))
+                   .Join(_properties, x => _map.Column.GetStaticPropertyName(x.Key), x => x.Name, 
+                        (v, p) => new { v.Value, Property = p }).ToList()
+                   .ForEach(x => x.Property.SetValue(Entity, ConvertValue(x.Property.PropertyType, x.Value), null));
+            }
+            else
+            {
+                var arguments = _ctorParameters
+                    .Select(x => values.FirstOrDefault(y => 
+                        _map.Column.TryGetStaticPropertyName(y.Key) == x.Name || 
+                        y.Key.EqualsIgnoreCase(x.Name)).Value)
+                    .ToArray();
+                _entity = (TEntity)_ctor.Invoke(arguments);
+            }
 
             if (_hasDynamicProperty) values.Where(x => _map.Column.HasDynamicPropertyMapping(x.Key))
                 .Select(x => new { Name = _map.Column.GetDynamicPropertyName(x.Key), x.Value })
@@ -74,13 +94,25 @@ namespace Gribble
 
         private static void Initialize(IEntityMapping map)
         {
-            _hasDynamicProperty = map.DynamicProperty.HasProperty();
             string dynamicPropertyName = null;
-            if (_hasDynamicProperty)
+
+            _defaultCtor = typeof(TEntity).HasDefaultCtor();
+
+            if (!_defaultCtor)
             {
-                dynamicPropertyName = map.DynamicProperty.GetPropertyName();
-                _dynamicProperty = typeof(TEntity).GetProperties().First(x => x.CanRead && x.CanWrite && x.Name == dynamicPropertyName);
+                _ctor = typeof(TEntity).GetConstructors()[0];
+                _ctorParameters = _ctor.GetParameters();
             }
+            else
+            {
+                _hasDynamicProperty = map.DynamicProperty.HasProperty();
+                if (_hasDynamicProperty)
+                {
+                    dynamicPropertyName = map.DynamicProperty.GetPropertyName();
+                    _dynamicProperty = typeof(TEntity).GetProperties().First(x => x.CanRead && x.CanWrite && x.Name == dynamicPropertyName);
+                }
+            }
+
             _properties = typeof(TEntity).GetProperties()
                 .Where(x => x.CanRead && x.CanWrite && 
                             map.StaticProperty.HasColumnMapping(x.Name) && 

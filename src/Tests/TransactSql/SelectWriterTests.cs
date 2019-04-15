@@ -484,7 +484,7 @@ namespace Tests.TransactSql
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
             statement.Parameters.Count.ShouldEqual(1);
             statement.Parameters.First().Value.ShouldEqual(true);
-            statement.Text.ShouldEqual(string.Format("SELECT * FROM [{0}] {1} WHERE ([{1}].[active] = @{3}) AND EXISTS (SELECT TOP (1) [UPPER([name])], [age] FROM [{2}] {4} WHERE ((UPPER([name]) = UPPER([{1}].[name])) AND ([age] = [{1}].[age])))",
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM [{0}] {1} WHERE ([{1}].[active] = @{3}) AND EXISTS (SELECT TOP (1) UPPER([name]), [age] FROM [{2}] {4} WHERE ((UPPER([name]) = UPPER([{1}].[name])) AND ([age] = [{1}].[age])))",
                                                     TableName1,
                                                     select.From.Alias,
                                                     TableName2,
@@ -522,7 +522,7 @@ namespace Tests.TransactSql
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
             statement.Parameters.Count.ShouldEqual(1);
             statement.Parameters.First().Value.ShouldEqual(true);
-            statement.Text.ShouldEqual(string.Format("SELECT * FROM [{0}] {1} WHERE ([{1}].[active] = @{3}) AND NOT EXISTS (SELECT TOP (1) [UPPER([name])], [age] FROM [{2}] {4} WHERE ((UPPER([name]) = UPPER([{1}].[name])) AND ([age] = [{1}].[age])))",
+            statement.Text.ShouldEqual(string.Format("SELECT * FROM [{0}] {1} WHERE ([{1}].[active] = @{3}) AND NOT EXISTS (SELECT TOP (1) UPPER([name]), [age] FROM [{2}] {4} WHERE ((UPPER([name]) = UPPER([{1}].[name])) AND ([age] = [{1}].[age])))",
                                                     TableName1,
                                                     select.From.Alias,
                                                     TableName2,

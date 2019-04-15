@@ -19,7 +19,7 @@ namespace Gribble.TransactSql
             var whereClause = BuildWhereClause(select, mapping, parameters);
             var orderByClause = select.HasOrderBy ? BuildOrderBy(select.OrderBy, mapping, parameters) : null;
 
-            Action<SqlWriter> writeProjection = x => x.Do(projection != null, y => y.FieldList(z => z.Comma.Flush(), projection), y => y.Wildcard.Flush());
+            Action<SqlWriter> writeProjection = x => x.Do(projection != null, y => y.ProjectionList(z => z.Comma.Flush(), projection), y => y.Wildcard.Flush());
 
             if (select.Any) sql.Select.Cast().Trim().OpenBlock.Trim().Case.When.Exists.OpenBlock.Trim();
 
@@ -107,7 +107,8 @@ namespace Gribble.TransactSql
                 }
             }
 
-            if (select.Any) sql.Trim().CloseBlock.Then.Value(1, SqlDbType.Bit).Else.Value(0, SqlDbType.Bit).End.As.Write(DataTypes.Bit.SqlName).Trim().CloseBlock.Flush();
+            if (select.Any) sql.Trim().CloseBlock.Then.Value(1, SqlDbType.Bit).Else.Value(0, SqlDbType.Bit)
+                .End.As.Write(DataTypes.Bit.SqlName).Trim().CloseBlock.Flush();
 
             return new Statement(sql.ToString(), Statement.StatementType.Text, GetResultType(select), parameters);
         }
@@ -123,10 +124,20 @@ namespace Gribble.TransactSql
         public static IEnumerable<string> BuildProjection(Select select, IEntityMapping mapping, IDictionary<string, object> parameters)
         {
             if (!select.HasProjection) return null;
-            return BuildProjections(select.Projection.Select(x => x.Projection), mapping, parameters);
+            return select.Projection.Select(x => BuildSelectProjection(x, mapping, parameters));
         }
 
-        private static IEnumerable<string> BuildProjections(IEnumerable<Projection> projections, IEntityMapping mapping, IDictionary<string, object> parameters)
+        private static string BuildSelectProjection(SelectProjection projection, 
+            IEntityMapping mapping, IDictionary<string, object> parameters)
+        {
+            var text = BuildProjection(projection.Projection, mapping, parameters);
+            if (!projection.Alias.IsNullOrEmpty())
+                text += new SqlWriter().Space().As.QuotedName(projection.Alias).ToString(false);
+            return text;
+        }
+
+        private static IEnumerable<string> BuildProjections(IEnumerable<Projection> projections, 
+            IEntityMapping mapping, IDictionary<string, object> parameters)
         {
             return projections.Select(x => BuildProjection(x, mapping, parameters));
         }

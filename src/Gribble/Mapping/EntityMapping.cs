@@ -52,6 +52,13 @@ namespace Gribble.Mapping
             }
         }
 
+        string IColumnMap.TryGetStaticPropertyName(string columnName)
+        {
+            return _map.ColumPropertyMapping.ContainsKey(columnName)
+                ? _map.ColumPropertyMapping[columnName]
+                : null;
+        }
+
         bool IColumnMap.HasDynamicPropertyMapping(string columnName)
         {
             if (Key.GetColumnName() == columnName || Column.HasStaticPropertyMapping(columnName)) return false;

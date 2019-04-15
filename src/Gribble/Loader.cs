@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
 using System.Linq;
 using Gribble.Extensions;
 using Gribble.Mapping;
@@ -9,7 +8,7 @@ using Gribble.TransactSql;
 
 namespace Gribble
 {
-    public class Loader<TEntity> where TEntity : class 
+    public class Loader<TEntity>
     {
         private readonly Command _command;
         private readonly IEntityMapping _map;

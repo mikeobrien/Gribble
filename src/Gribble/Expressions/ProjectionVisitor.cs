@@ -219,8 +219,9 @@ namespace Gribble.Expressions
                 context.State(projection);
                 VisitMember(node, x => projection.Function.Length.Text = x);
             }
-            else if (node.Expression != null && node.Expression.NodeType == ExpressionType.Parameter && 
-                     node.Member.DeclaringType == typeof(T))
+            else if (node.Expression != null && node.Expression.NodeType == ExpressionType.Parameter)
+                // TODO: Not sure if this is necessary
+                // && node.Member.DeclaringType == typeof(T))
             {
                 if (node.Member.MemberType != MemberTypes.Property)
                     throw new MemberTypeNotSupportedException(node.Member.Name, node.Member.MemberType);

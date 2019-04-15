@@ -83,6 +83,35 @@ namespace Tests.ImplicitMapping
         }
 
         [Test]
+        public void Should_project_results_to_objects()
+        {
+            var results = _identityTable1.Select(x => new
+            {
+                x.Name,
+                Month = x.Values["timestamp"].ToString().Substring(0, 3)
+            }).ToList();
+            results.Count.ShouldBeGreaterThan(2);
+            results.All(x => x.Name.Length > 0).ShouldBeTrue();
+        }
+
+        [Test]
+        public void Should_select_values()
+        {
+            var results = _identityTable1.Select(x => x.Id).ToList();
+            results.Count.ShouldBeGreaterThan(2);
+            results.All(x => x > 0).ShouldBeTrue();
+        }
+
+        [Test]
+        public void Should_select_projections()
+        {
+            var results = _identityTable1.Select(x => 
+                x.Values["timestamp"].ToString().Substring(0, 3)).ToList();
+            results.Count.ShouldBeGreaterThan(2);
+            results.All(x => x.Length > 0).ShouldBeTrue();
+        }
+
+        [Test]
         public void should_select_records_with_nolock()
         {
             var results = Table<IdentityEntity>.Create(_database.Connection, 

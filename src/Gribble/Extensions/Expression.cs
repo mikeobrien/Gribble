@@ -59,23 +59,27 @@ namespace Gribble.Extensions
             return (method.Method.Name == name);
         }
 
-        public static bool MatchesMethodSignature<T>(this MethodCallExpression method, Expression<Action<T>> expression)
+        public static bool MatchesMethodSignature<T>(this MethodCallExpression method, 
+            Expression<Action<T>> expression, bool compareArgumentTypes = true)
         {
-            return MatchesMethodSignatureExpression(method, expression);
+            return MatchesMethodSignatureExpression(method, expression, compareArgumentTypes);
         }
 
-        public static bool MatchesMethodSignature<T>(this MethodCallExpression method, Expression<Func<T, object>> expression)
+        public static bool MatchesMethodSignature<T>(this MethodCallExpression method, 
+            Expression<Func<T, object>> expression, bool compareArgumentTypes = true)
         {
-            return MatchesMethodSignatureExpression(method, expression);
+            return MatchesMethodSignatureExpression(method, expression, compareArgumentTypes);
         }
 
-        private static bool MatchesMethodSignatureExpression(this MethodCallExpression method, LambdaExpression expression)
+        private static bool MatchesMethodSignatureExpression(this MethodCallExpression method, 
+            LambdaExpression expression, bool compareArgumentTypes = true)
         {
             var compareMethod = expression.Body.StripConversion() as MethodCallExpression;
             if (compareMethod == null) throw new Exception("Expression must be a method call.");
             return (method.Method.Name == compareMethod.Method.Name &&
                     method.Arguments.Count == compareMethod.Arguments.Count &&
-                    !method.Arguments.Where((t, index) => !t.Type.TypesAreAssignable(compareMethod.Arguments[index].Type)).Any() &&
+                    (!compareArgumentTypes || !method.Arguments.Where((t, index) => 
+                         !t.Type.TypesAreAssignable(compareMethod.Arguments[index].Type)).Any()) &&
                     method.Method.ReturnType == compareMethod.Method.ReturnType);
         }
 

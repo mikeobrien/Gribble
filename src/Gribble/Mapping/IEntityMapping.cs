@@ -36,6 +36,7 @@
         string GetPropertyName(string columnName);
         bool HasStaticPropertyMapping(string columnName);
         string GetStaticPropertyName(string columnName);
+        string TryGetStaticPropertyName(string columnName);
         bool HasDynamicPropertyMapping(string columnName);
         string GetDynamicPropertyName(string columnName);
     }
