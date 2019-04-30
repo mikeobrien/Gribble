@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using Gribble;
 using Gribble.Expressions;
 using Gribble.Extensions;
+using Gribble.Mapping;
 using Gribble.Model;
 using Gribble.TransactSql;
 using NUnit.Framework;
 using Should;
+using Tests.Expressions;
 
 namespace Tests.TransactSql
 {
@@ -36,6 +37,14 @@ namespace Tests.TransactSql
         private const string TableName2 = "XLIST_2";
         private const string TableName3 = "XLIST_3";
         private const string TableName4 = "XLIST_4";
+
+        private IEntityMapping _mapping;
+
+        [SetUp]
+        public void Setup()
+        {
+            _mapping = new EntityMapping(new AutoClassMap<QueryVisitorTests.Entity>());
+        }
 
         [Test]
         public void Create_Table__With_Crl_Types_Test()
@@ -177,7 +186,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Union(MockQueryable<Entity>.Create(TableName2).Take(5).Union(MockQueryable<Entity>.Create(TableName3).Skip(4).OrderBy(x => x.Active)));
-            var statement = SchemaWriter.CreateUnionColumnsStatement(QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select);
+            var statement = SchemaWriter.CreateUnionColumnsStatement(QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select);
 
             statement.Parameters.Count().ShouldEqual(0);
             statement.Text.ShouldEqual("SELECT [name], CASE [system_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [system_type_id] END AS [system_type_id], CASE [user_type_id] WHEN 167 THEN 231 WHEN 175 THEN 239 WHEN 35 THEN 99 ELSE [user_type_id] END AS [user_type_id] FROM [sys].[columns] WHERE [object_id] = OBJECT_ID(N'XLIST_1') INTERSECT " +
@@ -190,7 +199,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Union(MockQueryable<Entity>.Create(TableName2).Take(5).Union(MockQueryable<Entity>.Create(TableName3).Skip(4).OrderBy(x => x.Active))).CopyTo(MockQueryable<Entity>.Create(TableName4));
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>) x).Name);
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>) x).Name, _mapping);
             var statement = SchemaWriter.CreateSharedColumnsStatement(select.CopyTo.Query, select.CopyTo.Into);
 
             statement.Parameters.Count().ShouldEqual(0);

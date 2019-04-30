@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Gribble;
 using Gribble.Expressions;
 using Gribble.Extensions;
 using Gribble.Mapping;
@@ -22,7 +21,7 @@ namespace Tests.TransactSql
             public int Flag { get; set; }
             public DateTime? Created { get; set; }
             public Guid ImportId { get; set; }
-            public Dictionary<string, object> Values { get; set; }
+            public IDictionary<string, object> Values { get; set; }
         }
 
         public class EntityMap : ClassMap<Entity>
@@ -43,6 +42,14 @@ namespace Tests.TransactSql
         public const string TableName1 = "XLIST_1";
         public const string TableName2 = "XLIST_2";
 
+        private IEntityMapping _mapping;
+
+        [SetUp]
+        public void Setup()
+        {
+            _mapping = new EntityMapping(new AutoClassMap<Entity>());
+        }
+
         [Test]
         public void should_render_sync_include_sql()
         {
@@ -50,7 +57,7 @@ namespace Tests.TransactSql
             var source = MockQueryable<Entity>.Create(TableName2);
             var importId = Guid.NewGuid();
             target.Where(x => x.ImportId != importId).SyncWith(source.Where(x => x.ImportId == importId), x => x.Created, SyncFields.Include, x => x.Name, x => x.Flag);
-            var query = QueryVisitor<Entity>.CreateModel(target.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var query = QueryVisitor<Entity>.CreateModel(target.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping);
 
             query.Operation.ShouldEqual(Query.OperationType.SyncWith);
             query.SyncWith.ShouldNotBeNull();
@@ -77,7 +84,7 @@ namespace Tests.TransactSql
             var source = MockQueryable<Entity>.Create(TableName2);
             var importId = Guid.NewGuid();
             target.Where(x => x.ImportId != importId).SyncWith(source.Where(x => x.ImportId == importId), x => x.Created, SyncFields.Exclude, x => x.Id, x => x.Created);
-            var query = QueryVisitor<Entity>.CreateModel(target.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var query = QueryVisitor<Entity>.CreateModel(target.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping);
 
             query.Operation.ShouldEqual(Query.OperationType.SyncWith);
             query.SyncWith.ShouldNotBeNull();
@@ -119,7 +126,7 @@ namespace Tests.TransactSql
             var source = MockQueryable<Entity>.Create(TableName2);
             var importId = (object)Guid.NewGuid();
             target.Where(x => x.Values["uid"] != importId).SyncWith(source.Where(x => x.Values["uid"] == importId), x => x.Created, SyncFields.Include, x => x.Name, x => x.Values["yada"]);
-            var query = QueryVisitor<Entity>.CreateModel(target.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var query = QueryVisitor<Entity>.CreateModel(target.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping);
 
             query.Operation.ShouldEqual(Query.OperationType.SyncWith);
             query.SyncWith.ShouldNotBeNull();

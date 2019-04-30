@@ -22,7 +22,7 @@ namespace Tests.ExplicitMapping
         {
             public int Id { get; set; }
             public string Name { get; set; }
-            public Dictionary<string, object> Values { get; set; }
+            public IDictionary<string, object> Values { get; set; }
         }
 
         public class TestClassMap : ClassMap<Entity>
@@ -38,7 +38,7 @@ namespace Tests.ExplicitMapping
         public class NoIdEntity
         {
             public string Name { get; set; }
-            public Dictionary<string, object> Values { get; set; }
+            public IDictionary<string, object> Values { get; set; }
         }
 
         public class TestNoIdClassMap : ClassMap<NoIdEntity>
@@ -80,9 +80,12 @@ namespace Tests.ExplicitMapping
             results.Count.ShouldEqual(10);
             results.All(x => x.Name.Length > 3).ShouldEqual(true);
             results.All(x => x.Id > -1).ShouldEqual(true);
-            results.First().Values.Count.ShouldEqual(2);
-            ((bool)results.First().Values["hide"]).ShouldEqual(false);
-            ((DateTime)results.First().Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+            var result = results.First();
+            result.Values.Count.ShouldEqual(4);
+            result.Values["hide"].ShouldEqual(false);
+            result.Values["Id"].ShouldEqual(1);
+            result.Values["Name"].ShouldEqual("oh hai");
+            ((DateTime)result.Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
         }
 
         [Test]
@@ -124,10 +127,12 @@ namespace Tests.ExplicitMapping
             var results = SqlStatement.ExecuteMany<NoIdEntity>($"{firstBatch}SELECT * FROM {Database.FirstTable.Name}").ToList();
             results.Count.ShouldEqual(10);
             results.All(x => x.Name.Length > 3).ShouldEqual(true);
-            results.First().Values.Count.ShouldEqual(3);
-            ((int)results.First().Values["id"]).ShouldBeGreaterThan(-1);
-            ((bool)results.First().Values["hide"]).ShouldEqual(false);
-            ((DateTime)results.First().Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+            var result = results.First();
+            result.Values.Count.ShouldEqual(4);
+            ((int)result.Values["id"]).ShouldBeGreaterThan(-1);
+            result.Values["hide"].ShouldEqual(false);
+            result.Values["Name"].ShouldEqual("oh hai");
+            ((DateTime)result.Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
         }
 
         [Test]
@@ -138,8 +143,10 @@ namespace Tests.ExplicitMapping
             result.ShouldNotBeNull();
             result.Name.Length.ShouldBeGreaterThan(3);
             result.Id.ShouldEqual(5);
-            result.Values.Count.ShouldEqual(2);
-            ((bool)result.Values["hide"]).ShouldEqual(false);
+            result.Values.Count.ShouldEqual(4);
+            result.Values["Id"].ShouldEqual(5);
+            result.Values["Name"].ShouldEqual("oh hai");
+            result.Values["hide"].ShouldEqual(false);
             ((DateTime)result.Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
         }
 

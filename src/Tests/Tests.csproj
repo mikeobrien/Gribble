@@ -78,6 +78,8 @@
   <ItemGroup>
     <Compile Include="AutoClassMapTests.cs" />
     <Compile Include="ClassMapTests.cs" />
+    <Compile Include="EntityDictionaryTests.cs" />
+    <Compile Include="EntityFactoryTests.cs" />
     <Compile Include="Extensions\GuidCombTests.cs" />
     <Compile Include="ImplicitMapping\SqlStatementTests.cs" />
     <Compile Include="ImplicitMapping\StoredProcedureTests.cs" />
@@ -87,7 +89,7 @@
     <Compile Include="ExplicitMapping\StoredProcedureTests.cs" />
     <Compile Include="TableSchemaTests.cs" />
     <Compile Include="EntityAdapterTests.cs" />
-    <Compile Include="EntityMapTests.cs" />
+    <Compile Include="EntityMappingTests.cs" />
     <Compile Include="NHibernate\ConnectionManagerTests.cs" />
     <Compile Include="NHibernate\Extensions.cs" />
     <Compile Include="QueryableTests.cs" />

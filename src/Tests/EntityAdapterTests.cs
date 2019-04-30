@@ -8,7 +8,7 @@ using Should;
 namespace Tests
 {
     [TestFixture]
-    public class EntityAdapterMappedTests
+    public class EntityAdapterTests
     {
         public class Entity
         {
@@ -33,13 +33,13 @@ namespace Tests
             public SomeState State { get; set; }
             public SomeState? NullableState { get; set; }
             public SomeState? NullableState2 { get; set; }
-            public Dictionary<string, object> Values { get; set; }
+            public IDictionary<string, object> Values { get; set; }
         }
 
         public class NoIdEntity
         {
             public string Name { get; set; }
-            public Dictionary<string, object> Values { get; set; }
+            public IDictionary<string, object> Values { get; set; }
         }
 
         private static readonly Guid Key = Guid.NewGuid();
@@ -155,8 +155,8 @@ namespace Tests
         public void should_get_entity_fields()
         {
             var entity = _createEntity();
-            var adapter = new EntityAdapter<Entity>(entity, Map);
-            var values = adapter.GetValues();
+            var reader = new EntityAdapter<Entity>(entity, Map);
+            var values = reader.GetValues();
             values.Count.ShouldEqual(EntityValues.Count);
 
             values["col_active"].ShouldEqual(entity.Active);
@@ -182,8 +182,8 @@ namespace Tests
         public void should_get_entity_with_no_id_fields()
         {
             var entity = _createNoIdEntity();
-            var adapter = new EntityAdapter<NoIdEntity>(entity, NoIdMap);
-            var values = adapter.GetValues();
+            var reader = new EntityAdapter<NoIdEntity>(entity, NoIdMap);
+            var values = reader.GetValues();
             values.Count.ShouldEqual(NoIdEntityValues.Count);
 
             values["col_name"].ShouldEqual(entity.Name);
@@ -193,52 +193,11 @@ namespace Tests
         }
 
         [Test]
-        public void should_set_entity_fields()
-        {
-            var entity = new Entity();
-            var adapter = new EntityAdapter<Entity>(entity, Map);
-            adapter.SetValues(EntityValues);
-
-            entity.Active.ShouldEqual(EntityValues["col_active"]);
-            entity.Age.ShouldEqual(EntityValues["col_age"]);
-            entity.Birthdate.ShouldEqual(EntityValues["col_birthdate"]);
-            entity.Created.ShouldEqual(EntityValues["col_created"]);
-            entity.Distance.ShouldEqual(EntityValues["col_distance"]);
-            entity.Flag.ShouldEqual(EntityValues["col_flag"]);
-            entity.Id.ShouldEqual(EntityValues["col_id"]);
-            entity.Length.ShouldEqual(EntityValues["col_length"]);
-            entity.Miles.ShouldEqual(EntityValues["col_miles"]);
-            entity.Name.ShouldEqual(EntityValues["col_name"]);
-            entity.Price.ShouldEqual(EntityValues["col_price"]);
-            ((int)entity.State).ShouldEqual(EntityValues["col_state"]);
-            ((int?)entity.NullableState).ShouldEqual(EntityValues["col_state_null"]);
-            ((int?)entity.NullableState2).ShouldEqual(EntityValues["col_state_null2"]);
-            entity.Values.Count.ShouldEqual(3);
-            entity.Values["CompanyName"].ShouldEqual(EntityValues["col_companyname"]);
-            entity.Values["OptOut"].ShouldEqual(EntityValues["col_optout"]);
-            entity.Values["OptOutDate"].ShouldEqual(EntityValues["col_optoutdate"]);
-        }
-
-        [Test]
-        public void should_set_entity_with_no_id_fields()
-        {
-            var entity = new NoIdEntity();
-            var adapter = new EntityAdapter<NoIdEntity>(entity, NoIdMap);
-            adapter.SetValues(NoIdEntityValues);
-
-            entity.Name.ShouldEqual(EntityValues["col_name"]);
-            entity.Values.Count.ShouldEqual(3);
-            entity.Values["CompanyName"].ShouldEqual(EntityValues["col_companyname"]);
-            entity.Values["OptOut"].ShouldEqual(EntityValues["col_optout"]);
-            entity.Values["OptOutDate"].ShouldEqual(EntityValues["col_optoutdate"]);
-        }
-
-        [Test]
         public void should_get_entity_key()
         {
             var entity = _createEntity();
-            var adapter = new EntityAdapter<Entity>(entity, Map);
-            var key = adapter.Key;
+            var reader = new EntityAdapter<Entity>(entity, Map);
+            var key = reader.Key;
             key.ShouldEqual(Key);
         }
 
@@ -246,8 +205,8 @@ namespace Tests
         public void should_set_entity_key()
         {
             var entity = new Entity();
-            var adapter = new EntityAdapter<Entity>(entity, Map);
-            adapter.Key = Key;
+            var reader = new EntityAdapter<Entity>(entity, Map);
+            reader.Key = Key;
             entity.Id.ShouldEqual(Key);
         }
     }

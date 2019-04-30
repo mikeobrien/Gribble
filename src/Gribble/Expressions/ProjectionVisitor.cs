@@ -205,7 +205,8 @@ namespace Gribble.Expressions
                 VisitMethodCall(node, argumentsState, true);
             }
             else if (node.Object != null && node.Object.NodeType == ExpressionType.MemberAccess && 
-                     node.Object.Type.GetInterfaces().Any(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IDictionary<,>)) && 
+                     ((node.Object.Type.IsGenericType && node.Object.Type.GetGenericTypeDefinition() == typeof(IDictionary<,>)) ||
+                      (node.Object.Type.GetInterfaces().Any(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IDictionary<,>)))) && 
                      node.MatchesMethodName("get_Item"))
                 context.State(Projection.Create.Field(((MemberExpression)node.Object).Member.Name, node.Arguments[0].EvaluateExpression<string>(), _tableAlias));
             else context.State(Projection.Create.Constant(node.EvaluateExpression()));

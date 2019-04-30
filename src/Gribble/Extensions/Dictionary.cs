@@ -28,5 +28,20 @@ namespace Gribble.Extensions
             source.Add(key, value);
             return value;
         }
+
+        public static bool ContainsKey<TKey, TValue>(this IDictionary<TKey, TValue> source, 
+            TKey key, Func<TKey, TKey> mapKey)
+        {
+            return source.Keys.Any(x => mapKey(x)?.Equals(key) ?? false);
+        }
+
+        public static TValue Map<TKey, TValue>(this IDictionary<TKey, TValue> source, 
+            TKey key, Func<TKey, TKey> mapKey)
+        {
+            var realKey = source.Keys.FirstOrDefault(x => mapKey(x)?.Equals(key) ?? false);
+            if (realKey == null)
+                throw new NullReferenceException($"Key '{key}' mapping not found.");
+            return source[realKey];
+        }
     }
 }

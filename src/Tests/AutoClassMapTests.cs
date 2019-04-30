@@ -15,7 +15,7 @@ namespace Tests
             public int Id { get; set; }
             public string Name { get; set; }
             public int Age { get; set; }
-            public Dictionary<string, object> Values { get; set; }
+            public IDictionary<string, object> Values { get; set; }
         }
 
         public class GuidEntity
@@ -23,7 +23,7 @@ namespace Tests
             public Guid Id { get; set; }
             public string Name { get; set; }
             public int Age { get; set; }
-            public Dictionary<string, object> Values { get; set; }
+            public IDictionary<string, object> Values { get; set; }
         }
 
         [Test]
@@ -39,10 +39,10 @@ namespace Tests
             map.PropertyColumMapping.ElementAt(2).Key.ShouldEqual("Age");
             map.PropertyColumMapping.ElementAt(2).Value.ShouldEqual("Age");
             map.HasDynamicProperty.ShouldEqual(true);
-            map.DynamicProperty.ShouldEqual("Values");
+            map.DynamicProperty.Name.ShouldEqual("Values");
             map.KeyType.ShouldEqual(PrimaryKeyType.Integer);
             map.KeyGeneration.ShouldEqual(PrimaryKeyGeneration.Server);
-            map.KeyProperty.ShouldEqual("Id");
+            map.KeyProperty.Name.ShouldEqual("Id");
             map.KeyColumn.ShouldEqual("Id");
         }
 
@@ -59,10 +59,10 @@ namespace Tests
             map.PropertyColumMapping.ElementAt(2).Key.ShouldEqual("Age");
             map.PropertyColumMapping.ElementAt(2).Value.ShouldEqual("Age");
             map.HasDynamicProperty.ShouldEqual(true);
-            map.DynamicProperty.ShouldEqual("Values");
+            map.DynamicProperty.Name.ShouldEqual("Values");
             map.KeyType.ShouldEqual(PrimaryKeyType.Guid);
             map.KeyGeneration.ShouldEqual(PrimaryKeyGeneration.Client);
-            map.KeyProperty.ShouldEqual("Id");
+            map.KeyProperty.Name.ShouldEqual("Id");
             map.KeyColumn.ShouldEqual("Id");
         }
     }

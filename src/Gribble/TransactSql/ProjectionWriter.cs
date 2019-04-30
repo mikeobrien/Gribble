@@ -53,6 +53,7 @@ namespace Gribble.TransactSql
                 case Projection.ProjectionType.Constant: VisitConstant(projection.Constant); break;
                 case Projection.ProjectionType.Field: VisitField(projection.Field); break;
                 case Projection.ProjectionType.Function: VisitFunction(projection.Function); break;
+                case Projection.ProjectionType.Wildcard: _sql.Wildcard.Flush(); break;
             }
         }
 

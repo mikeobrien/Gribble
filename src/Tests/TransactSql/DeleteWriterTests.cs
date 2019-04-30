@@ -25,7 +25,7 @@ namespace Tests.TransactSql
             public bool Active { get; set; }
             public decimal Length { get; set; }
             public long Miles { get; set; }
-            public Dictionary<string, object> Values {get; set;}
+            public IDictionary<string, object> Values {get; set;}
         }
 
         public class EntityMap : ClassMap<Entity>

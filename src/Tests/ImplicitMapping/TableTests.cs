@@ -17,7 +17,7 @@ namespace Tests.ImplicitMapping
             public IdentityEntity() { Values = new Dictionary<string, object>(); }
             public int Id { get; set; }
             public string Name { get; set; }
-            public Dictionary<string, object> Values { get; set; }
+            public IDictionary<string, object> Values { get; set; }
         }
         
         private TestDatabase _database = new TestDatabase();
@@ -83,7 +83,7 @@ namespace Tests.ImplicitMapping
         }
 
         [Test]
-        public void Should_project_results_to_objects()
+        public void Should_project_results_to_anon_objects()
         {
             var results = _identityTable1.Select(x => new
             {
@@ -92,6 +92,63 @@ namespace Tests.ImplicitMapping
             }).ToList();
             results.Count.ShouldBeGreaterThan(2);
             results.All(x => x.Name.Length > 0).ShouldBeTrue();
+            results.All(x => x.Month.Length > 0).ShouldBeTrue();
+        }
+
+        [Test]
+        public void Should_project_dynamic_values_to_anon_objects()
+        {
+            var results = _identityTable1.Select(x => new
+            {
+                x.Name,
+                x.Values
+            }).ToList();
+            results.Count.ShouldBeGreaterThan(2);
+            results.All(x => x.Name.Length > 0).ShouldBeTrue();
+            results.All(x => x.Values.Count > 0).ShouldBeTrue();
+        }
+
+        [Test]
+        public void Should_project_renamed_properties_to_anon_objects()
+        {
+            var results = _identityTable1.Select(x => new
+            {
+                FirstName = x.Name
+            }).ToList();
+            results.Count.ShouldBeGreaterThan(2);
+            results.All(x => x.FirstName.Length > 0).ShouldBeTrue();
+        }
+
+        [Test, Ignore("Not going to support this for now.")]
+        public void Should_project_dynamic_values_to_anon_objects_property()
+        {
+            var results = _identityTable1.Select(x => new
+            {
+                x.Name,
+                SomeValues = x.Values
+            }).ToList();
+            results.Count.ShouldBeGreaterThan(2);
+            results.All(x => x.Name.Length > 0).ShouldBeTrue();
+            results.All(x => x.SomeValues.Count > 0).ShouldBeTrue();
+        }
+
+        public class CustomClassWithDynamicValues
+        {
+            public string Name { get; set; }
+            public IDictionary<string, object> SomeValues { get; set; }
+        }
+
+        [Test, Ignore("Not going to support this for now.")]
+        public void Should_project_dynamic_values_to_custom_objects_property()
+        {
+            var results = _identityTable1.Select(x => new CustomClassWithDynamicValues
+            {
+                Name = x.Name,
+                SomeValues = x.Values
+            }).ToList();
+            results.Count.ShouldBeGreaterThan(2);
+            results.All(x => x.Name.Length > 0).ShouldBeTrue();
+            results.All(x => x.SomeValues.Count > 0).ShouldBeTrue();
         }
 
         [Test]

@@ -8,7 +8,7 @@
             Name = name;
         }
 
-        public string ColumnName { get; private set; }
-        public string Name { get; private set; }
+        public string ColumnName { get; }
+        public string Name { get; }
     }
 }

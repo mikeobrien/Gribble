@@ -41,12 +41,6 @@ namespace Gribble
         private readonly Queryable<TEntity> _queryable;
         private readonly Operations _operations;
 
-        public Table(IConnectionManager connectionManager, 
-            ITableNamingConvention namingConvention, 
-            IEntityMapping mapping, IProfiler profiler) : 
-            this(connectionManager, namingConvention.GetName<TEntity>(),
-                mapping, profiler) { }
-
         public Table(IConnectionManager connectionManager, string table, 
             IEntityMapping mapping, IProfiler profiler, bool noLock = false)
         {
@@ -56,7 +50,7 @@ namespace Gribble
             _profiler = profiler;
             _noLock = noLock;
             _operations = new Operations(connectionManager, mapping, profiler, noLock);
-            _queryable = new Queryable<TEntity>(_table, _operations);
+            _queryable = new Queryable<TEntity>(_table, mapping, _operations);
         }
 
         public static ITable<TEntity> Create(
@@ -193,7 +187,7 @@ namespace Gribble
         public int DeleteMany(IQueryable<TEntity> source)
         {
             var query = QueryVisitor<TEntity>.CreateModel(source.Expression, 
-                x => ((INamedQueryable) x).Name);
+                x => ((INamedQueryable) x).Name, _mapping);
             return Command.Create(DeleteWriter<TEntity>.CreateStatement(
                 new Delete(_table, query.Select, true), _mapping), _profiler).
                     ExecuteNonQuery(_connectionManager);
@@ -208,7 +202,7 @@ namespace Gribble
 
         private Operator CreateKeyFilter<T>(T id)
         {
-            var field = _mapping.Key.GetPropertyName();
+            var field = _mapping.Key.GetProperty().Name;
             return Operator.Create.FieldEqualsConstant(field, id);
         }
 
@@ -216,7 +210,7 @@ namespace Gribble
             EntityAdapter<TEntity> adapter = null)
         {
             var id = (adapter ?? new EntityAdapter<TEntity>(entity, _mapping)).Key;
-            var field = _mapping.Key.GetPropertyName();
+            var field = _mapping.Key.GetProperty().Name;
             return Operator.Create.FieldEqualsConstant(field, id);
         }
     }

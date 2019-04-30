@@ -34,7 +34,7 @@ namespace Tests
             public int Id { get; set; }
             public string Name { get; set; }
             public int Age { get; set; }
-            public Dictionary<string, object> Values { get; set; }
+            public IDictionary<string, object> Values { get; set; }
         }
 
         public class EntityMap : ClassMap<Entity>
@@ -63,7 +63,8 @@ namespace Tests
 
         private static object GetResult(MockQueryable<Entity> query)
         {
-            var statement = SelectWriter<Entity>.CreateStatement(QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select, Map);
+            var statement = SelectWriter<Entity>.CreateStatement(QueryVisitor<Entity>.CreateModel(
+                query.Expression, x => ((MockQueryable<Entity>)x).Name, Map).Select, Map);
             var command = Command.Create(statement, Profiler);
             var loader = new Loader<Entity>(command, Map);
             return loader.Execute(new ConnectionManager(Database.Connection, TimeSpan.FromMinutes(5)));

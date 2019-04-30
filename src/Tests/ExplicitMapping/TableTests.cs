@@ -18,7 +18,7 @@ namespace Tests.ExplicitMapping
             public IdentityEntity() { Values = new Dictionary<string, object>(); }
             public int Id { get; set; }
             public string Name { get; set; }
-            public Dictionary<string, object> Values { get; set; }
+            public IDictionary<string, object> Values { get; set; }
         }
 
         public class GuidEntity
@@ -26,7 +26,7 @@ namespace Tests.ExplicitMapping
             public GuidEntity() { Values = new Dictionary<string, object>(); }
             public Guid Id { get; set; }
             public string Name { get; set; }
-            public Dictionary<string, object> Values { get; set; }
+            public IDictionary<string, object> Values { get; set; }
         }
 
         public class IdentityEntityMap : ClassMap<IdentityEntity>

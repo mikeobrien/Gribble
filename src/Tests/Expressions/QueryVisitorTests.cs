@@ -4,6 +4,7 @@ using System.Linq;
 using Gribble;
 using Gribble.Expressions;
 using Gribble.Extensions;
+using Gribble.Mapping;
 using Gribble.Model;
 using NUnit.Framework;
 using Should;
@@ -34,11 +35,19 @@ namespace Tests.Expressions
         private const string TableName3 = "XLIST_3";
         private const string TableName4 = "XLIST_4";
 
+        private IEntityMapping _mapping;
+
+        [SetUp]
+        public void Setup()
+        {
+            _mapping = new EntityMapping(new AutoClassMap<Entity>());
+        }
+
         [Test]
         public void Tablename_Test()
         {
             var query = MockQueryable<Entity>.Create(TableName1);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             
@@ -50,7 +59,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Take(5);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.HasTop.ShouldEqual(true);
@@ -63,7 +72,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.TakePercent(5);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.HasTop.ShouldEqual(true);
@@ -76,7 +85,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Skip(15);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.HasStart.ShouldEqual(true);
@@ -88,7 +97,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Single();
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.Single.ShouldEqual(true);
@@ -99,7 +108,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.First();
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.First.ShouldEqual(true);
@@ -110,7 +119,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.FirstOrDefault();
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.FirstOrDefault.ShouldEqual(true);
@@ -121,7 +130,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Count();
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.Count.ShouldEqual(true);
@@ -132,7 +141,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Randomize();
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.Randomize.ShouldEqual(true);
@@ -146,7 +155,7 @@ namespace Tests.Expressions
             query.Union(MockQueryable<Entity>.Create(TableName2)).
                   Union(MockQueryable<Entity>.Create(TableName3)).
                   Union(MockQueryable<Entity>.Create(TableName4));
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.HasConditions.ShouldEqual(false);
@@ -176,7 +185,7 @@ namespace Tests.Expressions
             query.Union(MockQueryable<Entity>.Create(TableName2)).
                   Union(MockQueryable<Entity>.Create(TableName3)).
                   Union(MockQueryable<Entity>.Create(TableName4)).Take(5);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
 
@@ -207,7 +216,7 @@ namespace Tests.Expressions
             query.Where(x => x.Age == 33).Union(MockQueryable<Entity>.Create(TableName2).
                                                     Union(MockQueryable<Entity>.Create(TableName3).Where(x => x.Active))).
                   Union(MockQueryable<Entity>.Create(TableName4).Take(5)).Take(6);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.Top.ShouldEqual(6);
@@ -246,7 +255,7 @@ namespace Tests.Expressions
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Union(MockQueryable<Entity>.Create(TableName2).Take(1).Union(MockQueryable<Entity>.Create(TableName3)).Take(3)).Take(5);
 
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.Top.ShouldEqual(5);
@@ -280,7 +289,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Where(x => x.Age == 33 && (bool)x.Values["opt_out"] || x.Name.StartsWith("yada"));
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.Where.ShouldNotBeNull();
@@ -292,7 +301,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.First(x => x.Age == 33 && (bool)x.Values["opt_out"] || x.Name.StartsWith("yada"));
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.First.ShouldEqual(true);
@@ -305,7 +314,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.FirstOrDefault(x => x.Age == 33 && (bool)x.Values["opt_out"] || x.Name.StartsWith("yada"));
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.FirstOrDefault.ShouldEqual(true);
@@ -319,7 +328,7 @@ namespace Tests.Expressions
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Where(x => x.Age == 33).
                   First(x => x.Age != 5);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.First.ShouldEqual(true);
@@ -337,7 +346,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Take(10);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.HasWhere.ShouldEqual(false);
@@ -348,7 +357,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.OrderBy(x => x.Name.Substring(0, 5)).OrderBy(x => x.Age);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.OrderBy.ShouldNotBeNull();
@@ -362,7 +371,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.OrderByDescending(x => x.Name.Substring(0, 5)).OrderByDescending(x => x.Age);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.OrderBy.ShouldNotBeNull();
@@ -376,7 +385,7 @@ namespace Tests.Expressions
         {
             var query1 = MockQueryable<Entity>.Create(TableName1);
             query1.CopyTo(MockQueryable<Entity>.Create(TableName2));
-            var query2 = QueryVisitor<Entity>.CreateModel(query1.Expression, x => ((MockQueryable<Entity>)x).Name);
+            var query2 = QueryVisitor<Entity>.CreateModel(query1.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping);
 
             query2.ShouldNotBeNull();
             query2.CopyTo.Into.ShouldNotBeNull();
@@ -391,7 +400,7 @@ namespace Tests.Expressions
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Distinct(x => x.Name.Substring(0, 5)).Distinct(x => x.Age);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.Distinct.ShouldNotBeNull();
@@ -431,7 +440,7 @@ namespace Tests.Expressions
             query.Where(x => x.Age == 33).Intersect(MockQueryable<Entity>.Create(TableName2).
                                                     Intersect(MockQueryable<Entity>.Create(TableName3).Where(x => x.Active), x => x.Id), x => x.Name, x => x.Length).
                   Intersect(MockQueryable<Entity>.Create(TableName4).Take(5), x => x.Age);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.From.Type.ShouldEqual(Data.DataType.Table);
@@ -518,7 +527,7 @@ namespace Tests.Expressions
             query.Where(x => x.Age == 33).Except(MockQueryable<Entity>.Create(TableName2).
                                                     Except(MockQueryable<Entity>.Create(TableName3).Where(x => x.Active), x => x.Id), x => x.Name, x => x.Length).
                   Except(MockQueryable<Entity>.Create(TableName4).Take(5), x => x.Age);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
 
             select.ShouldNotBeNull();
             select.From.Type.ShouldEqual(Data.DataType.Table);

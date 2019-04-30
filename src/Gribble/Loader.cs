@@ -10,6 +10,8 @@ namespace Gribble
 {
     public class Loader<TEntity>
     {
+        private static readonly EntityFactory<TEntity> _entityFactory = new EntityFactory<TEntity>();
+
         private readonly Command _command;
         private readonly IEntityMapping _map;
 
@@ -52,14 +54,9 @@ namespace Gribble
 
         private static TEntity LoadEntity(IDataRecord record, IEntityMapping map)
         {
-            var adapter = typeof(TEntity).IsSimpleType() ? 
-                (ILoadAdapter<TEntity>)new ValueLoadAdapter<TEntity>() :
-                new EntityAdapter<TEntity>(map);
-            var values = Enumerable.Range(0, record.FieldCount).
-                Select(x => new { ColumnName = record.GetName(x), Value = record[x].FromDb<object>() }).
-                ToDictionary(value => value.ColumnName, value => value.Value);
-            adapter.SetValues(values);
-            return adapter.Entity;
+            return typeof(TEntity).IsSimpleType()
+                ? record[0].FromDb<TEntity>()
+                : _entityFactory.Create(record.ToDictionary(), map);
         }
     }
 }

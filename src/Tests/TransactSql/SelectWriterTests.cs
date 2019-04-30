@@ -28,7 +28,7 @@ namespace Tests.TransactSql
             public bool Active { get; set; }
             public decimal Length { get; set; }
             public long Miles { get; set; }
-            public Dictionary<string, object> Values {get; set;}
+            public IDictionary<string, object> Values {get; set;}
         }
 
         public class EntityMap : ClassMap<Entity>
@@ -55,25 +55,32 @@ namespace Tests.TransactSql
         private const string TableName1 = "XLIST_1";
         private const string TableName2 = "XLIST_2";
         private const string TableName3 = "XLIST_3";
+        
+        private IEntityMapping _mapping;
 
+        [SetUp]
+        public void Setup()
+        {
+            _mapping = new EntityMapping(new AutoClassMap<Entity>());
+        }
 
         [Test]
         public void Select_Test()
         {
             var query = MockQueryable<Entity>.Create(TableName1);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
             
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
             statement.Parameters.Count.ShouldEqual(0);
-            statement.Text.ShouldEqual(string.Format("SELECT * FROM [{0}] {1}", TableName1, select.From.Alias));
+            statement.Text.ShouldEqual($"SELECT * FROM [{TableName1}] {@select.From.Alias}");
         }
 
         [Test]
         public void should_render_sql_with_nolock_hint()
         {
             var query = MockQueryable<Entity>.Create(TableName1);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map, noLock: true);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -86,7 +93,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Skip(10);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map, noLock: true);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -100,7 +107,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Union(MockQueryable<Entity>.Create(TableName2).Take(1).Union(MockQueryable<Entity>.Create(TableName3)).Take(3)).Take(5);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             select.Projection = new List<SelectProjection>
                                     {
                                         new SelectProjection {Projection = Projection.Create.Field("Name")},
@@ -122,7 +129,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Take(5);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
             
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -135,7 +142,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.TakePercent(5);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -148,7 +155,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Randomize();
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -161,7 +168,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Distinct(x => x.Age);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -175,7 +182,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Distinct(x => x.Name.ToUpper()).Distinct(x => x.Age);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -189,7 +196,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Distinct(x => x.Age, x => x.Name, Order.Ascending);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -203,7 +210,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Distinct(x => x.Age, x => x.Name, Order.Descending);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -217,7 +224,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Duplicates(x => x.Name);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -231,7 +238,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Duplicates(x => x.Name, x => x.Age > 50, Order.Ascending);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -246,7 +253,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Duplicates(x => x.Name, x => x.Age, Order.Ascending);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -260,7 +267,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Duplicates(x => x.Name, x => x.Age, Order.Descending);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -274,7 +281,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Distinct(x => x.Name.ToUpper()).Duplicates(x => x.Name, x => x.Age, Order.Ascending, x => x.Created, Order.Descending);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -288,7 +295,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Duplicates(x => x.Name, x => x.Age, Order.Descending, x => x.Created, Order.Ascending);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -302,7 +309,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Distinct(x => x.Name.ToUpper()).Distinct(x => x.Age).Skip(10).Take(10);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -316,7 +323,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.First();
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Single);
@@ -329,7 +336,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.FirstOrDefault();
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.SingleOrNone);
@@ -342,7 +349,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Any();
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Scalar);
@@ -355,7 +362,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Any(x => x.Age == 44);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Scalar);
@@ -370,7 +377,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Count();
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Scalar);
@@ -383,7 +390,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Skip(10);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
             
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -397,7 +404,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Skip(10);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             select.Projection = new List<SelectProjection>
                                     {
                                         new SelectProjection {Projection = Projection.Create.Field("Name")},
@@ -416,7 +423,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Skip(10).Take(10);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
             
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -430,7 +437,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Skip(10).Take(10).Where(x => x.Active);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -445,7 +452,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Where(y => y.Name == "hello");
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
             
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -460,7 +467,7 @@ namespace Tests.TransactSql
             var query1 = MockQueryable<Entity>.Create(TableName1);
             var query2 = MockQueryable<Entity>.Create(TableName2);
             query1.Intersect(query2, x => x.Name, x => x.Age);
-            var select = QueryVisitor<Entity>.CreateModel(query1.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query1.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -478,7 +485,7 @@ namespace Tests.TransactSql
             var query1 = MockQueryable<Entity>.Create(TableName1);
             var query2 = MockQueryable<Entity>.Create(TableName2);
             query1.Where(x => x.Active).Intersect(query2, x => x.Name.ToUpper(), x => x.Age);
-            var select = QueryVisitor<Entity>.CreateModel(query1.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query1.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -498,7 +505,7 @@ namespace Tests.TransactSql
             var query1 = MockQueryable<Entity>.Create(TableName1);
             var query2 = MockQueryable<Entity>.Create(TableName2);
             query1.Except(query2, x => x.Name, x => x.Age);
-            var select = QueryVisitor<Entity>.CreateModel(query1.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query1.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -516,7 +523,7 @@ namespace Tests.TransactSql
             var query1 = MockQueryable<Entity>.Create(TableName1);
             var query2 = MockQueryable<Entity>.Create(TableName2);
             query1.Where(x => x.Active).Except(query2, x => x.Name.ToUpper(), x => x.Age);
-            var select = QueryVisitor<Entity>.CreateModel(query1.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query1.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -535,7 +542,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Where(y => y.Name == "hello").Skip(10).Take(10);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
             
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -550,7 +557,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.OrderBy(y => y.Name).OrderByDescending(y => y.Values["CompanyName"]);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
             
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -563,7 +570,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.OrderBy(y => y.Name).OrderByDescending(y => y.Values["CompanyName"]).Skip(10).Take(10);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
             
             statement.Result.ShouldEqual(Statement.ResultType.Multiple);
@@ -577,7 +584,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Union(MockQueryable<Entity>.Create(TableName2).Union(MockQueryable<Entity>.Create(TableName3)));
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Parameters.Count().ShouldEqual(0);
@@ -592,7 +599,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Union(MockQueryable<Entity>.Create(TableName2).Union(MockQueryable<Entity>.Create(TableName3)));
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
             statement.Parameters.Count().ShouldEqual(0);
             statement.Text.ShouldEqual(string.Format("SELECT * FROM [XLIST_3] {0} UNION SELECT * FROM [XLIST_2] {1} UNION SELECT * FROM [XLIST_1] {2}",
@@ -606,7 +613,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Union(MockQueryable<Entity>.Create(TableName2).Take(1).Union(MockQueryable<Entity>.Create(TableName3).Take(2)));
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
             statement.Parameters.Count().ShouldEqual(0);
             statement.Text.ShouldEqual(string.Format("SELECT TOP (2) * FROM [XLIST_3] {0} UNION SELECT TOP (1) * FROM [XLIST_2] {1} UNION SELECT * FROM [XLIST_1] {2}",
@@ -620,7 +627,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Union(MockQueryable<Entity>.Create(TableName2).Take(1).Union(MockQueryable<Entity>.Create(TableName3)).Take(3)).Take(5);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             var statement = SelectWriter<Entity>.CreateStatement(select, Map);
 
             statement.Parameters.Count().ShouldEqual(0);
@@ -637,7 +644,7 @@ namespace Tests.TransactSql
         {
             var query = MockQueryable<Entity>.Create(TableName1);
             query.Union(MockQueryable<Entity>.Create(TableName2).Take(1).Union(MockQueryable<Entity>.Create(TableName3)).Take(3)).Take(5);
-            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name).Select;
+            var select = QueryVisitor<Entity>.CreateModel(query.Expression, x => ((MockQueryable<Entity>)x).Name, _mapping).Select;
             select.Projection = new List<SelectProjection>
                                     {
                                         new SelectProjection {Projection = Projection.Create.Field("Name")},

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using Gribble.Expressions;
+using Gribble.Mapping;
 using Gribble.Model;
 
 namespace Gribble
@@ -9,27 +10,28 @@ namespace Gribble
     public class QueryProvider<TEntity> : IQueryProvider 
     {
         private readonly string _name;
+        private readonly IEntityMapping _mapping;
         private readonly Operations _operations;
 
-        public QueryProvider(string name, Operations operations)
+        public QueryProvider(string name, IEntityMapping mapping, Operations operations)
         {
             _name = name;
+            _mapping = mapping;
             _operations = operations;
         }
 
         public IQueryable CreateQuery(Expression expression) => CreateQuery<TEntity>(expression);
 
-        public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
-        {
-            return new Queryable<TElement>(_name, _operations, expression);
-        }
+        public IQueryable<TElement> CreateQuery<TElement>(Expression expression) =>
+            new Queryable<TElement>(_name, _mapping, _operations, expression);
 
-        public object Execute(Expression expression) { return Execute<object>(expression); }
+        public object Execute(Expression expression) => Execute<object>(expression);
 
         public TResult Execute<TResult>(Expression expression)
         {
-            var query = QueryVisitor<TEntity>.CreateModel(expression, x => ((INamedQueryable) x).Name);
-            switch (query.Operation) {
+            var query = QueryVisitor<TEntity>.CreateModel(expression, x => ((INamedQueryable) x).Name, _mapping);
+            switch (query.Operation)
+            {
                 case Query.OperationType.Query:
                     if (query.Select.From.IsTable)
                     {

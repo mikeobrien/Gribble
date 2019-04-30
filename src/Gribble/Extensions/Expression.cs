@@ -114,5 +114,12 @@ namespace Gribble.Extensions
             while (expression.NodeType == ExpressionType.Convert) expression = ((UnaryExpression)expression).Operand;
             return expression;
         }
+
+        public static PropertyInfo GetProperty<TObject, TProperty>(this Expression<Func<TObject, TProperty>> property)
+        {
+            if (property.Body.NodeType != ExpressionType.MemberAccess)
+                throw new ArgumentException("Mapping must be a property.", nameof(property));
+            return (PropertyInfo)((MemberExpression)property.Body).Member;
+        }
     }
 }

@@ -6,7 +6,8 @@
         {
             Field,
             Constant,
-            Function
+            Function,
+            Wildcard
         }
 
         public ProjectionType Type;

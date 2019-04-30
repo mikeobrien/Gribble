@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Gribble.Extensions;
+using Gribble.Mapping;
 using Gribble.Model;
 using Queryable = Gribble.Extensions.Queryable;
 
@@ -19,22 +20,28 @@ namespace Gribble.Expressions
         }
 
         private readonly Func<IQueryable<T>, string> _getTableName;
+        private readonly IEntityMapping _mapping;
 
-        public QueryVisitor(Func<IQueryable<T>, string> getTableName)
+        public QueryVisitor(Func<IQueryable<T>, string> getTableName, IEntityMapping mapping)
         {
             _getTableName = getTableName;
+            _mapping = mapping;
         }
 
-        public static Query CreateModel(Expression expression, Func<IQueryable<T>, string> getTableName)
+        public static Query CreateModel(Expression expression, 
+            Func<IQueryable<T>, string> getTableName, IEntityMapping mapping)
         {
-            var query = new Query {Select = new Select()};
-            new QueryVisitor<T>(getTableName).Visit(expression, query);
+            var query = new Query
+            {
+                Select = new Select()
+            };
+            new QueryVisitor<T>(getTableName, mapping).Visit(expression, query);
             return query;
         }
 
         public Query CreateModel(Expression expression)
         {
-            return CreateModel(expression, _getTableName);
+            return CreateModel(expression, _getTableName, _mapping);
         }
 
         protected override void VisitConstant(Context context, ConstantExpression node)
@@ -147,7 +154,7 @@ namespace Gribble.Expressions
             select.From.Queries.Add(query);
         }
 
-        private static void HandleSelect(Query query, MethodCallExpression expression)
+        private void HandleSelect(Query query, MethodCallExpression expression)
         {
             query.Operation = Query.OperationType.Query;
             var body = expression.Arguments[1].GetLambdaBody().StripConversion();
@@ -155,13 +162,36 @@ namespace Gribble.Expressions
             if (body.NodeType == ExpressionType.New)
             {
                 var newObject = (NewExpression)body;
+                var parameters = newObject.Constructor.GetParameters();
+                var dynamicPropertyName = _mapping.DynamicProperty.GetProperty().Name;
+                var dynamicArgument = _mapping.DynamicProperty.HasProperty()
+                    ? newObject.Arguments.OfType<MemberExpression>()
+                        .FirstOrDefault(x => x.Member.Name == dynamicPropertyName && 
+                            x.Type == typeof(IDictionary<string, object>))
+                    : null;
+
                 query.Select.Projection = newObject.Arguments
-                    .Zip(newObject.Constructor.GetParameters(), (a, p) => new SelectProjection
+                    .Zip(parameters, (a, p) => new
                     {
-                        Alias = p.Name,
-                        Projection = ProjectionVisitor<T>.CreateModel(a)
+                        Parameter = p,
+                        Argument = a
+                    })
+                    .Where(x => x.Argument != dynamicArgument)
+                    .Select(x => new SelectProjection
+                    {
+                        Alias = x.Parameter.Name,
+                        Projection = ProjectionVisitor<T>.CreateModel(x.Argument)
                     })
                     .ToList();
+                
+                if (dynamicArgument != null)
+                    query.Select.Projection.Add(new SelectProjection
+                    {
+                        Projection = new Projection
+                        {
+                            Type = Projection.ProjectionType.Wildcard
+                        }
+                    });
             }
             else
             {

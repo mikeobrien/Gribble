@@ -17,7 +17,7 @@ namespace Tests.TransactSql
             public Guid Id { get; set; }
             public string Name { get; set; }
             public DateTime? Created { get; set; }
-            public Dictionary<string, object> Values {get; set;}
+            public IDictionary<string, object> Values {get; set;}
         }
 
         public class EntityMap : ClassMap<Entity>

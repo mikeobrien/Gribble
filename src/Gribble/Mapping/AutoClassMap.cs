@@ -8,18 +8,15 @@ namespace Gribble.Mapping
 {
     public class AutoClassMap<T> : ClassMap<T>
     {
-        private static readonly Type DictionaryType = 
-            typeof(IDictionary<string, object>);
-
         public AutoClassMap(string keyName = null)
         {
             var type = typeof(T);
             var properties = type.GetProperties(
                 BindingFlags.Public | BindingFlags.Instance);
 
-            var dynamicProperty = properties.FirstOrDefault(x => 
-                DictionaryType.IsAssignableFrom(x.PropertyType));
-            if (dynamicProperty != null) MapDynamic(dynamicProperty.Name);
+            var dynamicProperty = properties.FirstOrDefault(x => x.PropertyType.IsGenericType && 
+                x.PropertyType.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+            if (dynamicProperty != null) MapDynamic(dynamicProperty);
 
             var idProperty = properties.FirstOrDefault(x =>
                 x.Name.Equals(keyName ?? "Id", StringComparison.OrdinalIgnoreCase) &&
@@ -27,7 +24,7 @@ namespace Gribble.Mapping
                  x.PropertyType.IsString()));
             if (idProperty != null)
             {
-                Id(idProperty.Name, idProperty.PropertyType);
+                Id(idProperty, idProperty.PropertyType);
                 if (idProperty.PropertyType.IsInteger())
                     KeyGeneration = PrimaryKeyGeneration.Server;
                 if (idProperty.PropertyType.IsGuid())
@@ -35,7 +32,7 @@ namespace Gribble.Mapping
             }
 
             properties.Where(x => x != dynamicProperty && x != idProperty)
-                .ToList().ForEach(x => Map(x.Name));
+                .ToList().ForEach(Map);
         } 
     }
 }

@@ -20,13 +20,13 @@ namespace Tests.ImplicitMapping
         {
             public int Id { get; set; }
             public string Name { get; set; }
-            public Dictionary<string, object> Values { get; set; }
+            public IDictionary<string, object> Values { get; set; }
         }
 
         public class NoIdEntity
         {
             public string Name { get; set; }
-            public Dictionary<string, object> Values { get; set; }
+            public IDictionary<string, object> Values { get; set; }
         }
         
         public static IProfiler Profiler = new ConsoleProfiler();
@@ -68,9 +68,13 @@ namespace Tests.ImplicitMapping
             results.Count.ShouldEqual(10);
             results.All(x => x.Name.Length > 3).ShouldEqual(true);
             results.All(x => x.Id > -1).ShouldEqual(true);
-            results.First().Values.Count.ShouldEqual(2);
-            ((bool)results.First().Values["hide"]).ShouldEqual(false);
-            ((DateTime)results.First().Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+
+            var result = results.First();
+            result.Values.Count.ShouldEqual(4);
+            result.Values["hide"].ShouldEqual(false);
+            ((DateTime)result.Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+            result.Values["Id"].ShouldEqual(1);
+            result.Values["Name"].ShouldEqual("oh hai");
         }
 
         [Test]
@@ -109,10 +113,13 @@ namespace Tests.ImplicitMapping
             var results = StoredProcedure.ExecuteMany<NoIdEntity>("GetAll").ToList();
             results.Count.ShouldEqual(10);
             results.All(x => x.Name.Length > 3).ShouldEqual(true);
-            results.First().Values.Count.ShouldEqual(3);
-            ((int)results.First().Values["id"]).ShouldBeGreaterThan(-1);
-            ((bool)results.First().Values["hide"]).ShouldEqual(false);
-            ((DateTime)results.First().Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+
+            var result = results.First();
+            result.Values.Count.ShouldEqual(4);
+            ((int)result.Values["id"]).ShouldBeGreaterThan(-1);
+            result.Values["hide"].ShouldEqual(false);
+            ((DateTime)result.Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+            result.Values["Name"].ShouldEqual("oh hai");
         }
 
         [Test]
@@ -122,9 +129,11 @@ namespace Tests.ImplicitMapping
             result.ShouldNotBeNull();
             result.Name.Length.ShouldBeGreaterThan(3);
             result.Id.ShouldEqual(5);
-            result.Values.Count.ShouldEqual(2);
+            result.Values.Count.ShouldEqual(4);
             ((bool)result.Values["hide"]).ShouldEqual(false);
             ((DateTime)result.Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+            result.Values["Name"].ShouldEqual("oh hai");
+            result.Values["Id"].ShouldEqual(5);
         }
 
         [Test]
