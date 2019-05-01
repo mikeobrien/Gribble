@@ -74,6 +74,34 @@ namespace Tests
             entity.Dynamic["dynamic_field_2"].ShouldEqual("dynamic value 2");
         }
 
+        [Test]
+        public void Should_create_entity_with_default_ctor_and_dynamic_property_and_mapping_override()
+        {
+            var map = new EntityMapping(new EntityWithDefaultCtorAndDynamicPropertyMap(), 
+                new []
+                {
+                    new ColumnMapping("static_field", "static1"),
+                    new ColumnMapping("dynamic_field_1", "dynamic1"),
+                    new ColumnMapping("dynamic_field_2", "dynamic2")
+                });
+            var values = new Dictionary<string, object>
+            {
+                { "static_field", "static value" },
+                { "dynamic_field_1", "dynamic value 1" },
+                { "dynamic_field_2", "dynamic value 2" },
+                { "dynamic_field_3", "dynamic value 3" }
+            };
+            var entity = new EntityFactory<EntityWithDefaultCtorAndDynamicProperty>()
+                .Create(values, map);
+
+            entity.ShouldNotBeNull();
+            entity.Static.ShouldEqual("static value");
+            entity.Dynamic.Count.ShouldEqual(3);
+            entity.Dynamic["static1"].ShouldEqual("static value");
+            entity.Dynamic["dynamic1"].ShouldEqual("dynamic value 1");
+            entity.Dynamic["dynamic2"].ShouldEqual("dynamic value 2");
+        }
+
         public class AnonObject
         {
             public AnonObject(string Implicit)
@@ -130,6 +158,34 @@ namespace Tests
             entity.Dynamic["Implicit"].ShouldEqual("implicit value");
             entity.Dynamic["dynamic_field_1"].ShouldEqual("dynamic value 1");
             entity.Dynamic["dynamic_field_2"].ShouldEqual("dynamic value 2");
+        }
+
+        [Test]
+        public void Should_create_anon_object_with_dynamic_property_and_mapping_override()
+        {
+            var map = new EntityMapping(new AutoClassMap<AnonObjectWithDynamicProperty>(), 
+                new []
+                {
+                    new ColumnMapping("Implicit", "static"),
+                    new ColumnMapping("dynamic_field_1", "dynamic1"),
+                    new ColumnMapping("dynamic_field_2", "dynamic2")
+                });
+            var values = new Dictionary<string, object>
+            {
+                { "Implicit", "implicit value" },
+                { "dynamic_field_1", "dynamic value 1" },
+                { "dynamic_field_2", "dynamic value 2" },
+                { "dynamic_field_3", "dynamic value 3" }
+            };
+            var entity = new EntityFactory<AnonObjectWithDynamicProperty>()
+                .Create(values, map);
+
+            entity.ShouldNotBeNull();
+            entity.Implicit.ShouldEqual("implicit value");
+            entity.Dynamic.Count.ShouldEqual(3);
+            entity.Dynamic["static"].ShouldEqual("implicit value");
+            entity.Dynamic["dynamic1"].ShouldEqual("dynamic value 1");
+            entity.Dynamic["dynamic2"].ShouldEqual("dynamic value 2");
         }
     }
 }

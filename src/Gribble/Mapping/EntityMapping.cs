@@ -90,16 +90,12 @@ namespace Gribble.Mapping
 
         string IColumnMap.GetDynamicPropertyName(string columnName)
         {
-            try
-            {
-                return _mappingOverride == null 
-                    ? columnName 
-                    : _mappingOverride.First(x => x.ColumnName.EqualsIgnoreCase(columnName)).Name;
-            }
-            catch (InvalidOperationException)
-            {
+            if (_mappingOverride == null) return columnName;
+
+            var propertyName = _mappingOverride.FirstOrDefault(x => x.ColumnName.EqualsIgnoreCase(columnName))?.Name;
+            if (propertyName == null)
                 throw new InvalidMappingException(columnName, InvalidMappingException.MappingType.DynamicColumn);
-            }
+            return propertyName;
         }
 
         bool IColumnMap.HasPropertyMapping(string columnName)
