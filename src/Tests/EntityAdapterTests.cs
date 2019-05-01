@@ -44,37 +44,6 @@ namespace Tests
 
         private static readonly Guid Key = Guid.NewGuid();
 
-        private static readonly Dictionary<string, object> EntityValues = 
-            new Dictionary<string, object>
-            {
-                {"col_active", false},
-                {"col_age", 44},
-                {"col_birthdate", DateTime.MaxValue},
-                {"col_created", DateTime.MinValue},
-                {"col_distance", 22.3},
-                {"col_flag", (byte)23},
-                {"col_id", Key},
-                {"col_length", 22.3m},
-                {"col_miles", 10L},
-                {"col_name", "oh hai"},
-                {"col_price", 45.67F},
-                {"col_companyname", "Some company"},
-                {"col_optout", true},
-                {"col_optoutdate", DateTime.MinValue},
-                {"col_state", 2},
-                {"col_state_null", 1},
-                {"col_state_null2", null}
-            };
-
-        private static readonly Dictionary<string, object> NoIdEntityValues =
-            new Dictionary<string, object>
-            {
-                {"col_name", "oh hai"},
-                {"col_companyname", "Some company"},
-                {"col_optout", true},
-                {"col_optoutdate", DateTime.MinValue},
-            };
-
         public class EntityMap : ClassMap<Entity>
         {
             public EntityMap()
@@ -136,7 +105,8 @@ namespace Tests
                             {
                                 {"CompanyName", "Some company"},
                                 {"OptOut", true},
-                                {"OptOutDate", DateTime.MinValue}
+                                {"OptOutDate", DateTime.MinValue},
+                                {"col_optoutstatus", 1}
                             }
             };
 
@@ -147,7 +117,8 @@ namespace Tests
                             {
                                 {"CompanyName", "Some company"},
                                 {"OptOut", true},
-                                {"OptOutDate", DateTime.MinValue}
+                                {"OptOutDate", DateTime.MinValue},
+                                {"col_optoutstatus", 1}
                             }
             };
 
@@ -157,7 +128,7 @@ namespace Tests
             var entity = _createEntity();
             var reader = new EntityAdapter<Entity>(entity, Map);
             var values = reader.GetValues();
-            values.Count.ShouldEqual(EntityValues.Count);
+            values.Count.ShouldEqual(17);
 
             values["col_active"].ShouldEqual(entity.Active);
             values["col_age"].ShouldEqual(entity.Age);
@@ -184,7 +155,7 @@ namespace Tests
             var entity = _createNoIdEntity();
             var reader = new EntityAdapter<NoIdEntity>(entity, NoIdMap);
             var values = reader.GetValues();
-            values.Count.ShouldEqual(NoIdEntityValues.Count);
+            values.Count.ShouldEqual(4);
 
             values["col_name"].ShouldEqual(entity.Name);
             values["col_companyname"].ShouldEqual(entity.Values["CompanyName"]);
