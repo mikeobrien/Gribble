@@ -163,8 +163,8 @@ namespace Gribble.Expressions
             {
                 var newObject = (NewExpression)body;
                 var parameters = newObject.Constructor.GetParameters();
-                var dynamicPropertyName = _mapping.DynamicProperty.GetProperty().Name;
-                var dynamicArgument = _mapping.DynamicProperty.HasProperty()
+                var dynamicPropertyName = _mapping.DynamicProperty.Property.Name;
+                var dynamicArgument = _mapping.DynamicProperty.HasProperty
                     ? newObject.Arguments.OfType<MemberExpression>()
                         .FirstOrDefault(x => x.Member.Name == dynamicPropertyName && 
                             x.Type == typeof(IDictionary<string, object>))

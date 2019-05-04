@@ -50,9 +50,9 @@ namespace Gribble
         {
             var property = new DynamicProperty();
 
-            if (map.DynamicProperty.HasProperty())
+            if (map.DynamicProperty.HasProperty)
             {
-                property.Property = map.DynamicProperty.GetProperty();
+                property.Property = map.DynamicProperty.Property;
                 property.HasProperty = property.Property != null;
                 if (property.HasProperty)
                     property.Values = new EntityDictionary(map);
@@ -108,9 +108,9 @@ namespace Gribble
             DynamicProperty dynamicProperty, TEntity entity)
         {
             var dynamicValues = values
-                .Where(x => map.Column.HasDynamicPropertyMapping(x.Key) && 
+                .Where(x => map.Column.HasDynamicMapping(x.Key) && 
                             !map.Column.HasStaticPropertyMapping(x.Key))
-                .ToDictionary(x => map.Column.GetDynamicPropertyName(x.Key), 
+                .ToDictionary(x => map.Column.GetDynamicName(x.Key), 
                     x => ConvertValue(x.Value));
             dynamicProperty.Values.Init(entity, dynamicValues);
         }

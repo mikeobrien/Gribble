@@ -1,8 +1,8 @@
 ﻿namespace Gribble.Mapping
 {
-    public class ColumnMapping
+    public class DynamicMapping
     {
-        public ColumnMapping(string columnName, string name)
+        public DynamicMapping(string columnName, string name)
         {
             ColumnName = columnName;
             Name = name;

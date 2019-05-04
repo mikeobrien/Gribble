@@ -50,7 +50,7 @@ namespace Tests.TransactSql
             }
         }
 
-        private static readonly EntityMapping IdentityMap = new EntityMapping(new IdentityEntityMap(), new[] { new ColumnMapping("companyname", "CompanyName"), new ColumnMapping("optout", "OptOut") });
+        private static readonly EntityMapping IdentityMap = new EntityMapping(new IdentityEntityMap(), new[] { new DynamicMapping("companyname", "CompanyName"), new DynamicMapping("optout", "OptOut") });
         private static readonly EntityMapping GuidMap = new EntityMapping(new GuidEntityMap());
 
         public const string TableName1 = "XLIST_1";

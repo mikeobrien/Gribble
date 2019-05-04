@@ -31,26 +31,23 @@ namespace Gribble
                  $"would occur: {columns.Aggregate((i, x) => i + ", " + x)}") { }
     }
 
-    public class Table<TEntity> : IOrderedQueryable<TEntity>, ITable<TEntity> 
+    public class Table<TEntity> : ITable<TEntity> 
     {
         private readonly IConnectionManager _connectionManager;
-        private readonly string _table;
         private readonly IEntityMapping _mapping;
         private readonly IProfiler _profiler;
-        private readonly bool _noLock;
         private readonly Queryable<TEntity> _queryable;
         private readonly Operations _operations;
 
-        public Table(IConnectionManager connectionManager, string table, 
+        public Table(IConnectionManager connectionManager, string tableName, 
             IEntityMapping mapping, IProfiler profiler, bool noLock = false)
         {
             _connectionManager = connectionManager;
-            _table = table;
+            Name = tableName;
             _mapping = mapping;
             _profiler = profiler;
-            _noLock = noLock;
             _operations = new Operations(connectionManager, mapping, profiler, noLock);
-            _queryable = new Queryable<TEntity>(_table, mapping, _operations);
+            _queryable = new Queryable<TEntity>(Name, mapping, _operations);
         }
 
         public static ITable<TEntity> Create(
@@ -102,8 +99,8 @@ namespace Gribble
                 profiler ?? new ConsoleProfiler(), noLock);
         }
 
-        public string Name => _table;
-        
+        public string Name { get; }
+
         // ---------------------- IOrderedQueryable Implementation -----------------
 
         public Expression Expression
@@ -124,7 +121,7 @@ namespace Gribble
             var adapter = new EntityAdapter<TEntity>(entity, _mapping);
             var hasIdentityKey = _mapping.Key.KeyType == PrimaryKeyType.Integer && 
                 _mapping.Key.KeyGeneration == PrimaryKeyGeneration.Server;
-            var keyColumnName = _mapping.Key.GetColumnName();
+            var keyColumnName = _mapping.Key.ColumnName;
 
             if (_mapping.Key.KeyType == PrimaryKeyType.Guid && 
                 _mapping.Key.KeyGeneration == PrimaryKeyGeneration.Client)
@@ -135,7 +132,7 @@ namespace Gribble
 
             var insert = new Insert { HasIdentityKey = hasIdentityKey,
                 Type = Model.Insert.SetType.Values, 
-                Into = new Table { Name = _table},
+                Into = new Table { Name = Name},
                 Values = values };
 
             var command = Command.Create(InsertWriter<TEntity>
@@ -150,7 +147,7 @@ namespace Gribble
         {
             var select = new Select {
                 Top = 1,
-                From = { Type = Data.DataType.Table, Table = new Table { Name = _table } },
+                From = { Type = Data.DataType.Table, Table = new Table { Name = Name } },
                 Where = CreateKeyFilter(id) };
             return _operations.ExecuteQuery<TEntity, IEnumerable<TEntity>>(select).FirstOrDefault();
         }
@@ -158,9 +155,9 @@ namespace Gribble
         public void Update(TEntity entity)
         {
             var adapter = new EntityAdapter<TEntity>(entity, _mapping);
-            var keyColumnName = _mapping.Key.GetColumnName();
+            var keyColumnName = _mapping.Key.ColumnName;
             var values = adapter.GetValues().Where(x => x.Key != keyColumnName);
-            Command.Create(UpdateWriter<TEntity>.CreateStatement(new Update(values, _table, CreateEntityKeyFilter(entity, adapter)), _mapping), _profiler).
+            Command.Create(UpdateWriter<TEntity>.CreateStatement(new Update(values, Name, CreateEntityKeyFilter(entity, adapter)), _mapping), _profiler).
                     ExecuteNonQuery(_connectionManager);
         }
 
@@ -189,20 +186,20 @@ namespace Gribble
             var query = QueryVisitor<TEntity>.CreateModel(source.Expression, 
                 x => ((INamedQueryable) x).Name, _mapping);
             return Command.Create(DeleteWriter<TEntity>.CreateStatement(
-                new Delete(_table, query.Select, true), _mapping), _profiler).
+                new Delete(Name, query.Select, true), _mapping), _profiler).
                     ExecuteNonQuery(_connectionManager);
         }
 
         private int Delete(Operator filter, bool multiDelete)
         {
             return Command.Create(DeleteWriter<TEntity>.CreateStatement(
-                new Delete(_table, filter, multiDelete), _mapping), _profiler).
+                new Delete(Name, filter, multiDelete), _mapping), _profiler).
                     ExecuteNonQuery(_connectionManager);
         }
 
         private Operator CreateKeyFilter<T>(T id)
         {
-            var field = _mapping.Key.GetProperty().Name;
+            var field = _mapping.Key.Property.Name;
             return Operator.Create.FieldEqualsConstant(field, id);
         }
 
@@ -210,7 +207,7 @@ namespace Gribble
             EntityAdapter<TEntity> adapter = null)
         {
             var id = (adapter ?? new EntityAdapter<TEntity>(entity, _mapping)).Key;
-            var field = _mapping.Key.GetProperty().Name;
+            var field = _mapping.Key.Property.Name;
             return Operator.Create.FieldEqualsConstant(field, id);
         }
     }

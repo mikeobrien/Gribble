@@ -80,9 +80,9 @@ namespace Tests
             var map = new EntityMapping(new EntityWithDefaultCtorAndDynamicPropertyMap(), 
                 new []
                 {
-                    new ColumnMapping("static_field", "static1"),
-                    new ColumnMapping("dynamic_field_1", "dynamic1"),
-                    new ColumnMapping("dynamic_field_2", "dynamic2")
+                    new DynamicMapping("static_field", "static1"),
+                    new DynamicMapping("dynamic_field_1", "dynamic1"),
+                    new DynamicMapping("dynamic_field_2", "dynamic2")
                 });
             var values = new Dictionary<string, object>
             {
@@ -166,9 +166,9 @@ namespace Tests
             var map = new EntityMapping(new AutoClassMap<AnonObjectWithDynamicProperty>(), 
                 new []
                 {
-                    new ColumnMapping("Implicit", "static"),
-                    new ColumnMapping("dynamic_field_1", "dynamic1"),
-                    new ColumnMapping("dynamic_field_2", "dynamic2")
+                    new DynamicMapping("Implicit", "static"),
+                    new DynamicMapping("dynamic_field_1", "dynamic1"),
+                    new DynamicMapping("dynamic_field_2", "dynamic2")
                 });
             var values = new Dictionary<string, object>
             {

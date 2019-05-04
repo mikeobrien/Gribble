@@ -78,14 +78,14 @@ namespace Tests
         public void Key_Column_Name_Test()
         {
             var mapping = new EntityMapping(new IdentityEntityMap());
-            mapping.Key.GetColumnName().ShouldEqual("entity_id");
+            mapping.Key.ColumnName.ShouldEqual("entity_id");
         }
 
         [Test]
         public void Key_Property_Name_Test()
         {
             var mapping = new EntityMapping(new GuidEntityMap());
-            mapping.Key.GetProperty().Name.ShouldEqual("Id");
+            mapping.Key.Property.Name.ShouldEqual("Id");
         }
 
         [Test]
@@ -140,7 +140,7 @@ namespace Tests
         [Test]
         public void Dynamic_Property_Has_Custom_Column_Mapping_Test()
         {
-            var columnMapping = new[] { new ColumnMapping("some_property", "SomeProperty"), new ColumnMapping("another_property", "AnotherProperty") };
+            var columnMapping = new[] { new DynamicMapping("some_property", "SomeProperty"), new DynamicMapping("another_property", "AnotherProperty") };
             var mapping = new EntityMapping(new GuidEntityMap(), columnMapping);
             mapping.DynamicProperty.HasColumnMapping("SomeProperty").ShouldEqual(true);
         }
@@ -148,7 +148,7 @@ namespace Tests
         [Test]
         public void Dynamic_Property_Does_Not_Have_Custom_Column_Mapping_Test()
         {
-            var columnMapping = new[] { new ColumnMapping("some_property", "SomeProperty"), new ColumnMapping("another_property", "AnotherProperty") };
+            var columnMapping = new[] { new DynamicMapping("some_property", "SomeProperty"), new DynamicMapping("another_property", "AnotherProperty") };
             var mapping = new EntityMapping(new GuidEntityMap(), columnMapping);
             mapping.DynamicProperty.HasColumnMapping("SomeProperty2").ShouldEqual(false);
         }
@@ -156,7 +156,7 @@ namespace Tests
         [Test]
         public void Dynamic_Property_Custom_Column_Mapping_Test()
         {
-            var columnMapping = new[] { new ColumnMapping("some_property", "SomeProperty"), new ColumnMapping("another_property", "AnotherProperty") };
+            var columnMapping = new[] { new DynamicMapping("some_property", "SomeProperty"), new DynamicMapping("another_property", "AnotherProperty") };
             var mapping = new EntityMapping(new GuidEntityMap(), columnMapping);
             mapping.DynamicProperty.GetColumnName("AnotherProperty").ShouldEqual("another_property");
         }
@@ -164,24 +164,24 @@ namespace Tests
         [Test]
         public void Has_Dynamic_Property_Test()
         {
-            var columnMapping = new[] { new ColumnMapping("some_property", "SomeProperty"), new ColumnMapping("another_property", "AnotherProperty") };
+            var columnMapping = new[] { new DynamicMapping("some_property", "SomeProperty"), new DynamicMapping("another_property", "AnotherProperty") };
             var mapping = new EntityMapping(new GuidEntityMap(), columnMapping);
-            mapping.DynamicProperty.HasProperty().ShouldEqual(true);
+            mapping.DynamicProperty.HasProperty.ShouldEqual(true);
         }
 
         [Test]
         public void Does_Not_Have_Dynamic_Property_Test()
         {
             var mapping = new EntityMapping(new NonDynamicEntityMap());
-            mapping.DynamicProperty.HasProperty().ShouldEqual(false);
+            mapping.DynamicProperty.HasProperty.ShouldEqual(false);
         }
 
         [Test]
         public void Dynamic_Property_Name_Test_Test()
         {
-            var columnMapping = new[] { new ColumnMapping("some_property", "SomeProperty"), new ColumnMapping("another_property", "AnotherProperty") };
+            var columnMapping = new[] { new DynamicMapping("some_property", "SomeProperty"), new DynamicMapping("another_property", "AnotherProperty") };
             var mapping = new EntityMapping(new GuidEntityMap(), columnMapping);
-            mapping.DynamicProperty.GetProperty().Name.ShouldEqual("Values");
+            mapping.DynamicProperty.Property.Name.ShouldEqual("Values");
         }
 
         [Test]
@@ -237,38 +237,38 @@ namespace Tests
         public void Column_Default_Mapping_Has_Dynamic_Property_Mapping_Test()
         {
             var mapping = new EntityMapping(new GuidEntityMap());
-            mapping.Column.HasDynamicPropertyMapping("some_column").ShouldEqual(true);
+            mapping.Column.HasDynamicMapping("some_column").ShouldEqual(true);
         }
 
         [Test]
         public void Column_Default_Mapping_Dynamic_Property_Mapping_Test()
         {
             var mapping = new EntityMapping(new GuidEntityMap());
-            mapping.Column.GetDynamicPropertyName("some_column").ShouldEqual("some_column");
+            mapping.Column.GetDynamicName("some_column").ShouldEqual("some_column");
         }
 
         [Test]
         public void Column_Has_Custom_Dynamic_Property_Mapping_Test()
         {
-            var columnMapping = new[] { new ColumnMapping("some_property", "SomeProperty"), new ColumnMapping("another_property", "AnotherProperty") };
+            var columnMapping = new[] { new DynamicMapping("some_property", "SomeProperty"), new DynamicMapping("another_property", "AnotherProperty") };
             var mapping = new EntityMapping(new GuidEntityMap(), columnMapping);
-            mapping.Column.HasDynamicPropertyMapping("some_property").ShouldEqual(true);
+            mapping.Column.HasDynamicMapping("some_property").ShouldEqual(true);
         }
 
         [Test]
         public void Column_Does_Not_Have_Custom_Dynamic_Property_Mapping_Test()
         {
-            var columnMapping = new[] { new ColumnMapping("some_property", "SomeProperty"), new ColumnMapping("another_property", "AnotherProperty") };
+            var columnMapping = new[] { new DynamicMapping("some_property", "SomeProperty"), new DynamicMapping("another_property", "AnotherProperty") };
             var mapping = new EntityMapping(new GuidEntityMap(), columnMapping);
-            mapping.Column.HasDynamicPropertyMapping("some_property2").ShouldEqual(false);
+            mapping.Column.HasDynamicMapping("some_property2").ShouldEqual(false);
         }
 
         [Test]
         public void Column_Custom_Dynamic_Property_Mapping_Test()
         {
-            var columnMapping = new[] { new ColumnMapping("some_property", "SomeProperty"), new ColumnMapping("another_property", "AnotherProperty") };
+            var columnMapping = new[] { new DynamicMapping("some_property", "SomeProperty"), new DynamicMapping("another_property", "AnotherProperty") };
             var mapping = new EntityMapping(new GuidEntityMap(), columnMapping);
-            mapping.Column.GetDynamicPropertyName("another_property").ShouldEqual("AnotherProperty");
+            mapping.Column.GetDynamicName("another_property").ShouldEqual("AnotherProperty");
         }
     }
 }

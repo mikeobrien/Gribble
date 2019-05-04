@@ -29,7 +29,7 @@ namespace Gribble.Mapping
             return new EntityMapping(GetMappingOrDefault<TEntity>());
         }
 
-        public IEntityMapping GetEntityMapping<TEntity>(IEnumerable<ColumnMapping> mappingOverride)
+        public IEntityMapping GetEntityMapping<TEntity>(IEnumerable<DynamicMapping> mappingOverride)
         {
             return new EntityMapping(GetMappingOrDefault<TEntity>(), mappingOverride);
         }

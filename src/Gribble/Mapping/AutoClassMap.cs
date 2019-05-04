@@ -26,13 +26,25 @@ namespace Gribble.Mapping
             {
                 Id(idProperty, idProperty.PropertyType);
                 if (idProperty.PropertyType.IsInteger())
-                    KeyGeneration = PrimaryKeyGeneration.Server;
+                    KeyProperty.Generation = PrimaryKeyGeneration.Server;
                 if (idProperty.PropertyType.IsGuid())
-                    KeyGeneration = PrimaryKeyGeneration.Client;
+                    KeyProperty.Generation = PrimaryKeyGeneration.Client;
             }
 
             properties.Where(x => x != dynamicProperty && x != idProperty)
                 .ToList().ForEach(Map);
         } 
+
+        protected void Id(PropertyInfo property, Type type)
+        {
+            PrimaryKeyType keyType;
+
+            if (type.IsInteger()) keyType = PrimaryKeyType.Integer;
+            else if (type == typeof(Guid)) keyType = PrimaryKeyType.Guid;
+            else if (type == typeof(string)) keyType = PrimaryKeyType.String;
+            else throw new ArgumentException("Type must be an integer, guid or string.");
+
+            new KeyMappingDsl(property, keyType, this).Column(property.Name);
+        }
     }
 }

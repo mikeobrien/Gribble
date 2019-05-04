@@ -24,27 +24,27 @@ namespace Gribble.Mapping
         }
 
         private readonly IClassMap _map;
-        private readonly List<ColumnMapping> _mappingOverride;
+        private readonly List<DynamicMapping> _dynamicMapping;
         private readonly Dictionary<string, PropertyInfo> _staticDynamicPropertyMapping;
 
         public EntityMapping(IClassMap map) : this(map, null) {}
 
-        public EntityMapping(IClassMap map, IEnumerable<ColumnMapping> mappingOverride)
+        public EntityMapping(IClassMap map, IEnumerable<DynamicMapping> dynamicMapping)
         {
             _map = map;
-            _mappingOverride = mappingOverride?.ToList();
-            _staticDynamicPropertyMapping = CreateStaticDynamicPropertyMapping(_mappingOverride);
+            _dynamicMapping = dynamicMapping?.ToList();
+            _staticDynamicPropertyMapping = CreateStaticDynamicPropertyMapping(_dynamicMapping);
         }
 
         private Dictionary<string, PropertyInfo> CreateStaticDynamicPropertyMapping(
-            List<ColumnMapping> mappingOverride)
+            List<DynamicMapping> mappingOverride)
         {
-            return _map.ColumPropertyMapping
+            return _map.Properties
                 .Select(x => new
                 {
                     Name = mappingOverride?.FirstOrDefault(o => o.ColumnName
-                        .EqualsIgnoreCase(x.Key))?.Name ?? x.Value.Name,
-                    Property = x.Value
+                        .EqualsIgnoreCase(x.ColumnName))?.Name ?? x.Property.Name,
+                    x.Property
                 })
                 .ToDictionary(x => x.Name, x => x.Property, StringComparer.OrdinalIgnoreCase);
         }
@@ -60,82 +60,74 @@ namespace Gribble.Mapping
 
         bool IColumnMap.HasStaticPropertyMapping(string columnName)
         {
-            return _map.ColumPropertyMapping.ContainsKey(columnName);
+            return _map.Properties.Any(x => x.ColumnName.EqualsIgnoreCase(columnName));
         }
 
         PropertyInfo IColumnMap.GetStaticProperty(string columnName)
         {
-            try
-            {
-                return _map.ColumPropertyMapping[columnName];
-            }
-            catch (KeyNotFoundException)
-            {
+            var mapping = ((IColumnMap)this).TryGetStaticProperty(columnName);
+            if (mapping == null)
                 throw new InvalidMappingException(columnName, 
                     InvalidMappingException.MappingType.StaticColumn);
-            }
+            return mapping;
         }
 
         PropertyInfo IColumnMap.TryGetStaticProperty(string columnName)
         {
-            return _map.ColumPropertyMapping.ContainsKey(columnName)
-                ? _map.ColumPropertyMapping[columnName]
-                : null;
+            return _map.Properties.FirstOrDefault(x => x
+                .ColumnName.EqualsIgnoreCase(columnName))?.Property;
         }
 
-        bool IColumnMap.HasDynamicPropertyMapping(string columnName)
+        bool IColumnMap.HasDynamicMapping(string columnName)
         {
-            return _mappingOverride == null || _mappingOverride.Any(x => x.ColumnName.EqualsIgnoreCase(columnName));
+            return _dynamicMapping == null || _dynamicMapping.Any(
+                x => x.ColumnName.EqualsIgnoreCase(columnName));
         }
 
-        string IColumnMap.GetDynamicPropertyName(string columnName)
+        string IColumnMap.GetDynamicName(string columnName)
         {
-            if (_mappingOverride == null) return columnName;
+            if (_dynamicMapping == null) return columnName;
 
-            var propertyName = _mappingOverride.FirstOrDefault(x => x.ColumnName.EqualsIgnoreCase(columnName))?.Name;
-            if (propertyName == null)
-                throw new InvalidMappingException(columnName, InvalidMappingException.MappingType.DynamicColumn);
-            return propertyName;
+            var dynamicName = _dynamicMapping.FirstOrDefault(x => x
+                .ColumnName.EqualsIgnoreCase(columnName))?.Name;
+            if (dynamicName == null)
+                throw new InvalidMappingException(columnName, 
+                    InvalidMappingException.MappingType.DynamicColumn);
+            return dynamicName;
         }
 
-        bool IColumnMap.HasPropertyMapping(string columnName)
+        bool IColumnMap.HasMapping(string columnName)
         {
-            return Column.HasStaticPropertyMapping(columnName) || Column.HasDynamicPropertyMapping(columnName);
+            return Column.HasStaticPropertyMapping(columnName) || 
+                   Column.HasDynamicMapping(columnName);
         }
 
-        string IColumnMap.GetPropertyName(string columnName)
+        string IColumnMap.GetName(string columnName)
         {
             return Column.HasStaticPropertyMapping(columnName) ? 
                 Column.GetStaticProperty(columnName).Name : 
-                Column.GetDynamicPropertyName(columnName);
+                Column.GetDynamicName(columnName);
         }
 
         // ----------------- IDynamicPropertyMap Implementation -----------------
 
-        bool IDynamicPropertyMap.HasProperty()
-        {
-            return _map.HasDynamicProperty;
-        }
-
-        PropertyInfo IDynamicPropertyMap.GetProperty()
-        {
-            return _map.DynamicProperty;
-        }
+        bool IDynamicPropertyMap.HasProperty => _map.DynamicProperty != null;
+        PropertyInfo IDynamicPropertyMap.Property => _map.DynamicProperty;
 
         bool IDynamicPropertyMap.HasColumnMapping(string propertyName)
         {
-            if (Key.GetProperty()?.Name == propertyName || 
+            if (Key.Property?.Name == propertyName || 
                 StaticProperty.HasColumnMapping(propertyName)) return false;
-            return _mappingOverride == null || 
-                _mappingOverride.Any(x => x.Name == propertyName);
+            return _dynamicMapping == null || 
+                _dynamicMapping.Any(x => x.Name == propertyName);
         }
 
         string IDynamicPropertyMap.GetColumnName(string propertyName)
         {
             try
             {
-                return _mappingOverride == null ? propertyName : 
-                    _mappingOverride.First(x => x.Name == propertyName).ColumnName;
+                return _dynamicMapping == null ? propertyName : 
+                    _dynamicMapping.First(x => x.Name == propertyName).ColumnName;
             }
             catch (InvalidOperationException)
             {
@@ -146,47 +138,40 @@ namespace Gribble.Mapping
 
         // ----------------- IStaticPropertyMap Implementation -----------------
         
-        List<PropertyInfo> IStaticPropertyMap.Properties => _map.Properties;
-        Dictionary<string, PropertyInfo> IStaticPropertyMap.StaticDynamicMapping => _staticDynamicPropertyMapping;
+        List<PropertyMapping> IStaticPropertyMap.Mapping => _map.Properties;
+        Dictionary<string, PropertyInfo> IStaticPropertyMap.StaticDynamicMapping => 
+            _staticDynamicPropertyMapping;
 
         bool IStaticPropertyMap.HasColumnMapping(string propertyName)
         {
-            return _map.PropertyColumMapping.ContainsKey(propertyName) ||
+            return _map.Properties.Any(x => x.Property.Name.EqualsIgnoreCase(propertyName)) ||
                 _staticDynamicPropertyMapping.ContainsKey(propertyName);
         }
 
         string IStaticPropertyMap.GetColumnName(string propertyName)
         {
-            try
-            {
-                return _map.PropertyColumMapping[propertyName];
-            }
-            catch (KeyNotFoundException)
-            {
-                throw new InvalidMappingException(propertyName, InvalidMappingException.MappingType.StaticProperty);
-            }
+            var columnName = _map.Properties.FirstOrDefault(x => x
+                .Property.Name.EqualsIgnoreCase(propertyName))?.ColumnName;;
+            if (columnName == null)
+                throw new InvalidMappingException(propertyName, 
+                    InvalidMappingException.MappingType.StaticProperty);
+            return columnName;
         }
 
         PropertyInfo IStaticPropertyMap.GetProperty(string propertyName)
         {
-            return _map.PropertyColumMapping.ContainsKey(propertyName)
-                ? _map.PropertyNameMapping[propertyName]
+            var mapping = _map.Properties.FirstOrDefault(x => x
+                .Property.Name.EqualsIgnoreCase(propertyName));;
+            return mapping != null
+                ? mapping.Property
                 : _staticDynamicPropertyMapping[propertyName];
         }
 
         // ----------------- IEntityKey Implementation -----------------
 
-        public PrimaryKeyType KeyType => _map.KeyType;
-        public PrimaryKeyGeneration KeyGeneration => _map.KeyGeneration;
-
-        string IEntityKey.GetColumnName()
-        {
-            return _map.KeyColumn;
-        }
-
-        PropertyInfo IEntityKey.GetProperty()
-        {
-            return _map.KeyProperty;
-        }
+        public PrimaryKeyType KeyType => _map.KeyProperty.Type;
+        public PrimaryKeyGeneration KeyGeneration => _map.KeyProperty.Generation;
+        PropertyInfo IEntityKey.Property => _map.KeyProperty?.Property;
+        string IEntityKey.ColumnName => _map.KeyProperty?.ColumnName;
     }
 }

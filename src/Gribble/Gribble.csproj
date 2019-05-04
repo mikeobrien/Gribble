@@ -52,6 +52,7 @@
     <Compile Include="Extensions\GuidComb.cs" />
     <Compile Include="Extensions\Unique.cs" />
     <Compile Include="Mapping\AutoClassMap.cs" />
+    <Compile Include="Mapping\PropertyMapping.cs" />
     <Compile Include="Operations.cs" />
     <Compile Include="Profilers.cs" />
     <Compile Include="Queryable.cs" />
@@ -75,7 +76,7 @@
     <Compile Include="INamedQueryable.cs" />
     <Compile Include="Loader.cs" />
     <Compile Include="Mapping\ClassMap.cs" />
-    <Compile Include="Mapping\ColumnMapping.cs" />
+    <Compile Include="Mapping\DynamicMapping.cs" />
     <Compile Include="Mapping\EntityMapping.cs" />
     <Compile Include="Mapping\EntityMappingCollection.cs" />
     <Compile Include="Mapping\IClassMap.cs" />

@@ -15,14 +15,14 @@ namespace Gribble.Mapping
     {
         PrimaryKeyType KeyType { get; }
         PrimaryKeyGeneration KeyGeneration { get; }
-        string GetColumnName();
-        PropertyInfo GetProperty();
+        string ColumnName { get; }
+        PropertyInfo Property { get; }
     }
 
     public interface IDynamicPropertyMap
     {
-        bool HasProperty();
-        PropertyInfo GetProperty();
+        bool HasProperty { get; }
+        PropertyInfo Property { get; }
         bool HasColumnMapping(string propertyName);
         string GetColumnName(string propertyName);
     }
@@ -32,18 +32,18 @@ namespace Gribble.Mapping
         bool HasColumnMapping(string propertyName);
         string GetColumnName(string propertyName);
         PropertyInfo GetProperty(string propertyName);
-        List<PropertyInfo> Properties { get; }
+        List<PropertyMapping> Mapping { get; }
         Dictionary<string, PropertyInfo> StaticDynamicMapping { get; }
     }
 
     public interface IColumnMap
     {
-        bool HasPropertyMapping(string columnName);
-        string GetPropertyName(string columnName);
+        bool HasMapping(string columnName);
+        string GetName(string columnName);
         bool HasStaticPropertyMapping(string columnName);
         PropertyInfo GetStaticProperty(string columnName);
         PropertyInfo TryGetStaticProperty(string columnName);
-        bool HasDynamicPropertyMapping(string columnName);
-        string GetDynamicPropertyName(string columnName);
+        bool HasDynamicMapping(string columnName);
+        string GetDynamicName(string columnName);
     }
 }

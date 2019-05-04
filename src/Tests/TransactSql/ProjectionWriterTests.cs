@@ -52,12 +52,12 @@ namespace Tests.TransactSql
             }
         }
 
-        private static readonly EntityMapping Map = new EntityMapping(new EntityMap(), new[] { new ColumnMapping("optout", "OptOut"),
-                                                                                               new ColumnMapping("count", "Count"),
-                                                                                               new ColumnMapping("company", "Company"),
-                                                                                               new ColumnMapping("companyname", "CompanyName"),
-                                                                                               new ColumnMapping("pubcode", "PubCode"),
-                                                                                               new ColumnMapping("createdate", "CreateDate")});
+        private static readonly EntityMapping Map = new EntityMapping(new EntityMap(), new[] { new DynamicMapping("optout", "OptOut"),
+                                                                                               new DynamicMapping("count", "Count"),
+                                                                                               new DynamicMapping("company", "Company"),
+                                                                                               new DynamicMapping("companyname", "CompanyName"),
+                                                                                               new DynamicMapping("pubcode", "PubCode"),
+                                                                                               new DynamicMapping("createdate", "CreateDate")});
 
         [Test]
         public void Entity_Property_Test()

@@ -73,7 +73,7 @@ namespace Gribble
         {
             var hasIdentityKey = _mapping.Key.KeyType == PrimaryKeyType.Integer && 
                                  _mapping.Key.KeyGeneration == PrimaryKeyGeneration.Server;
-            var keyColumnName = _mapping.Key.GetColumnName();
+            var keyColumnName = _mapping.Key.ColumnName;
             var columns = Command.Create(SchemaWriter
                     .CreateSharedColumnsStatement(source, target), _profiler)
                 .ExecuteEnumerable(_connectionManager, r => new
@@ -86,7 +86,7 @@ namespace Gribble
             if (columns.Any(x => x.IsNarrowing))
                 throw new StringColumnNarrowingException(columns.Select(x => x.Column.Name));
             return columns.Select(x => x.Column).Select(x => new SelectProjection {
-                Projection = Projection.Create.Field(_mapping.Column.GetPropertyName(x.Name), 
+                Projection = Projection.Create.Field(_mapping.Column.GetName(x.Name), 
                     !_mapping.Column.HasStaticPropertyMapping(x.Name))}).ToList();
         } 
     }

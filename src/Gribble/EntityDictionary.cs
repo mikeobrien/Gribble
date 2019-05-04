@@ -25,7 +25,7 @@ namespace Gribble
         public IDictionary<string, object> DynamicValues { get; private set; }
 
         public bool IsReadOnly => false;
-        public int Count => DynamicValues.Count + _mapping.StaticProperty.Properties.Count;
+        public int Count => DynamicValues.Count + _mapping.StaticProperty.Mapping.Count;
         public void Clear() => DynamicValues.Clear();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         
@@ -73,7 +73,7 @@ namespace Gribble
             _mapping.StaticProperty.StaticDynamicMapping.Select(x => x.Key)).ToList();
 
         public ICollection<object> Values => DynamicValues.Values.Union(
-            _mapping.StaticProperty.Properties.Select(x => x.GetValue(_entity))).ToList();
+            _mapping.StaticProperty.Mapping.Select(x => x.Property.GetValue(_entity))).ToList();
 
         public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex) =>
             CreateDictionary().ToArray().CopyTo(array, arrayIndex);

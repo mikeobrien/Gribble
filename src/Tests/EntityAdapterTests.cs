@@ -77,15 +77,15 @@ namespace Tests
 
         private static readonly EntityMapping Map = 
             new EntityMapping(new EntityMap(), new[] {
-                new ColumnMapping("col_companyname", "CompanyName"),
-                new ColumnMapping("col_optout", "OptOut"),
-                new ColumnMapping("col_optoutdate", "OptOutDate")
+                new DynamicMapping("col_companyname", "CompanyName"),
+                new DynamicMapping("col_optout", "OptOut"),
+                new DynamicMapping("col_optoutdate", "OptOutDate")
             });
 
         private static readonly EntityMapping NoIdMap = new EntityMapping(new NoIdEntityMap(), new[] {
-                new ColumnMapping("col_companyname", "CompanyName"),
-                new ColumnMapping("col_optout", "OptOut"),
-                new ColumnMapping("col_optoutdate", "OptOutDate")
+                new DynamicMapping("col_companyname", "CompanyName"),
+                new DynamicMapping("col_optout", "OptOut"),
+                new DynamicMapping("col_optoutdate", "OptOutDate")
             });
 
         private readonly Func<Entity> _createEntity = 

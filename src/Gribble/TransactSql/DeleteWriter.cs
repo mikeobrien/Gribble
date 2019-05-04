@@ -21,7 +21,7 @@ namespace Gribble.TransactSql
                     writer.Where.Write(statement.Text);
                     break;
                 case Delete.FilterType.Select:
-                    var keyColumn = mapping.Key.GetColumnName();
+                    var keyColumn = mapping.Key.ColumnName;
                     statement = SelectWriter<TEntity>.CreateStatement(delete.Select, mapping);
                     writer.Where.Exists.OpenBlock.Trim().Select.QuotedName(keyColumn).From.OpenBlock.Trim().
                         Write(statement.Text).Trim().CloseBlock.As.SubQueryAlias.Where.SubQueryColumn(keyColumn).Equal.QuotedName(delete.Table.Name, keyColumn).Trim().CloseBlock.Flush();

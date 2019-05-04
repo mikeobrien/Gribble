@@ -19,7 +19,7 @@ namespace Gribble.TransactSql
             var whereClause = BuildWhereClause(select, mapping, parameters);
             var orderByClause = select.HasOrderBy ? BuildOrderBy(select.OrderBy, mapping, parameters) : null;
 
-            Action<SqlWriter> writeProjection = x => x.Do(projection != null, y => y.ProjectionList(z => z.Comma.Flush(), projection), y => y.Wildcard.Flush());
+            void WriteProjection(SqlWriter x) => x.Do(projection != null, y => y.ProjectionList(z => z.Comma.Flush(), projection), y => y.Wildcard.Flush());
 
             if (select.Any) sql.Select.Cast().Trim().OpenBlock.Trim().Case.When.Exists.OpenBlock.Trim();
 
@@ -33,29 +33,30 @@ namespace Gribble.TransactSql
                     sql.Do(select.TopType == Select.TopValueType.Count, x => x.Top(select.Top), x => x.TopPercent(select.Top));
 
                 if (select.Count) sql.CountWildcard.Flush();
-                else sql.Do(writeProjection);
+                else sql.Do(WriteProjection);
             
                 sql.From.Flush();
 
                 if (select.HasStart)
                 {
-                    sql.OpenBlock.Trim().Select.Do(writeProjection).Trim().Comma.
+                    sql.OpenBlock.Trim().Select.Do(WriteProjection).Trim().Comma.
                         RowNumber().Over.OpenBlock.Trim().OrderBy.
-                        Do(select.HasOrderBy, x => x.Write(orderByClause), x => x.Do(projection != null, writeProjection, y => y.QuotedName(mapping.Key.GetColumnName()))).Trim().
+                        Do(select.HasOrderBy, x => x.Write(orderByClause), x => x
+                            .Do(projection != null, WriteProjection, y => y.QuotedName(mapping.Key.ColumnName))).Trim().
                         CloseBlock.As.RowNumberAlias.From.Flush();
                 }
 
                 if (select.HasDuplicates)
                 {
                     var duplicateProjection = BuildProjection(select.Duplicates.Distinct, mapping, parameters);
-                    sql.OpenBlock.Trim().Select.Do(writeProjection).Trim().Comma.
+                    sql.OpenBlock.Trim().Select.Do(WriteProjection).Trim().Comma.
                         RowNumber().Over.OpenBlock.Trim().Partition.By.Write(duplicateProjection).OrderBy.Write(BuildOrderBy(select.Duplicates.OrderBy, mapping, parameters)).
                         Trim().CloseBlock.As.PartitionAlias.From.Flush();
                 } 
                 else if (select.HasDistinct)
                 {
                     var distinctProjection = BuildProjections(select.Distinct.Select(x => x.Projection), mapping, parameters);
-                    sql.OpenBlock.Trim().Select.Do(writeProjection).Trim().Comma.
+                    sql.OpenBlock.Trim().Select.Do(WriteProjection).Trim().Comma.
                         RowNumber().Over.OpenBlock.Trim().Partition.By.ExpressionList(z => z.Comma.Flush(), distinctProjection).OrderBy.
                         Write(BuildOrderBy(select.Distinct.Any(x => x.HasOrder) ? select.Distinct.Where(x => x.HasOrder).Select(x => x.Order) : 
                             select.Distinct.Select(x => new OrderBy { 

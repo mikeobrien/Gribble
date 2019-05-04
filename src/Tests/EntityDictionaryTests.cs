@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Gribble;
 using Gribble.Mapping;
@@ -14,7 +13,6 @@ namespace Tests
         public class Entity
         {
             public string StaticProperty1 { get; set; }
-            public IDictionary<string, object> Values { get; set; }
         }
 
         public class EntityMap : ClassMap<Entity>
@@ -50,7 +48,7 @@ namespace Tests
             {
                 StaticProperty1 = "fark"
             };
-            var dictionary = CreateDictionary(entity, new ColumnMapping("static_prop_1", "dsp1"));
+            var dictionary = CreateDictionary(entity, new DynamicMapping("static_prop_1", "dsp1"));
 
             Assert.Throws<KeyNotFoundException>(() => dictionary["StaticProperty1"].ShouldEqual("fark"));
 
@@ -97,7 +95,7 @@ namespace Tests
             {
                 StaticProperty1 = "fark"
             };
-            var dictionary = CreateDictionary(entity, new ColumnMapping("static_prop_1", "dsp1"));
+            var dictionary = CreateDictionary(entity, new DynamicMapping("static_prop_1", "dsp1"));
             
             dictionary.TryGetValue("StaticProperty1", out _).ShouldBeFalse();
             
@@ -134,19 +132,20 @@ namespace Tests
             };
             var dictionary = CreateDictionary(entity);
 
-            var enumerator = dictionary.GetEnumerator();
-            
-            enumerator.MoveNext().ShouldBeTrue();
+            using (var enumerator = dictionary.GetEnumerator())
+            {
+                enumerator.MoveNext().ShouldBeTrue();
 
-            enumerator.Current.Key.ShouldEqual("dynamic_1");
-            enumerator.Current.Value.ShouldEqual("d1");
+                enumerator.Current.Key.ShouldEqual("dynamic_1");
+                enumerator.Current.Value.ShouldEqual("d1");
 
-            enumerator.MoveNext().ShouldBeTrue();
+                enumerator.MoveNext().ShouldBeTrue();
 
-            enumerator.Current.Key.ShouldEqual("StaticProperty1");
-            enumerator.Current.Value.ShouldEqual("sp1");
+                enumerator.Current.Key.ShouldEqual("StaticProperty1");
+                enumerator.Current.Value.ShouldEqual("sp1");
 
-            enumerator.MoveNext().ShouldBeFalse();
+                enumerator.MoveNext().ShouldBeFalse();
+            }
         }
 
         [Test]
@@ -156,21 +155,22 @@ namespace Tests
             {
                 StaticProperty1 = "sp1"
             };
-            var dictionary = CreateDictionary(entity, new ColumnMapping("static_prop_1", "dsp1"));
+            var dictionary = CreateDictionary(entity, new DynamicMapping("static_prop_1", "dsp1"));
 
-            var enumerator = dictionary.GetEnumerator();
-            
-            enumerator.MoveNext().ShouldBeTrue();
+            using (var enumerator = dictionary.GetEnumerator())
+            {
+                enumerator.MoveNext().ShouldBeTrue();
 
-            enumerator.Current.Key.ShouldEqual("dynamic_1");
-            enumerator.Current.Value.ShouldEqual("d1");
+                enumerator.Current.Key.ShouldEqual("dynamic_1");
+                enumerator.Current.Value.ShouldEqual("d1");
 
-            enumerator.MoveNext().ShouldBeTrue();
+                enumerator.MoveNext().ShouldBeTrue();
 
-            enumerator.Current.Key.ShouldEqual("dsp1");
-            enumerator.Current.Value.ShouldEqual("sp1");
+                enumerator.Current.Key.ShouldEqual("dsp1");
+                enumerator.Current.Value.ShouldEqual("sp1");
 
-            enumerator.MoveNext().ShouldBeFalse();
+                enumerator.MoveNext().ShouldBeFalse();
+            }
         }
 
         [Test]
@@ -237,7 +237,7 @@ namespace Tests
         public void Should_contain_overidden_static_property()
         {
             var dictionary = CreateDictionary(new Entity(), 
-                new ColumnMapping("static_prop_1", "dsp1"));
+                new DynamicMapping("static_prop_1", "dsp1"));
 
             dictionary.ContainsKey("dsp1").ShouldBeTrue();
             dictionary.ContainsKey("StaticProperty1").ShouldBeFalse();
@@ -341,7 +341,7 @@ namespace Tests
             array[1].Value.ShouldEqual("sp1");
         }
 
-        private EntityDictionary CreateDictionary(Entity entity, params ColumnMapping[] mappingOverride)
+        private EntityDictionary CreateDictionary(Entity entity, params DynamicMapping[] mappingOverride)
         {
             var dictionary = new EntityDictionary(new EntityMapping(new EntityMap(), mappingOverride));
             dictionary.Init(entity, new Dictionary<string, object>

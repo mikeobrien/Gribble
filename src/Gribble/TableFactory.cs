@@ -8,7 +8,7 @@ namespace Gribble
     {
         ITable<TEntity> CreateFor<TEntity>(string tableName, bool noLock = false)
             where TEntity : class, new();
-        ITable<TEntity> CreateFor<TEntity>(string tableName, IEnumerable<ColumnMapping> mapping, bool noLock = false)
+        ITable<TEntity> CreateFor<TEntity>(string tableName, IEnumerable<DynamicMapping> mapping, bool noLock = false)
             where TEntity : class, new();
     }
 
@@ -35,12 +35,12 @@ namespace Gribble
                 noLock);
         }
 
-        public ITable<TEntity> CreateFor<TEntity>(string tableName, IEnumerable<ColumnMapping> mapping, bool noLock = false) where TEntity : class, new()
+        public ITable<TEntity> CreateFor<TEntity>(string tableName, IEnumerable<DynamicMapping> mapping, bool noLock = false) where TEntity : class, new()
         {
             return Table<TEntity>.Create(
                 _connectionManager, 
                 tableName, 
-                _mappingCollection.GetEntityMapping<TEntity>(mapping.Select(x => new ColumnMapping(x.ColumnName, x.Name))), 
+                _mappingCollection.GetEntityMapping<TEntity>(mapping.Select(x => new DynamicMapping(x.ColumnName, x.Name))), 
                 _profiler, 
                 noLock);
         }

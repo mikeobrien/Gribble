@@ -18,6 +18,7 @@ namespace Tests.ExplicitMapping
             public IdentityEntity() { Values = new Dictionary<string, object>(); }
             public int Id { get; set; }
             public string Name { get; set; }
+            public DateTime CurrentTime { get; set; }
             public IDictionary<string, object> Values { get; set; }
         }
 
@@ -26,6 +27,7 @@ namespace Tests.ExplicitMapping
             public GuidEntity() { Values = new Dictionary<string, object>(); }
             public Guid Id { get; set; }
             public string Name { get; set; }
+            public DateTime CurrentTime { get; set; }
             public IDictionary<string, object> Values { get; set; }
         }
 
@@ -35,6 +37,7 @@ namespace Tests.ExplicitMapping
             {
                 Id(x => x.Id).Column("id").Identity();
                 Map(x => x.Name).Column("name");
+                Map(x => x.CurrentTime).Column("currenttime").Readonly();
                 Map(x => x.Values).Dynamic();
             }
         }
@@ -45,6 +48,7 @@ namespace Tests.ExplicitMapping
             {
                 Id(x => x.Id).Column("uid").GuidComb();
                 Map(x => x.Name).Column("name");
+                Map(x => x.CurrentTime).Column("currenttime").Readonly();
                 Map(x => x.Values).Dynamic();
             }
         }
@@ -62,7 +66,15 @@ namespace Tests.ExplicitMapping
         public void Setup()
         {
             const int records = 10;
-            const string columnSchena = "[id] [int] IDENTITY(1,1) NOT NULL, [name] [nvarchar] (500) NULL, [hide] [bit] NULL, [timestamp] [datetime] NULL, [upc] [uniqueidentifier] DEFAULT NEWID(), [code] [int] DEFAULT 5, [uid] [uniqueidentifier] NOT NULL";
+            const string columnSchena = 
+                "[id] [int] IDENTITY(1,1) NOT NULL, " +
+                "[name] [nvarchar] (500) NULL, " +
+                "[hide] [bit] NULL, " +
+                "[timestamp] [datetime] NULL, " +
+                "[upc] [uniqueidentifier] DEFAULT NEWID(), " +
+                "[code] [int] DEFAULT 5, " +
+                "[currenttime] AS (GETDATE()), " +
+                "[uid] [uniqueidentifier] NOT NULL";
             const string dataColumns = "name, hide, [timestamp], [uid]";
             const string data = "'oh hai', 0, GETDATE(), NEWID()";
 
@@ -90,8 +102,8 @@ namespace Tests.ExplicitMapping
         {
             var result = _identityTable1.Get(7);
             result.ShouldNotBeNull();
-            result.Name.Length.ShouldBeGreaterThan(3);
             result.Id.ShouldEqual(7);
+            result.Name.Length.ShouldBeGreaterThan(3);
             result.Values.Count.ShouldBeGreaterThan(2);
             ((bool)result.Values["hide"]).ShouldEqual(false);
             ((DateTime)result.Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
