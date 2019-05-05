@@ -13,6 +13,7 @@ namespace Gribble.Mapping
 
     public interface IEntityKey
     {
+        bool HasKey { get; }
         PrimaryKeyType KeyType { get; }
         PrimaryKeyGeneration KeyGeneration { get; }
         string ColumnName { get; }

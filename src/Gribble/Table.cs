@@ -119,28 +119,37 @@ namespace Gribble
         public void Insert(TEntity entity)
         {
             var adapter = new EntityAdapter<TEntity>(entity, _mapping);
-            var hasIdentityKey = _mapping.Key.KeyType == PrimaryKeyType.Integer && 
+            var hasIdentityKey = _mapping.Key.HasKey && 
+                _mapping.Key.KeyType == PrimaryKeyType.Integer && 
                 _mapping.Key.KeyGeneration == PrimaryKeyGeneration.Server;
             var keyColumnName = _mapping.Key.ColumnName;
 
-            if (_mapping.Key.KeyType == PrimaryKeyType.Guid && 
+            if (_mapping.Key.HasKey && 
+                _mapping.Key.KeyType == PrimaryKeyType.Guid && 
                 _mapping.Key.KeyGeneration == PrimaryKeyGeneration.Client)
-                adapter.Key = GuidComb.Create();
+                    adapter.Key = GuidComb.Create();
 
             var values = adapter.GetValues().Where(x => !hasIdentityKey || 
                 (x.Key != keyColumnName)).ToDictionary(x => x.Key, x => x.Value);
 
-            var insert = new Insert { HasIdentityKey = hasIdentityKey,
+            var insert = new Insert
+            {
+                HasIdentityKey = hasIdentityKey,
                 Type = Model.Insert.SetType.Values, 
-                Into = new Table { Name = Name},
-                Values = values };
+                Into = new Table
+                {
+                    Name = Name
+                },
+                Values = values
+            };
 
             var command = Command.Create(InsertWriter<TEntity>
                 .CreateStatement(insert, _mapping), _profiler);
 
             if (command.Statement.Result == Statement.ResultType.None)
                 command.ExecuteNonQuery(_connectionManager);
-            else adapter.Key = command.ExecuteScalar(_connectionManager);
+            else if (_mapping.Key.HasKey)
+                adapter.Key = command.ExecuteScalar(_connectionManager);
         }
 
         public TEntity Get<T>(T id)

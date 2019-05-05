@@ -168,7 +168,8 @@ namespace Gribble.Mapping
         }
 
         // ----------------- IEntityKey Implementation -----------------
-
+        
+        public bool HasKey => _map.KeyProperty != null;
         public PrimaryKeyType KeyType => _map.KeyProperty.Type;
         public PrimaryKeyGeneration KeyGeneration => _map.KeyProperty.Generation;
         PropertyInfo IEntityKey.Property => _map.KeyProperty?.Property;
