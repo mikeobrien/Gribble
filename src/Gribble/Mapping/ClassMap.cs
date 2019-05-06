@@ -188,22 +188,25 @@ namespace Gribble.Mapping
             {
                 var mapping = new DynamicMapping(columnName, _name);
                 _map.Mapping.Add(mapping);
-                return new DynamicColumnMappingConfigDsl(mapping);
+                return new DynamicColumnMappingConfigDsl(_map, mapping);
             }
         }
 
-        public class DynamicColumnMappingConfigDsl
+        public class DynamicColumnMappingConfigDsl : DynamicMappingDsl
         {
+            private readonly DynamicMap _map;
             private readonly DynamicMapping _mapping;
 
-            public DynamicColumnMappingConfigDsl(DynamicMapping mapping)
+            public DynamicColumnMappingConfigDsl(DynamicMap map,DynamicMapping mapping) : base(map)
             {
+                _map = map;
                 _mapping = mapping;
             }
 
-            public void Readonly()
+            public DynamicMappingDsl Readonly()
             {
                 _mapping.Readonly = true;
+                return new DynamicMappingDsl(_map);
             }
         }
 
