@@ -110,7 +110,7 @@ namespace Gribble
             var dynamicValues = values
                 .Where(x => !map.Column.HasStaticPropertyMapping(x.Key))
                 .ToDictionary(x => map.Column.GetDynamicName(x.Key), 
-                    x => ConvertValue(x.Value));
+                    x => ConvertValue(x.Value), StringComparer.OrdinalIgnoreCase);
             dynamicProperty.Values.Init(entity, dynamicValues);
         }
 
