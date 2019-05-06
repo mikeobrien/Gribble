@@ -13,10 +13,8 @@ namespace Gribble.Mapping
         {
             public enum MappingType
             {
-                StaticColumn,
-                StaticProperty,
-                DynamicColumn,
-                DynamicProperty
+                Column,
+                Property
             }
 
             public InvalidMappingException(string name, MappingType type) :
@@ -70,7 +68,7 @@ namespace Gribble.Mapping
             var mapping = ((IColumnMap)this).TryGetStaticProperty(columnName);
             if (mapping == null)
                 throw new InvalidMappingException(columnName, 
-                    InvalidMappingException.MappingType.StaticColumn);
+                    InvalidMappingException.MappingType.Column);
             return mapping;
         }
 
@@ -113,20 +111,22 @@ namespace Gribble.Mapping
 
         bool IDynamicPropertyMap.HasColumnMapping(string propertyName)
         {
-            if (Key.Property?.Name == propertyName || 
+            if ((Key.Property?.Name).EqualsIgnoreCase(propertyName) || 
                 StaticProperty.HasColumnMapping(propertyName)) return false;
             return !_hasDynamicMapping || 
-                _dynamicMapping.Any(x => x.Name == propertyName);
+                _dynamicMapping.Any(x => x.Name.EqualsIgnoreCase(propertyName));
         }
 
         bool IDynamicPropertyMap.IsReadonly(string propertyName)
         {
-            return _dynamicMapping?.FirstOrDefault(x => x.Name == propertyName)?.Readonly ?? false;
+            return _dynamicMapping?.FirstOrDefault(x => x.Name
+                .EqualsIgnoreCase(propertyName))?.Readonly ?? false;
         }
 
         string IDynamicPropertyMap.GetColumnName(string propertyName)
         {
-            var columnName = _dynamicMapping?.FirstOrDefault(x => x.Name == propertyName)?.ColumnName;
+            var columnName = _dynamicMapping?.FirstOrDefault(x => x.Name
+                .EqualsIgnoreCase(propertyName))?.ColumnName;
             return columnName ?? propertyName;
         }
 
@@ -148,7 +148,7 @@ namespace Gribble.Mapping
                 .Property.Name.EqualsIgnoreCase(propertyName))?.ColumnName;;
             if (columnName == null)
                 throw new InvalidMappingException(propertyName, 
-                    InvalidMappingException.MappingType.StaticProperty);
+                    InvalidMappingException.MappingType.Property);
             return columnName;
         }
 
