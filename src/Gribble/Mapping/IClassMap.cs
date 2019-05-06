@@ -8,7 +8,7 @@ namespace Gribble.Mapping
     {
         Type Type { get; }
         KeyPropertyMapping KeyProperty { get; set; }
-        PropertyInfo DynamicProperty { get; }
+        DynamicMap DynamicProperty { get; }
         List<PropertyMapping> Properties { get; }
     }
 }

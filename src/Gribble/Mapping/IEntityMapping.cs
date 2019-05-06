@@ -25,6 +25,7 @@ namespace Gribble.Mapping
         bool HasProperty { get; }
         PropertyInfo Property { get; }
         bool HasColumnMapping(string propertyName);
+        bool IsReadonly(string propertyName);
         string GetColumnName(string propertyName);
     }
 

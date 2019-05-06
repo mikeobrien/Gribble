@@ -40,7 +40,8 @@ namespace Gribble
             return Table<TEntity>.Create(
                 _connectionManager, 
                 tableName, 
-                _mappingCollection.GetEntityMapping<TEntity>(mapping.Select(x => new DynamicMapping(x.ColumnName, x.Name))), 
+                _mappingCollection.GetEntityMapping<TEntity>(mapping
+                    .Select(x => new DynamicMapping(x.ColumnName, x.Name))), 
                 _profiler, 
                 noLock);
         }

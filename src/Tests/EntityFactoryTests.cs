@@ -96,10 +96,12 @@ namespace Tests
 
             entity.ShouldNotBeNull();
             entity.Static.ShouldEqual("static value");
-            entity.Dynamic.Count.ShouldEqual(3);
+            entity.Dynamic.Count.ShouldEqual(4);
             entity.Dynamic["static1"].ShouldEqual("static value");
             entity.Dynamic["dynamic1"].ShouldEqual("dynamic value 1");
             entity.Dynamic["dynamic2"].ShouldEqual("dynamic value 2");
+
+            entity.Dynamic["dynamic_field_3"].ShouldEqual("dynamic value 3");
         }
 
         public class AnonObject
@@ -182,10 +184,12 @@ namespace Tests
 
             entity.ShouldNotBeNull();
             entity.Implicit.ShouldEqual("implicit value");
-            entity.Dynamic.Count.ShouldEqual(3);
+            entity.Dynamic.Count.ShouldEqual(4);
             entity.Dynamic["static"].ShouldEqual("implicit value");
             entity.Dynamic["dynamic1"].ShouldEqual("dynamic value 1");
             entity.Dynamic["dynamic2"].ShouldEqual("dynamic value 2");
+
+            entity.Dynamic["dynamic_field_3"].ShouldEqual("dynamic value 3");
         }
     }
 }

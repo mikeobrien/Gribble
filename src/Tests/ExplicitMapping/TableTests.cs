@@ -38,7 +38,8 @@ namespace Tests.ExplicitMapping
                 Id(x => x.Id).Column("id").Identity();
                 Map(x => x.Name).Column("name");
                 Map(x => x.CurrentTime).Column("currenttime").Readonly();
-                Map(x => x.Values).Dynamic();
+                Map(x => x.Values).Dynamic()
+                    .Map("Random").Column("randomid").Readonly();
             }
         }
 
@@ -49,7 +50,8 @@ namespace Tests.ExplicitMapping
                 Id(x => x.Id).Column("uid").GuidComb();
                 Map(x => x.Name).Column("name");
                 Map(x => x.CurrentTime).Column("currenttime").Readonly();
-                Map(x => x.Values).Dynamic();
+                Map(x => x.Values).Dynamic()
+                    .Map("Random").Column("randomid").Readonly();
             }
         }
 
@@ -74,6 +76,7 @@ namespace Tests.ExplicitMapping
                 "[upc] [uniqueidentifier] DEFAULT NEWID(), " +
                 "[code] [int] DEFAULT 5, " +
                 "[currenttime] AS (GETDATE()), " +
+                "[randomid] AS (NEWID()), " +
                 "[uid] [uniqueidentifier] NOT NULL";
             const string dataColumns = "name, hide, [timestamp], [uid]";
             const string data = "'oh hai', 0, GETDATE(), NEWID()";
@@ -107,6 +110,7 @@ namespace Tests.ExplicitMapping
             result.Values.Count.ShouldBeGreaterThan(2);
             ((bool)result.Values["hide"]).ShouldEqual(false);
             ((DateTime)result.Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+            ((Guid)result.Values["Random"]).ShouldNotEqual(Guid.Empty);
         }
 
         [Test]
@@ -116,9 +120,11 @@ namespace Tests.ExplicitMapping
             results.Count.ShouldBeGreaterThan(2);
             results.All(x => x.Name.Length > 3).ShouldEqual(true);
             results.All(x => x.Id > 0).ShouldEqual(true);
-            results.First().Values.Count.ShouldBeGreaterThan(2);
-            ((bool)results.First().Values["hide"]).ShouldEqual(false);
-            ((DateTime)results.First().Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+            var result = results.First();
+            result.Values.Count.ShouldBeGreaterThan(2);
+            ((bool)result.Values["hide"]).ShouldEqual(false);
+            ((DateTime)result.Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+            ((Guid)result.Values["Random"]).ShouldNotEqual(Guid.Empty);
         }
 
         [Test]

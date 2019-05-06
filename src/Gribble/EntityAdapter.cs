@@ -34,7 +34,7 @@ namespace Gribble
             if (_map.DynamicProperty.HasProperty) 
                 properties = properties
                     .Union(TryGetDynamicValues()
-                        .Where(x => _map.DynamicProperty.HasColumnMapping(x.Key) && 
+                        .Where(x => !_map.DynamicProperty.IsReadonly(x.Key) && 
                                     !_map.StaticProperty.HasColumnMapping(x.Key))
                     .Select(x => new
                     {

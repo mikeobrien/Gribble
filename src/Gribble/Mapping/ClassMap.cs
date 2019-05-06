@@ -9,7 +9,7 @@ namespace Gribble.Mapping
     public abstract class ClassMap<T> : IClassMap
     {
         public List<PropertyMapping> Properties { get; } = new List<PropertyMapping>();
-        public PropertyInfo DynamicProperty { get; set; }
+        public DynamicMap DynamicProperty { get; set; }
         public KeyPropertyMapping KeyProperty { get; set; }
 
         public Type Type => typeof(T);
@@ -71,9 +71,9 @@ namespace Gribble.Mapping
             return new ColumnMappingDsl(property.GetProperty(), this);
         }
 
-        public DynamicMappingDsl Map(Expression<Func<T, IDictionary<string, object>>> property)
+        public DynamicDsl Map(Expression<Func<T, IDictionary<string, object>>> property)
         {
-            return new DynamicMappingDsl(property.GetProperty(), this);
+            return new DynamicDsl(property.GetProperty(), this);
         }
 
         protected IntegerKeyMappingDsl IntegerId(PropertyInfo property)
@@ -88,7 +88,7 @@ namespace Gribble.Mapping
 
         protected void MapDynamic(PropertyInfo property)
         {
-            new DynamicMappingDsl(property, this).Dynamic();
+            new DynamicDsl(property, this).Dynamic();
         }
 
         private void AddKeyMapping(PrimaryKeyType type, string columnName, PropertyInfo property)
@@ -110,26 +110,26 @@ namespace Gribble.Mapping
 
         public abstract class MappingDslBase
         {
-            protected readonly ClassMap<T> Map;
+            protected readonly ClassMap<T> ClassMap;
             protected readonly PropertyInfo Property;
 
-            protected MappingDslBase(PropertyInfo property, ClassMap<T> map)
+            protected MappingDslBase(PropertyInfo property, ClassMap<T> classMap)
             {
-                Map = map;
+                ClassMap = classMap;
                 Property = property;
             }
         }
 
         public class ColumnMappingDsl : MappingDslBase
         {
-            public ColumnMappingDsl(PropertyInfo property, ClassMap<T> map) : base(property, map)
+            public ColumnMappingDsl(PropertyInfo property, ClassMap<T> classMap) : base(property, classMap)
             {
                 Column(property.Name);
             }
 
             public MappingConfigDsl Column(string name)
             {
-                return new MappingConfigDsl(Map.AddMapping(name, Property));
+                return new MappingConfigDsl(ClassMap.AddMapping(name, Property));
             }
         }
 
@@ -148,13 +148,62 @@ namespace Gribble.Mapping
             }
         }
 
-        public class DynamicMappingDsl : MappingDslBase
+        public class DynamicDsl : MappingDslBase
         {
-            public DynamicMappingDsl(PropertyInfo property, ClassMap<T> map) : base(property, map) { }
+            public DynamicDsl(PropertyInfo property, ClassMap<T> classMap) : base(property, classMap) { }
 
-            public void Dynamic()
+            public DynamicMappingDsl Dynamic()
             {
-                Map.DynamicProperty = Property;
+                return new DynamicMappingDsl(ClassMap.DynamicProperty = new DynamicMap(Property));
+            }
+        }
+
+        public class DynamicMappingDsl
+        {
+            private readonly DynamicMap _map;
+
+            public DynamicMappingDsl(DynamicMap map)
+            {
+                _map = map;
+            }
+
+            public DynamicColumnMappingDsl Map(string name)
+            {
+                return new DynamicColumnMappingDsl(_map, name);
+            }
+        }
+
+        public class DynamicColumnMappingDsl
+        {
+            private readonly DynamicMap _map;
+            private readonly string _name;
+
+            public DynamicColumnMappingDsl(DynamicMap map, string name)
+            {
+                _map = map;
+                _name = name;
+            }
+
+            public DynamicColumnMappingConfigDsl Column(string columnName)
+            {
+                var mapping = new DynamicMapping(columnName, _name);
+                _map.Mapping.Add(mapping);
+                return new DynamicColumnMappingConfigDsl(mapping);
+            }
+        }
+
+        public class DynamicColumnMappingConfigDsl
+        {
+            private readonly DynamicMapping _mapping;
+
+            public DynamicColumnMappingConfigDsl(DynamicMapping mapping)
+            {
+                _mapping = mapping;
+            }
+
+            public void Readonly()
+            {
+                _mapping.Readonly = true;
             }
         }
 
@@ -162,27 +211,27 @@ namespace Gribble.Mapping
         {
             private readonly PrimaryKeyType _type;
 
-            public KeyMappingDsl(PropertyInfo property, PrimaryKeyType type, ClassMap<T> map) : 
-                base(property, map)
+            public KeyMappingDsl(PropertyInfo property, PrimaryKeyType type, ClassMap<T> classMap) : 
+                base(property, classMap)
             {
                 _type = type;
             }
 
             public virtual KeyMappingDsl Column(string name)
             {
-                Map.AddKeyMapping(_type, name, Property);
+                ClassMap.AddKeyMapping(_type, name, Property);
                 return this;
             }
         }
 
         public class IntegerKeyMappingDsl : KeyMappingDsl
         {
-            public IntegerKeyMappingDsl(PropertyInfo property, ClassMap<T> map) :
-                base(property, PrimaryKeyType.Integer, map) { }
+            public IntegerKeyMappingDsl(PropertyInfo property, ClassMap<T> classMap) :
+                base(property, PrimaryKeyType.Integer, classMap) { }
 
             public void Identity()
             {
-                Map.KeyProperty.Generation = PrimaryKeyGeneration.Server;
+                ClassMap.KeyProperty.Generation = PrimaryKeyGeneration.Server;
             }
 
             public new IntegerKeyMappingDsl Column(string name)
@@ -194,12 +243,12 @@ namespace Gribble.Mapping
 
         public class GuidKeyMappingDsl : KeyMappingDsl
         {
-            public GuidKeyMappingDsl(PropertyInfo property, ClassMap<T> map) :
-                base(property, PrimaryKeyType.Guid, map) { }
+            public GuidKeyMappingDsl(PropertyInfo property, ClassMap<T> classMap) :
+                base(property, PrimaryKeyType.Guid, classMap) { }
 
             public void GuidComb()
             {
-                Map.KeyProperty.Generation = PrimaryKeyGeneration.Client;
+                ClassMap.KeyProperty.Generation = PrimaryKeyGeneration.Client;
             }
 
             public new GuidKeyMappingDsl Column(string name)

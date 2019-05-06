@@ -128,7 +128,7 @@ namespace Tests
             var entity = _createEntity();
             var reader = new EntityAdapter<Entity>(entity, Map);
             var values = reader.GetValues();
-            values.Count.ShouldEqual(17);
+            values.Count.ShouldEqual(18);
 
             values["col_active"].ShouldEqual(entity.Active);
             values["col_age"].ShouldEqual(entity.Age);
@@ -147,6 +147,8 @@ namespace Tests
             values["col_companyname"].ShouldEqual(entity.Values["CompanyName"]);
             values["col_optout"].ShouldEqual(entity.Values["OptOut"]);
             values["col_optoutdate"].ShouldEqual(entity.Values["OptOutDate"]);
+
+            values["col_optoutstatus"].ShouldEqual(entity.Values["col_optoutstatus"]);
         }
 
         [Test]
@@ -155,12 +157,14 @@ namespace Tests
             var entity = _createNoIdEntity();
             var reader = new EntityAdapter<NoIdEntity>(entity, NoIdMap);
             var values = reader.GetValues();
-            values.Count.ShouldEqual(4);
+            values.Count.ShouldEqual(5);
 
             values["col_name"].ShouldEqual(entity.Name);
             values["col_companyname"].ShouldEqual(entity.Values["CompanyName"]);
             values["col_optout"].ShouldEqual(entity.Values["OptOut"]);
             values["col_optoutdate"].ShouldEqual(entity.Values["OptOutDate"]);
+
+            values["col_optoutstatus"].ShouldEqual(entity.Values["col_optoutstatus"]);
         }
 
         [Test]

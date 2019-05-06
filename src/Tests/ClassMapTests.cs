@@ -93,7 +93,7 @@ namespace Tests
             map.Properties[2].Property.Name.ShouldEqual("Age");
             map.Properties[2].ColumnName.ShouldEqual("Age");
             map.DynamicProperty.ShouldNotBeNull();
-            map.DynamicProperty.Name.ShouldEqual("Values");
+            map.DynamicProperty.Property.Name.ShouldEqual("Values");
             map.KeyProperty.Type.ShouldEqual(PrimaryKeyType.Integer);
             map.KeyProperty.Generation.ShouldEqual(PrimaryKeyGeneration.Server);
             map.KeyProperty.Property.Name.ShouldEqual("Id");
@@ -113,7 +113,7 @@ namespace Tests
             map.Properties[2].Property.Name.ShouldEqual("Age");
             map.Properties[2].ColumnName.ShouldEqual("Age");
             map.DynamicProperty.ShouldNotBeNull();
-            map.DynamicProperty.Name.ShouldEqual("Values");
+            map.DynamicProperty.Property.Name.ShouldEqual("Values");
             map.KeyProperty.Type.ShouldEqual(PrimaryKeyType.Guid);
             map.KeyProperty.Generation.ShouldEqual(PrimaryKeyGeneration.Client);
             map.KeyProperty.Property.Name.ShouldEqual("Id");
@@ -133,7 +133,7 @@ namespace Tests
             map.Properties[2].Property.Name.ShouldEqual("Age");
             map.Properties[2].ColumnName.ShouldEqual("col_age");
             map.DynamicProperty.ShouldNotBeNull();
-            map.DynamicProperty.Name.ShouldEqual("Values");
+            map.DynamicProperty.Property.Name.ShouldEqual("Values");
             map.KeyProperty.Type.ShouldEqual(PrimaryKeyType.Integer);
             map.KeyProperty.Generation.ShouldEqual(PrimaryKeyGeneration.Server);
             map.KeyProperty.Property.Name.ShouldEqual("Id");
@@ -153,7 +153,7 @@ namespace Tests
             map.Properties[2].Property.Name.ShouldEqual("Age");
             map.Properties[2].ColumnName.ShouldEqual("col_age");
             map.DynamicProperty.ShouldNotBeNull();
-            map.DynamicProperty.Name.ShouldEqual("Values");
+            map.DynamicProperty.Property.Name.ShouldEqual("Values");
             map.KeyProperty.Type.ShouldEqual(PrimaryKeyType.Guid);
             map.KeyProperty.Generation.ShouldEqual(PrimaryKeyGeneration.Client);
             map.KeyProperty.Property.Name.ShouldEqual("Id");
@@ -173,7 +173,7 @@ namespace Tests
             map.Properties[2].Property.Name.ShouldEqual("Age");
             map.Properties[2].ColumnName.ShouldEqual("col_age");
             map.DynamicProperty.ShouldNotBeNull();
-            map.DynamicProperty.Name.ShouldEqual("Values");
+            map.DynamicProperty.Property.Name.ShouldEqual("Values");
             map.KeyProperty.Type.ShouldEqual(PrimaryKeyType.Guid);
             map.KeyProperty.Generation.ShouldEqual(PrimaryKeyGeneration.Client);
             map.KeyProperty.Property.Name.ShouldEqual("Id");
