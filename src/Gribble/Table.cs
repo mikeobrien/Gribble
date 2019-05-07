@@ -130,7 +130,7 @@ namespace Gribble
                     adapter.Key = GuidComb.Create();
 
             var values = adapter.GetValues().Where(x => !hasIdentityKey || 
-                (x.Key != keyColumnName)).ToDictionary(x => x.Key, x => x.Value);
+                !x.Key.EqualsIgnoreCase(keyColumnName)).ToDictionary(x => x.Key, x => x.Value);
 
             var insert = new Insert
             {
@@ -165,9 +165,10 @@ namespace Gribble
         {
             var adapter = new EntityAdapter<TEntity>(entity, _mapping);
             var keyColumnName = _mapping.Key.ColumnName;
-            var values = adapter.GetValues().Where(x => x.Key != keyColumnName);
-            Command.Create(UpdateWriter<TEntity>.CreateStatement(new Update(values, Name, CreateEntityKeyFilter(entity, adapter)), _mapping), _profiler).
-                    ExecuteNonQuery(_connectionManager);
+            var values = adapter.GetValues().Where(x => !x.Key.EqualsIgnoreCase(keyColumnName));
+            Command.Create(UpdateWriter<TEntity>.CreateStatement(new Update(values, Name, 
+                    CreateEntityKeyFilter(entity, adapter)), _mapping), _profiler).
+                ExecuteNonQuery(_connectionManager);
         }
 
         public void Delete<T>(T id)

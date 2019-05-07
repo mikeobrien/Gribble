@@ -18,7 +18,7 @@ namespace Tests.ExplicitMapping
             public IdentityEntity() { Values = new Dictionary<string, object>(); }
             public int Id { get; set; }
             public string Name { get; set; }
-            public DateTime CurrentTime { get; set; }
+            public DateTime Now { get; set; }
             public IDictionary<string, object> Values { get; set; }
         }
 
@@ -27,7 +27,7 @@ namespace Tests.ExplicitMapping
             public GuidEntity() { Values = new Dictionary<string, object>(); }
             public Guid Id { get; set; }
             public string Name { get; set; }
-            public DateTime CurrentTime { get; set; }
+            public DateTime Now { get; set; }
             public IDictionary<string, object> Values { get; set; }
         }
 
@@ -37,7 +37,7 @@ namespace Tests.ExplicitMapping
             {
                 Id(x => x.Id).Column("id").Identity();
                 Map(x => x.Name).Column("name");
-                Map(x => x.CurrentTime).Column("currenttime").Readonly();
+                Map(x => x.Now).Column("currenttime").Readonly();
                 Map(x => x.Values).Dynamic()
                     .Map("Random").Column("randomid").Readonly();
             }
@@ -49,7 +49,7 @@ namespace Tests.ExplicitMapping
             {
                 Id(x => x.Id).Column("uid").GuidComb();
                 Map(x => x.Name).Column("name");
-                Map(x => x.CurrentTime).Column("currenttime").Readonly();
+                Map(x => x.Now).Column("currenttime").Readonly();
                 Map(x => x.Values).Dynamic()
                     .Map("Random").Column("randomid").Readonly();
             }
@@ -107,6 +107,7 @@ namespace Tests.ExplicitMapping
             result.ShouldNotBeNull();
             result.Id.ShouldEqual(7);
             result.Name.Length.ShouldBeGreaterThan(3);
+            result.Now.ShouldBeGreaterThan(DateTime.Now.AddDays(-1));
             result.Values.Count.ShouldBeGreaterThan(2);
             ((bool)result.Values["hide"]).ShouldEqual(false);
             ((DateTime)result.Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
@@ -120,6 +121,7 @@ namespace Tests.ExplicitMapping
             results.Count.ShouldBeGreaterThan(2);
             results.All(x => x.Name.Length > 3).ShouldEqual(true);
             results.All(x => x.Id > 0).ShouldEqual(true);
+            results.All(x => x.Now > DateTime.Now.AddDays(-1)).ShouldEqual(true);
             var result = results.First();
             result.Values.Count.ShouldBeGreaterThan(2);
             ((bool)result.Values["hide"]).ShouldEqual(false);
@@ -232,6 +234,8 @@ namespace Tests.ExplicitMapping
             entity.Name = "Some new name.";
             var newUid = Guid.NewGuid();
             entity.Values["uid"] = newUid;
+            entity.Values.Add("random", Guid.NewGuid());
+            entity.Values.Add("now", DateTime.Now);
             _identityTable1.Update(entity);
             var newEntity = _identityTable1.First(x => x.Id == 3);
             newEntity.Name.ShouldEqual("Some new name.");
@@ -248,6 +252,8 @@ namespace Tests.ExplicitMapping
             entity.Values.Add("timestamp", DateTime.Now);
             entity.Values.Add("hide", true);
             entity.Values.Add("uid", Guid.NewGuid());
+            entity.Values.Add("random", Guid.NewGuid());
+            entity.Values.Add("now", DateTime.Now);
             _identityTable1.Insert(entity);
             entity.Id.ShouldBeGreaterThan(0);
             var newEntity = _identityTable1.First(x => x.Id == entity.Id);
@@ -264,6 +270,8 @@ namespace Tests.ExplicitMapping
             entity.Name = "oh hai";
             entity.Values.Add("timestamp", DateTime.Now);
             entity.Values.Add("hide", true);
+            entity.Values.Add("random", Guid.NewGuid());
+            entity.Values.Add("now", DateTime.Now);
             _guidTable1.Insert(entity);
             entity.Id.ShouldNotEqual(Guid.Empty);
             var newEntity = _guidTable1.First(x => x.Id == entity.Id);
