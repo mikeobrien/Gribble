@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Gribble.Extensions;
 using Gribble.TransactSql;
 
@@ -37,6 +38,17 @@ namespace Gribble
             });
         }
 
+        public Task<SqlDataReader> ExecuteReaderAsync(IConnectionManager connectionManager)
+        {
+            return Execute(() =>
+            {
+                using (var command = CreateCommand(connectionManager))
+                {
+                    return command.ExecuteReaderAsync();
+                }
+            });
+        }
+
         public T ExecuteScalar<T>(IConnectionManager connectionManager)
         {
             return Execute(() =>
@@ -44,6 +56,17 @@ namespace Gribble
                 using (var command = CreateCommand(connectionManager))
                 {
                     return command.ExecuteScalar().FromDb<T>();
+                }
+            });
+        }
+
+        public Task<T> ExecuteScalarAsync<T>(IConnectionManager connectionManager)
+        {
+            return Execute(() =>
+            {
+                using (var command = CreateCommand(connectionManager))
+                {
+                    return command.ExecuteScalarAsync().FromDbAsync<T>();
                 }
             });
         }
@@ -59,6 +82,17 @@ namespace Gribble
             });
         }
 
+        public Task<object> ExecuteScalarAsync(IConnectionManager connectionManager)
+        {
+            return Execute(() =>
+            {
+                using (var command = CreateCommand(connectionManager))
+                {
+                    return command.ExecuteScalarAsync().FromDbAsync<object>();
+                }
+            });
+        }
+
         public int ExecuteNonQuery(IConnectionManager connectionManager)
         {
             return Execute(() =>
@@ -66,6 +100,17 @@ namespace Gribble
                 using (var command = CreateCommand(connectionManager))
                 {
                     return command.ExecuteNonQuery();
+                }
+            });
+        }
+
+        public Task<int> ExecuteNonQueryAsync(IConnectionManager connectionManager)
+        {
+            return Execute(() =>
+            {
+                using (var command = CreateCommand(connectionManager))
+                {
+                    return command.ExecuteNonQueryAsync();
                 }
             });
         }
@@ -84,9 +129,28 @@ namespace Gribble
             });
         }
 
+        public Task<TReturn> ExecuteNonQueryAsync<TReturn>(IConnectionManager connectionManager)
+        {
+            return Execute(async () => {
+                const string parameterName = "@__return__";
+                using (var command = CreateCommand(connectionManager))
+                {
+                    command.Parameters.Add(new SqlParameter {
+                        ParameterName = parameterName, Direction = ParameterDirection.ReturnValue });
+                    await command.ExecuteNonQueryAsync();
+                    return (TReturn)command.Parameters[parameterName].Value;
+                }
+            });
+        }
+
         public IEnumerable<T> ExecuteEnumerable<T>(IConnectionManager connectionManager)
         {
             return ExecuteEnumerable(connectionManager, x => x[0].FromDb<T>());
+        }
+
+        public Task<IEnumerable<T>> ExecuteEnumerableAsync<T>(IConnectionManager connectionManager)
+        {
+            return ExecuteEnumerableAsync(connectionManager, x => x[0].FromDb<T>());
         }
 
         public IEnumerable<T> ExecuteEnumerable<T>(IConnectionManager connectionManager, Func<IDataReader, T> createItem)
@@ -97,6 +161,18 @@ namespace Gribble
                 using (var reader = CreateCommand(connectionManager).ExecuteReader())
                     while (reader.Read()) values.Add(createItem(reader));
                 return values;
+            });
+        }
+
+        public Task<IEnumerable<T>> ExecuteEnumerableAsync<T>(
+            IConnectionManager connectionManager, Func<IDataReader, T> createItem)
+        {
+            return Execute(async () =>
+            {
+                var values = new List<T>();
+                using (var reader = await CreateCommand(connectionManager).ExecuteReaderAsync())
+                    while (reader.Read()) values.Add(createItem(reader));
+                return (IEnumerable<T>)values;
             });
         }
         
@@ -112,6 +188,7 @@ namespace Gribble
                 }
             });
         }
+
         public DataTable ExecuteDataTable(string tableName, IConnectionManager connectionManager)
         {
             return Execute(() =>

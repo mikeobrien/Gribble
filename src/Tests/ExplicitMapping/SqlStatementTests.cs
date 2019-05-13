@@ -159,10 +159,34 @@ namespace Tests.ExplicitMapping
         }
 
         [Test]
+        public void should_get_scalar_async_result(
+            [Values(FirstBatch, "")] string firstBatch)
+        {
+            var result = SqlStatement.ExecuteScalarAsync<int>(
+                $"{firstBatch}SELECT COUNT(*) FROM {Database.FirstTable.Name}")
+                .Result;
+            result.ShouldBeGreaterThan(8);
+        }
+
+        [Test]
         public void should_execute_non_query(
             [Values(FirstBatch, "")] string firstBatch)
         {
-            SqlStatement.Execute($"{firstBatch}DELETE FROM {Database.FirstTable.Name} WHERE Id=@Id", new { Id = 6 }).ShouldEqual(1);
+            SqlStatement.ExecuteNonQuery($"{firstBatch}DELETE FROM {Database.FirstTable.Name} WHERE Id=@Id", new { Id = 6 }).ShouldEqual(1);
+
+            var result = SqlStatement.ExecuteScalar<int>($"SELECT COUNT(*) FROM {Database.FirstTable.Name}");
+            result.ShouldEqual(9);
+        }
+
+        [Test]
+        public void should_execute_non_query_async(
+            [Values(FirstBatch, "")] string firstBatch)
+        {
+            SqlStatement.ExecuteNonQueryAsync(
+                $"{firstBatch}DELETE FROM {Database.FirstTable.Name} WHERE Id=@Id", 
+                new { Id = 6 })
+                .Result
+                .ShouldEqual(1);
 
             var result = SqlStatement.ExecuteScalar<int>($"SELECT COUNT(*) FROM {Database.FirstTable.Name}");
             result.ShouldEqual(9);

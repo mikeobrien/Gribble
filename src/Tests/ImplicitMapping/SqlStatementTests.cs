@@ -149,7 +149,7 @@ namespace Tests.ImplicitMapping
         public void should_execute_non_query(
             [Values(FirstBatch, "")] string firstBatch)
         {
-            SqlStatement.Execute($"DELETE FROM {Database.FirstTable.Name} WHERE Id=@Id", new { Id = 6 }).ShouldEqual(1);
+            SqlStatement.ExecuteNonQuery($"DELETE FROM {Database.FirstTable.Name} WHERE Id=@Id", new { Id = 6 }).ShouldEqual(1);
 
             var result = SqlStatement.ExecuteScalar<int>($"{firstBatch}SELECT COUNT(*) FROM {Database.FirstTable.Name}");
             result.ShouldEqual(9);

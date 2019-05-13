@@ -155,7 +155,7 @@ namespace Tests.ImplicitMapping
         [Test]
         public void should_execute_non_query_return()
         {
-            StoredProcedure.Execute<int>("ReturnValue").ShouldEqual(42);
+            StoredProcedure.ExecuteNonQuery<int>("ReturnValue").ShouldEqual(42);
         }
 
         [Test]

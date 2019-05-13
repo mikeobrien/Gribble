@@ -154,6 +154,13 @@ namespace Tests.ExplicitMapping
         }
 
         [Test]
+        public void should_get_async_scalar_result()
+        {
+            var result = StoredProcedure.ExecuteScalarAsync<int>("GetCount").Result;
+            result.ShouldBeGreaterThan(8);
+        }
+
+        [Test]
         public void should_execute_non_query()
         {
             StoredProcedure.Execute("DeleteOne", new { Id = 6 }).ShouldEqual(1);
@@ -163,9 +170,24 @@ namespace Tests.ExplicitMapping
         }
 
         [Test]
+        public void should_execute_async_non_query()
+        {
+            StoredProcedure.Execute("DeleteOne", new { Id = 6 }).ShouldEqual(1);
+
+            var result = StoredProcedure.ExecuteScalarAsync<int>("GetCount").Result;
+            result.ShouldEqual(9);
+        }
+
+        [Test]
         public void should_execute_non_query_return()
         {
-            StoredProcedure.Execute<int>("ReturnValue").ShouldEqual(42);
+            StoredProcedure.ExecuteNonQuery<int>("ReturnValue").ShouldEqual(42);
+        }
+
+        [Test]
+        public void should_execute_async_non_query_return()
+        {
+            StoredProcedure.ExecuteNonQueryAsync<int>("ReturnValue").Result.ShouldEqual(42);
         }
 
         [Test]
