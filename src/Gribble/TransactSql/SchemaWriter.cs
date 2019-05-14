@@ -207,7 +207,12 @@ namespace Gribble.TransactSql
 
         public static Statement CreateAddNonClusteredIndexStatement(string tableName, params Index.Column[] columns)
         {
-            var indexName = string.Format("IX_{0}_{1}", tableName, string.Join("_", columns.Select(x => x.Name)));
+            var indexName = $"IX_{tableName}_{string.Join("_", columns.Select(x => x.Name))}";
+            return CreateAddNonClusteredIndexStatement(tableName, indexName, columns);
+        }
+
+        public static Statement CreateAddNonClusteredIndexStatement(string tableName, string indexName, params Index.Column[] columns)
+        {
             var writer = SqlWriter.CreateWriter().Create.NonClustered.Index.QuotedName(indexName).On.QuotedName(tableName).OpenBlock.Trim();
             var first = true;
             foreach (var column in columns)

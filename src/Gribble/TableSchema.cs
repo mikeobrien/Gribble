@@ -24,6 +24,7 @@ namespace Gribble
         void RemoveColumn(string tableName, string columnName);
 
         List<Index> GetIndexes(string tableName);
+        void AddNonClusteredIndex(string tableName, string indexName, params Index.Column[] columns);
         void AddNonClusteredIndex(string tableName, params Index.Column[] columns);
         void AddNonClusteredIndexes(string tableName, params Index.ColumnSet[] indexColumns);
         void RemoveNonClusteredIndex(string tableName, string indexName);
@@ -168,6 +169,11 @@ namespace Gribble
                 }
             }
             return indexes;
+        }
+
+        public void AddNonClusteredIndex(string tableName, string indexName, params Index.Column[] columns)
+        { 
+            Command.Create(SchemaWriter.CreateAddNonClusteredIndexStatement(tableName, indexName, columns), _profiler).ExecuteNonQuery(_connectionManager);
         }
 
         public void AddNonClusteredIndex(string tableName, params Index.Column[] columns)
