@@ -163,7 +163,7 @@ namespace Tests.ExplicitMapping
         [Test]
         public void should_execute_non_query()
         {
-            StoredProcedure.Execute("DeleteOne", new { Id = 6 }).ShouldEqual(1);
+            StoredProcedure.ExecuteNonQuery("DeleteOne", new { Id = 6 }).ShouldEqual(1);
 
             var result = StoredProcedure.ExecuteScalar<int>("GetCount");
             result.ShouldEqual(9);
@@ -172,7 +172,7 @@ namespace Tests.ExplicitMapping
         [Test]
         public void should_execute_async_non_query()
         {
-            StoredProcedure.Execute("DeleteOne", new { Id = 6 }).ShouldEqual(1);
+            StoredProcedure.ExecuteNonQuery("DeleteOne", new { Id = 6 }).ShouldEqual(1);
 
             var result = StoredProcedure.ExecuteScalarAsync<int>("GetCount").Result;
             result.ShouldEqual(9);

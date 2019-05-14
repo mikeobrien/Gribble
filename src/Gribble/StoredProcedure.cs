@@ -189,13 +189,13 @@ namespace Gribble
 
     public static class IStoredProcedureExtensions
     {
-        public static int Execute(this IStoredProcedure storedProcedure,
+        public static int ExecuteNonQuery(this IStoredProcedure storedProcedure,
             string name, object parameters)
         {
             return storedProcedure.ExecuteNonQuery(name, parameters.AsDictionary());
         }
 
-        public static TReturn Execute<TReturn>(this IStoredProcedure storedProcedure,
+        public static TReturn ExecuteNonQuery<TReturn>(this IStoredProcedure storedProcedure,
             string name, object parameters)
         {
             return storedProcedure.ExecuteNonQuery<TReturn>(name, parameters.AsDictionary());
