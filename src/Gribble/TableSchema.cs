@@ -18,6 +18,7 @@ namespace Gribble
         void DeleteTable(string tableName);
 
         List<Column> GetColumns(string tableName);
+        Column GetColumn(string tableName, string columnName);
         void AddColumn(string tableName, Column column);
         void AddColumns(string tableName, params Column[] columns);
         void RemoveColumn(string tableName, string columnName);
@@ -93,6 +94,15 @@ namespace Gribble
             using (var reader = Command.Create(statement, _profiler).ExecuteReader(_connectionManager))
                 while (reader.Read()) columns.Add(ColumnFactory(reader)); 
             return columns;
+        }
+
+        public Column GetColumn(string tableName, string columnName)
+        {
+            var statement = SchemaWriter.CreateTableColumnStatement(tableName, columnName);
+            var columns = new List<Column>();
+            using (var reader = Command.Create(statement, _profiler).ExecuteReader(_connectionManager))
+                while (reader.Read()) columns.Add(ColumnFactory(reader)); 
+            return columns.FirstOrDefault();
         }
 
         internal static Column ColumnFactory(IDataReader reader)

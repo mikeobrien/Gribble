@@ -34,6 +34,14 @@ namespace Gribble.TransactSql
             return new Statement(writer.ToString(), Statement.StatementType.Text, Statement.ResultType.Multiple);
         }
 
+        public static Statement CreateTableColumnStatement(string tableName, string columnName)
+        {
+            var writer = WriteSelectColumns(SqlWriter.CreateWriter()).
+                Where.Write(System.Columns.Aliased.ObjectId).Equal.ObjectId(tableName).And
+                    .QuotedName(System.Columns.Aliased.Name).Equal.QuotedString(columnName);
+            return new Statement(writer.ToString(), Statement.StatementType.Text, Statement.ResultType.Multiple);
+        }
+
         public static SqlWriter WriteSelectColumns(SqlWriter writer, IEnumerable<string> tables = null)
         {
             return writer.Select.
