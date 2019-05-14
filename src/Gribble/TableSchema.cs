@@ -14,14 +14,15 @@ namespace Gribble
         void CreateTable(string tableName, params Column[] columns);
         void CreateTable(string tableName, string modelTable);
         bool TableExists(string tableName);
+        void RenameTable(string oldName, string newName);
         void DeleteTable(string tableName);
 
-        IEnumerable<Column> GetColumns(string tableName);
+        List<Column> GetColumns(string tableName);
         void AddColumn(string tableName, Column column);
         void AddColumns(string tableName, params Column[] columns);
         void RemoveColumn(string tableName, string columnName);
 
-        IEnumerable<Index> GetIndexes(string tableName);
+        List<Index> GetIndexes(string tableName);
         void AddNonClusteredIndex(string tableName, params Index.Column[] columns);
         void AddNonClusteredIndexes(string tableName, params Index.ColumnSet[] indexColumns);
         void RemoveNonClusteredIndex(string tableName, string indexName);
@@ -54,6 +55,17 @@ namespace Gribble
                 .ExecuteScalar<bool>(_connectionManager);
         }
 
+        public void RenameTable(string oldName, string newName)
+        {
+            Command.Create(new Statement("sp_rename", Statement.StatementType.StoredProcedure, 
+                new Dictionary<string, object>
+                {
+                    { "objname", oldName },
+                    { "newname", newName }
+                }), _profiler)
+                .ExecuteNonQuery(_connectionManager);
+        }
+
         public void CreateTable(string tableName, params Column[] columns)
         {
             Command.Create(SchemaWriter.CreateTableCreateStatement(tableName, columns), _profiler)
@@ -74,7 +86,7 @@ namespace Gribble
                 .ExecuteNonQuery(_connectionManager);
         }
 
-        public IEnumerable<Column> GetColumns(string tableName)
+        public List<Column> GetColumns(string tableName)
         {
             var statement = SchemaWriter.CreateTableColumnsStatement(tableName);
             var columns = new List<Column>();
@@ -121,7 +133,7 @@ namespace Gribble
         public void RemoveColumn(string tableName, string columnName)
         { Command.Create(SchemaWriter.CreateRemoveColumnStatement(tableName, columnName), _profiler).ExecuteNonQuery(_connectionManager); }
 
-        public IEnumerable<Index> GetIndexes(string tableName)
+        public List<Index> GetIndexes(string tableName)
         {
             var indexes = new List<Index>();
             using (var reader = Command.Create(SchemaWriter.CreateGetIndexesStatement(tableName), _profiler).ExecuteReader(_connectionManager))
@@ -161,6 +173,8 @@ namespace Gribble
         }
 
         public void RemoveNonClusteredIndex(string tableName, string indexName)
-        { Command.Create(SchemaWriter.CreateRemoveNonClusteredIndexStatement(tableName, indexName), _profiler).ExecuteNonQuery(_connectionManager); }
+        {
+            Command.Create(SchemaWriter.CreateRemoveNonClusteredIndexStatement(tableName, indexName), _profiler).ExecuteNonQuery(_connectionManager);
+        }
     }
 }
