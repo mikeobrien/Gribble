@@ -14,6 +14,7 @@ namespace Gribble
         void CreateTable(string tableName, params Column[] columns);
         void CreateTable(string tableName, string modelTable);
         bool TableExists(string tableName);
+        void RenameTable(string oldName, string newName);
         void DeleteTable(string tableName);
 
         IEnumerable<Column> GetColumns(string tableName);
@@ -52,6 +53,17 @@ namespace Gribble
         {
             return Command.Create(SchemaWriter.CreateTableExistsStatement(tableName), _profiler)
                 .ExecuteScalar<bool>(_connectionManager);
+        }
+
+        public void RenameTable(string oldName, string newName)
+        {
+            Command.Create(new Statement("sp_rename", Statement.StatementType.StoredProcedure, 
+                new Dictionary<string, object>
+                {
+                    { "objname", oldName },
+                    { "newname", newName }
+                }), _profiler)
+                .ExecuteNonQuery(_connectionManager);
         }
 
         public void CreateTable(string tableName, params Column[] columns)
@@ -161,6 +173,8 @@ namespace Gribble
         }
 
         public void RemoveNonClusteredIndex(string tableName, string indexName)
-        { Command.Create(SchemaWriter.CreateRemoveNonClusteredIndexStatement(tableName, indexName), _profiler).ExecuteNonQuery(_connectionManager); }
+        {
+            Command.Create(SchemaWriter.CreateRemoveNonClusteredIndexStatement(tableName, indexName), _profiler).ExecuteNonQuery(_connectionManager);
+        }
     }
 }
