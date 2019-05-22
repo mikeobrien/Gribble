@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using Gribble;
-using Gribble.Mapping;
-using NHibernate.Util;
 using NUnit.Framework;
 using Should;
 
@@ -64,6 +62,16 @@ namespace Tests.ImplicitMapping
             result.Values["Name"].ShouldEqual("oh hai");
             result.Values["hide"].ShouldEqual(false);
             ((DateTime)result.Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+        }
+
+        [Test]
+        public void should_get_object_array_results()
+        {
+            var results = SqlStatement.ExecuteMany<object[]>($"SELECT id, name, hide FROM {Database.FirstTable.Name}").ToList();
+            results.Count().ShouldEqual(10);
+            results.All(x => (int)x[0] > -1).ShouldEqual(true);
+            results.All(x => ((string)x[1]).Length > 3).ShouldEqual(true);
+            results.All(x => !(bool)x[2]).ShouldEqual(true);
         }
 
         [Test]

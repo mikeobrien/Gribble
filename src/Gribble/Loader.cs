@@ -54,9 +54,15 @@ namespace Gribble
 
         private static TEntity LoadEntity(IDataRecord record, IEntityMapping map)
         {
-            return typeof(TEntity).IsSimpleType()
-                ? record[0].FromDb<TEntity>()
-                : _entityFactory.Create(record.ToDictionary(), map);
+            if (typeof(TEntity).IsSimpleType())
+                return record[0].FromDb<TEntity>();
+            if (typeof(TEntity) == typeof(object[]))
+            {
+                var values = new object[record.FieldCount];
+                record.GetValues(values);
+                return (TEntity)(object)values;
+            }
+            return _entityFactory.Create(record.ToDictionary(), map);
         }
     }
 }
