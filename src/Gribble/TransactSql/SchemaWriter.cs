@@ -27,6 +27,13 @@ namespace Gribble.TransactSql
             return new Statement(writer.ToString(), Statement.StatementType.Text, Statement.ResultType.Multiple);
         }
 
+        public static Statement CreateTableInfoStatement(string tableName)
+        {
+            var writer = SqlWriter.CreateWriter().Select.Top(1).Wildcard.From.Write(System.Tables.TableName).
+                Where.Write(System.Tables.ObjectId).Equal.ObjectId(tableName);
+            return new Statement(writer.ToString(), Statement.StatementType.Text, Statement.ResultType.Multiple);
+        }
+
         public static Statement CreateTableColumnsStatement(string tableName)
         {
             var writer = WriteSelectColumns(SqlWriter.CreateWriter()).

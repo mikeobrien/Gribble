@@ -140,6 +140,19 @@ namespace Tests
         }
 
         [Test]
+        public void should_get_table_info()
+        {
+            var tableName = "Temp" + Guid.NewGuid().ToString("N");
+            GribbleDatabase.CreateTable(tableName, new Column("Id", typeof(int), isIdentity: true, key: Column.KeyType.PrimaryKey));
+
+            var tableInfo = GribbleDatabase.GetTableInfo(tableName);
+
+            tableInfo.Name.ShouldEqual(tableName);
+            tableInfo.ObjectId.ShouldBeGreaterThan(0);
+            tableInfo.UsesAnsiNulls.ShouldBeTrue();
+        }
+
+        [Test]
         public void should_indicate_table_exists()
         {
             var tableName = "Temp" + Guid.NewGuid().ToString("N");

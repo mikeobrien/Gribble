@@ -11,6 +11,7 @@ namespace Gribble
 {
     public interface ITableSchema
     {
+        TableInfo GetTableInfo(string tableName);
         void CreateTable(string tableName, params Column[] columns);
         void CreateTable(string tableName, string modelTable);
         bool TableExists(string tableName);
@@ -30,6 +31,24 @@ namespace Gribble
         void AddNonClusteredIndex(string tableName, params Index.Column[] columns);
         void AddNonClusteredIndexes(string tableName, params Index.ColumnSet[] indexColumns);
         void RemoveNonClusteredIndex(string tableName, string indexName);
+    }
+
+    public class TableInfo
+    {
+        public TableInfo(string name, int objectId, bool usesAnsiNulls, DateTime created, DateTime? modified)
+        {
+            Name = name;
+            ObjectId = objectId;
+            UsesAnsiNulls = usesAnsiNulls;
+            Created = created;
+            Modified = modified;
+        }
+
+        public string Name { get; }
+        public int ObjectId { get; }
+        public bool UsesAnsiNulls { get; }
+        public DateTime Created { get; }
+        public DateTime? Modified { get; }
     }
 
     public class TableSchema : ITableSchema
@@ -68,6 +87,25 @@ namespace Gribble
                     { "newname", newName }
                 }), _profiler)
                 .ExecuteNonQuery(_connectionManager);
+        }
+
+        public TableInfo GetTableInfo(string tableName)
+        {
+            var statement = SchemaWriter.CreateTableInfoStatement(tableName);
+            using (var reader = Command.Create(statement, _profiler).ExecuteReader(_connectionManager))
+            {
+                if (reader.Read())
+                {
+                    return new TableInfo(
+                        (string)reader[TransactSql.System.Tables.Name],
+                        (int)reader[TransactSql.System.Tables.ObjectId],
+                        (bool)reader[TransactSql.System.Tables.UsesAnsiNulls],
+                        (DateTime)reader[TransactSql.System.Tables.CreateDate],
+                        (DateTime?)reader[TransactSql.System.Tables.ModifyDate]);
+                }
+            }
+
+            return null;
         }
 
         public void CreateTable(string tableName, params Column[] columns)
