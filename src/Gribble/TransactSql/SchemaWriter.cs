@@ -36,8 +36,9 @@ namespace Gribble.TransactSql
 
         public static Statement CreateTableColumnsStatement(string tableName)
         {
-            var writer = WriteSelectColumns(SqlWriter.CreateWriter()).
-                    Where.Write(System.Columns.Aliased.ObjectId).Equal.ObjectId(tableName);
+            var writer = WriteSelectColumns(SqlWriter.CreateWriter())
+                .Where.Write(System.Columns.Aliased.ObjectId).Equal.ObjectId(tableName)
+                .OrderBy.Write(System.Columns.Name);
             return new Statement(writer.ToString(), Statement.StatementType.Text, Statement.ResultType.Multiple);
         }
 

@@ -169,7 +169,7 @@ namespace Tests.TransactSql
                 "CASE OBJECT_DEFINITION([SC].[default_object_id]) WHEN '(GETDATE())' THEN NULL WHEN '(NEWID())' THEN NULL WHEN '(NEWSEQUENTIALID())' THEN NULL ELSE REPLACE(REPLACE(OBJECT_DEFINITION([SC].[default_object_id]), '(', ''), ')', '') END AS [default_value], " +
                 "ISNULL([SI].[is_primary_key], 0) AS [is_primary_key], CAST((CASE [SI].[type] WHEN 1 THEN 1 ELSE 0 END) AS bit) AS [is_primary_key_clustered], [SC].[precision], [SC].[scale], [SCC].[definition] AS [computation], [SCC].[is_persisted] AS [persisted_computation] " +
                 "FROM ( ( ( [sys].[columns] [SC] LEFT JOIN [sys].[index_columns] [SIC] ON [SC].[column_id] = [SIC].[column_id] AND [SC].[object_id] = [SIC].[object_id] ) LEFT JOIN [sys].[indexes] [SI] ON [SI].[index_id] = [SIC].[index_id] AND " +
-                "[SI].[object_id] = [SIC].[object_id] ) LEFT JOIN [sys].[computed_columns] [SCC] ON [SC].[column_id] = [SCC].[column_id] AND [SC].[object_id] = [SCC].[object_id] ) WHERE [SC].[object_id] = OBJECT_ID(N'XLIST_1')");
+                "[SI].[object_id] = [SIC].[object_id] ) LEFT JOIN [sys].[computed_columns] [SCC] ON [SC].[column_id] = [SCC].[column_id] AND [SC].[object_id] = [SCC].[object_id] ) WHERE [SC].[object_id] = OBJECT_ID(N'XLIST_1') ORDER BY name");
         }
 
         [Test]
