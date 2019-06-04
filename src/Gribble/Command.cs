@@ -115,7 +115,7 @@ namespace Gribble
             });
         }
 
-        public TReturn ExecuteNonQuery<TReturn>(IConnectionManager connectionManager)
+        public TReturn ExecuteReturn<TReturn>(IConnectionManager connectionManager)
         {
             return Execute(() => {
                 const string parameterName = "@__return__";
@@ -129,7 +129,7 @@ namespace Gribble
             });
         }
 
-        public Task<TReturn> ExecuteNonQueryAsync<TReturn>(IConnectionManager connectionManager)
+        public Task<TReturn> ExecuteReturnAsync<TReturn>(IConnectionManager connectionManager)
         {
             return Execute(async () => {
                 const string parameterName = "@__return__";
