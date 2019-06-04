@@ -15,8 +15,8 @@ namespace Gribble
         bool Exists(string name);
         int ExecuteNonQuery(string name, IDictionary<string, object> parameters = null);
         Task<int> ExecuteNonQueryAsync(string name, IDictionary<string, object> parameters = null);
-        TReturn ExecuteNonQuery<TReturn>(string name, IDictionary<string, object> parameters = null);
-        Task<TReturn> ExecuteNonQueryAsync<TReturn>(string name, IDictionary<string, object> parameters = null);
+        TReturn ExecuteReturn<TReturn>(string name, IDictionary<string, object> parameters = null);
+        Task<TReturn> ExecuteReturnAsync<TReturn>(string name, IDictionary<string, object> parameters = null);
         T ExecuteScalar<T>(string name, IDictionary<string, object> parameters = null);
         Task<T> ExecuteScalarAsync<T>(string name, IDictionary<string, object> parameters = null);
         TEntity ExecuteSingle<TEntity>(string name, 
@@ -112,18 +112,18 @@ namespace Gribble
                 .ExecuteNonQueryAsync(_connectionManager);
         }
 
-        public TReturn ExecuteNonQuery<TReturn>(string name, IDictionary<string, object> parameters = null)
+        public TReturn ExecuteReturn<TReturn>(string name, IDictionary<string, object> parameters = null)
         {
             return Command.Create(StatementWriter.CreateStoredProcedure(name,
                     parameters, Statement.ResultType.None), _profiler)
-                .ExecuteNonQuery<TReturn>(_connectionManager);
+                .ExecuteReturn<TReturn>(_connectionManager);
         }
 
-        public Task<TReturn> ExecuteNonQueryAsync<TReturn>(string name, IDictionary<string, object> parameters = null)
+        public Task<TReturn> ExecuteReturnAsync<TReturn>(string name, IDictionary<string, object> parameters = null)
         {
             return Command.Create(StatementWriter.CreateStoredProcedure(name,
                     parameters, Statement.ResultType.None), _profiler)
-                .ExecuteNonQueryAsync<TReturn>(_connectionManager);
+                .ExecuteReturnAsync<TReturn>(_connectionManager);
         }
 
         public T ExecuteScalar<T>(string name, IDictionary<string, object> parameters = null)
@@ -195,10 +195,10 @@ namespace Gribble
             return storedProcedure.ExecuteNonQuery(name, parameters.AsDictionary());
         }
 
-        public static TReturn ExecuteNonQuery<TReturn>(this IStoredProcedure storedProcedure,
+        public static TReturn ExecuteReturn<TReturn>(this IStoredProcedure storedProcedure,
             string name, object parameters)
         {
-            return storedProcedure.ExecuteNonQuery<TReturn>(name, parameters.AsDictionary());
+            return storedProcedure.ExecuteReturn<TReturn>(name, parameters.AsDictionary());
         }
 
         public static T ExecuteScalar<T>(this IStoredProcedure storedProcedure,

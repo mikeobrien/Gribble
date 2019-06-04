@@ -181,13 +181,13 @@ namespace Tests.ExplicitMapping
         [Test]
         public void should_execute_non_query_return()
         {
-            StoredProcedure.ExecuteNonQuery<int>("ReturnValue").ShouldEqual(42);
+            StoredProcedure.ExecuteReturn<int>("ReturnValue").ShouldEqual(42);
         }
 
         [Test]
         public void should_execute_async_non_query_return()
         {
-            StoredProcedure.ExecuteNonQueryAsync<int>("ReturnValue").Result.ShouldEqual(42);
+            StoredProcedure.ExecuteReturnAsync<int>("ReturnValue").Result.ShouldEqual(42);
         }
 
         [Test]
