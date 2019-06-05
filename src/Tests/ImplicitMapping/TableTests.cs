@@ -17,8 +17,14 @@ namespace Tests.ImplicitMapping
             public IdentityEntity() { Values = new Dictionary<string, object>(); }
             public int Id { get; set; }
             public string Name { get; set; }
+            public EnumValue NameEnum { get; set; }
+            public EnumValue ValueEnum { get; set; }
+            public EnumValue? NullableNameEnum { get; set; }
+            public EnumValue? NullableValueEnum { get; set; }
             public IDictionary<string, object> Values { get; set; }
         }
+
+        public enum EnumValue { First = 1, Second = 2, Third = 3 }
         
         private TestDatabase _database = new TestDatabase();
         private ITable<IdentityEntity> _identityTable1;
@@ -31,19 +37,26 @@ namespace Tests.ImplicitMapping
             const int records = 10;
             const string columnSchena = "[id] [int] IDENTITY(1,1) NOT NULL, [name] [nvarchar] (500) NULL, " + 
                 "[hide] [bit] NULL, [timestamp] [datetime] NULL, [upc] [uniqueidentifier] DEFAULT NEWID(), " + 
-                "[code] [int] DEFAULT 5";
-            const string dataColumns = "name, hide, [timestamp]";
-            const string data = "'oh hai', 0, GETDATE()";
+                "[code] [int] DEFAULT 5, [nameenum] [varchar](50) NULL, [valueenum] [int] NULL, " +
+                "[nullablenameenum] [varchar](50) NULL, [nullablevalueenum] [int] NULL";
+            const string dataColumns = "name, hide, [timestamp], nameenum, valueenum, nullablenameenum, nullablevalueenum";
+            const string data = "'oh hai', 0, GETDATE(), 'Second', 3, 'Second', 3";
 
             _database = new TestDatabase();
             _database.AddTable(columnSchena, records, dataColumns, data);
             _database.AddTable(columnSchena, records, dataColumns, data);
             _database.AddTable("[id] [int] IDENTITY(1,1) NOT NULL, [name] [nvarchar] (500) NULL, " + 
-                "[hide] [bit] NULL, [upc] [uniqueidentifier] DEFAULT NEWID(), [code] [int] DEFAULT 5", 
-                5, "name, hide", "'oh hai yo', 1");
+                "[hide] [bit] NULL, [upc] [uniqueidentifier] DEFAULT NEWID(), [code] [int] DEFAULT 5, " +
+                "[nameenum] [varchar](50) NULL, [valueenum] [int] NULL, " +
+                "[nullablenameenum] [varchar](50) NULL, [nullablevalueenum] [int] NULL", 
+                5, "name, hide, nameenum, valueenum, nullablenameenum, nullablevalueenum", 
+                "'oh hai yo', 1, 'Second', 3, 'Second', 3");
             _database.AddTable("[id] [int] IDENTITY(1,1) NOT NULL, [name] [varchar] (500) NULL, " + 
-                "[hide] [bit] NULL, [upc] [uniqueidentifier] DEFAULT NEWID(), [code] [int] DEFAULT 5", 
-                5, "name, hide", "'oh hai yo', 1");
+                "[hide] [bit] NULL, [upc] [uniqueidentifier] DEFAULT NEWID(), [code] [int] DEFAULT 5, " +
+                "[nameenum] [varchar](50) NULL, [valueenum] [int] NULL, " +
+                "[nullablenameenum] [varchar](50) NULL, [nullablevalueenum] [int] NULL", 
+                5, "name, hide, nameenum, valueenum, nullablenameenum, nullablevalueenum", 
+                "'oh hai yo', 1, 'Second', 3, 'Second', 3");
 
             _database.SetUp();
 
@@ -64,6 +77,10 @@ namespace Tests.ImplicitMapping
             result.ShouldNotBeNull();
             result.Name.Length.ShouldBeGreaterThan(3);
             result.Id.ShouldEqual(7);
+            result.NameEnum.ShouldEqual(EnumValue.Second);
+            result.ValueEnum.ShouldEqual(EnumValue.Third);
+            result.NullableNameEnum.ShouldEqual(EnumValue.Second);
+            result.NullableValueEnum.ShouldEqual(EnumValue.Third);
             result.Values.Count.ShouldBeGreaterThan(2);
             ((bool)result.Values["hide"]).ShouldEqual(false);
             ((DateTime)result.Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);

@@ -117,12 +117,25 @@ namespace Gribble
         private static object ConvertValue(object value, Type type = null)
         {
             if (value == null) return null;
-            type = type ?? value.GetType();
-            if (!type.IsGenericType || type.GetGenericTypeDefinition() != typeof(Nullable<>)) return value;
-            var arguments = type.GetGenericArguments();
-            return arguments.Any(x => x.IsEnum) 
-                ? Enum.ToObject(arguments.First(x => x.IsEnum), value) 
+            var valueType = GetValueType(type, value);
+            return valueType.IsEnum
+                ? ParseEnum(valueType, value)
                 : value;
+        }
+
+        private static Type GetValueType(Type type, object value)
+        {
+            type = type ?? value.GetType();
+            return !type.IsGenericType || type.GetGenericTypeDefinition() != typeof(Nullable<>)
+                ? type
+                : type.GetGenericArguments().FirstOrDefault();
+        }
+
+        private static object ParseEnum(Type type, object value)
+        {
+            return value is string
+                ? Enum.Parse(type, value.ToString())
+                : Enum.ToObject(type, value);
         }
     }
 }
