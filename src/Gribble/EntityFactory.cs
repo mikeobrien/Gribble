@@ -120,8 +120,11 @@ namespace Gribble
             type = type ?? value.GetType();
             if (!type.IsGenericType || type.GetGenericTypeDefinition() != typeof(Nullable<>)) return value;
             var arguments = type.GetGenericArguments();
-            return arguments.Any(x => x.IsEnum) 
-                ? Enum.ToObject(arguments.First(x => x.IsEnum), value) 
+            var enumType = arguments.FirstOrDefault(x => x.IsEnum) ;
+            return enumType != null
+                ? (value is string
+                    ? Enum.Parse(enumType, value.ToString())
+                    : Enum.ToObject(arguments.First(x => x.IsEnum), value))
                 : value;
         }
     }
