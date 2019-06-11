@@ -17,6 +17,7 @@ namespace Tests.ExplicitMapping
         {
             public IdentityEntity() { Values = new Dictionary<string, object>(); }
             public int Id { get; set; }
+            public string CountryCode { get; set; }
             public string Name { get; set; }
             public DateTime Now { get; set; }
             public IDictionary<string, object> Values { get; set; }
@@ -26,6 +27,7 @@ namespace Tests.ExplicitMapping
         {
             public GuidEntity() { Values = new Dictionary<string, object>(); }
             public Guid Id { get; set; }
+            public string CountryCode { get; set; }
             public string Name { get; set; }
             public DateTime Now { get; set; }
             public IDictionary<string, object> Values { get; set; }
@@ -37,8 +39,10 @@ namespace Tests.ExplicitMapping
             {
                 Id(x => x.Id).Column("id").Identity();
                 Map(x => x.Name).Column("name");
+                Map(x => x.CountryCode).Column("country");
                 Map(x => x.Now).Column("currenttime").Readonly();
                 Map(x => x.Values).Dynamic()
+                    .Map("CodeNumber").Column("code")
                     .Map("Random").Column("randomid").Readonly();
             }
         }
@@ -49,8 +53,10 @@ namespace Tests.ExplicitMapping
             {
                 Id(x => x.Id).Column("uid").GuidComb();
                 Map(x => x.Name).Column("name");
+                Map(x => x.CountryCode).Column("country");
                 Map(x => x.Now).Column("currenttime").Readonly();
                 Map(x => x.Values).Dynamic()
+                    .Map("CodeNumber").Column("code")
                     .Map("Random").Column("randomid").Readonly();
             }
         }
@@ -71,6 +77,7 @@ namespace Tests.ExplicitMapping
             const string columnSchena = 
                 "[id] [int] IDENTITY(1,1) NOT NULL, " +
                 "[name] [nvarchar] (500) NULL, " +
+                "[country] [nvarchar] (500) NULL, " +
                 "[hide] [bit] NULL, " +
                 "[timestamp] [datetime] NULL, " +
                 "[upc] [uniqueidentifier] DEFAULT NEWID(), " +
@@ -242,6 +249,49 @@ namespace Tests.ExplicitMapping
             newEntity.Values["timestamp"].ShouldEqual(timestamp);
             newEntity.Values["hide"].ShouldEqual(hide);
             newEntity.Values["uid"].ShouldEqual(newUid);
+        }
+
+        [Test]
+        public void Should_update_entities_by_predicate()
+        {
+            var count = _identityTable1.UpdateMany(new Dictionary<string, object>
+            {
+                { "name", "fark" },
+                { "CodeNumber", 8 },
+                { "CountryCode", "fark" }
+            }, x => x.Id > 5);
+
+            Should_match_updated_results(count);
+        }
+
+        [Test]
+        public void Should_update_entities_by_query()
+        {
+            var count = _identityTable1.UpdateMany(new Dictionary<string, object>
+            {
+                { "name", "fark" },
+                { "CodeNumber", 8 },
+                { "CountryCode", "fark" }
+            }, _identityTable1.Where(x => x.Id > 5));
+
+            Should_match_updated_results(count);
+        }
+
+        private void Should_match_updated_results(int count)
+        {
+            count.ShouldEqual(5);
+
+            var records = _identityTable1.ToList();
+
+            records.Where(x => x.Id <= 5)
+                .All(x => x.Name == "oh hai" && 
+                          (int)x.Values["CodeNumber"] == 5 && 
+                          x.CountryCode == null).ShouldBeTrue();
+
+            records.Where(x => x.Id > 5)
+                .All(x => x.Name == "fark" && 
+                          (int)x.Values["CodeNumber"] == 8 && 
+                          x.CountryCode == "fark").ShouldBeTrue();
         }
 
         [Test]

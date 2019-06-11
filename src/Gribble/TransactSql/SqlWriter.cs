@@ -125,7 +125,7 @@ namespace Gribble.TransactSql
         public SqlWriter Period => Write(".");
 
         public SqlWriter QuotedName(params string[] name) 
-            { return Write(name.Select(QuoteName).Aggregate((a, s) => a + "." + s)); }
+            { return Write(name.Where(x => x != null).Select(QuoteName).Aggregate((a, s) => a + "." + s)); }
         public SqlWriter QuotedString(string value) { return QuotedString(value, false); }
         public SqlWriter QuotedString(string value, bool unicode) 
             { return QuotedString(x => x.Write(value), unicode); }

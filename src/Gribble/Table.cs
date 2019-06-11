@@ -17,6 +17,8 @@ namespace Gribble
         TEntity Get<T>(T id);
         void Insert(TEntity entity);
         void Update(TEntity entity);
+        int UpdateMany(IDictionary<string, object> values, Expression<Func<TEntity, bool>> filter);
+        int UpdateMany(IDictionary<string, object> values, IQueryable<TEntity> source);
         void Delete<T>(T id);
         void Delete(TEntity entity);
         void Delete(Expression<Func<TEntity, bool>> filter);
@@ -169,6 +171,36 @@ namespace Gribble
             Command.Create(UpdateWriter<TEntity>.CreateStatement(new Update(values, Name, 
                     CreateEntityKeyFilter(entity, adapter)), _mapping), _profiler).
                 ExecuteNonQuery(_connectionManager);
+        }
+
+        public int UpdateMany(IDictionary<string, object> values, Expression<Func<TEntity, bool>> filter)
+        {
+            return UpdateMany(values, WhereVisitor<TEntity>.CreateModel(filter));
+        }
+
+        public int UpdateMany(IDictionary<string, object> values, IQueryable<TEntity> source)
+        {
+            var query = QueryVisitor<TEntity>.CreateModel(source.Expression, x => Name, _mapping);
+            return UpdateMany(values, query.Select.Where, query.Select.From.Alias);
+        }
+
+        public int UpdateMany(IDictionary<string, object> values, Operator @operator, string alias = null)
+        {
+            return Command.Create(UpdateWriter<TEntity>.CreateStatement(new Update(
+                    MapColums(values), Name, @operator), _mapping, alias), _profiler).
+                ExecuteNonQuery(_connectionManager);
+        }
+
+        private IDictionary<string, object> MapColums(IDictionary<string, object> values)
+        {
+            return values.ToDictionary(x =>
+            {
+                if (_mapping.StaticProperty.HasColumnMapping(x.Key))
+                    return _mapping.StaticProperty.GetColumnName(x.Key);
+                if (_mapping.DynamicProperty.HasColumnMapping(x.Key))
+                    return _mapping.DynamicProperty.GetColumnName(x.Key);
+                return x.Key;
+            }, x => x.Value);
         }
 
         public void Delete<T>(T id)
