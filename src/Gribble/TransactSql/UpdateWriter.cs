@@ -20,9 +20,12 @@ namespace Gribble.TransactSql
 
             if (alias != null) writer.From.QuotedName(update.Table.Name).QuotedName(alias);
 
-            var where = WhereWriter<TEntity>.CreateStatement(update.Where, mapping);
-            writer.Where.Write(where.Text);
-            parameters.AddRange(where.Parameters);
+            if (update.Where != null)
+            {
+                var where = WhereWriter<TEntity>.CreateStatement(update.Where, mapping);
+                writer.Where.Write(where.Text);
+                parameters.AddRange(where.Parameters);
+            }
 
             return new Statement(writer.ToString(), Statement.StatementType.Text, 
                 Statement.ResultType.None, parameters);

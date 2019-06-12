@@ -295,6 +295,25 @@ namespace Tests.ExplicitMapping
         }
 
         [Test]
+        public void Should_update_entities_by_non_filtered_query()
+        {
+            var count = _identityTable1.UpdateMany(new Dictionary<string, object>
+            {
+                { "name", "fark" },
+                { "CodeNumber", 8 },
+                { "CountryCode", "fark" }
+            }, _identityTable1);
+            
+            count.ShouldEqual(10);
+
+            var records = _identityTable1.ToList();
+
+            records.All(x => x.Name == "fark" && 
+                (int)x.Values["CodeNumber"] == 8 && 
+                x.CountryCode == "fark").ShouldBeTrue();
+        }
+
+        [Test]
         public void Insert_Identity_Entity_Test()
         {
             var entity = new IdentityEntity();

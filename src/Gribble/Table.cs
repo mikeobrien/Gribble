@@ -187,8 +187,8 @@ namespace Gribble
         public int UpdateMany(IDictionary<string, object> values, Operator @operator, string alias = null)
         {
             return Command.Create(UpdateWriter<TEntity>.CreateStatement(new Update(
-                    MapColums(values), Name, @operator), _mapping, alias), _profiler).
-                ExecuteNonQuery(_connectionManager);
+                    MapColums(values), Name, @operator), _mapping, alias), _profiler)
+                .ExecuteNonQuery(_connectionManager);
         }
 
         private IDictionary<string, object> MapColums(IDictionary<string, object> values)

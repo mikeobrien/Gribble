@@ -16,6 +16,6 @@ namespace Gribble.Model
         public IDictionary<string, object> Assignment;
 
         public Operator Where;
-        public bool HasWhere { get { return Where != null; } }
+        public bool HasWhere => Where != null;
     }
 }
