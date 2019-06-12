@@ -181,13 +181,15 @@ namespace Gribble
         public int UpdateMany(IDictionary<string, object> values, IQueryable<TEntity> source)
         {
             var query = QueryVisitor<TEntity>.CreateModel(source.Expression, x => Name, _mapping);
-            return UpdateMany(values, query.Select.Where, query.Select.From.Alias);
+            return UpdateMany(values, query.Select.Where, query.Select.From.Alias,
+                query.Select.Top, query.Select.TopType);
         }
 
-        public int UpdateMany(IDictionary<string, object> values, Operator @operator, string alias = null)
+        private int UpdateMany(IDictionary<string, object> values, Operator @operator, 
+            string alias = null, int? top = null, TopValueType? topValueType = null)
         {
-            return Command.Create(UpdateWriter<TEntity>.CreateStatement(new Update(
-                    MapColums(values), Name, @operator), _mapping, alias), _profiler)
+            return Command.Create(UpdateWriter<TEntity>.CreateStatement(new Update(MapColums(values), 
+                    Name, @operator, top, topValueType), _mapping, alias), _profiler)
                 .ExecuteNonQuery(_connectionManager);
         }
 

@@ -86,9 +86,9 @@ namespace Gribble.Expressions
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.OrderByDescending(y => y))) 
                     HandleOrderBy(query.Select, node, true);
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Take(0)))
-                    { query.Select.Top = node.ConstantArgumentAt<int>(2); query.Select.TopType = Select.TopValueType.Count; }
+                    { query.Select.Top = node.ConstantArgumentAt<int>(2); query.Select.TopType = TopValueType.Count; }
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.TakePercent(0)))
-                    { query.Select.Top = node.ConstantArgumentAt<int>(2); query.Select.TopType = Select.TopValueType.Percent; }
+                    { query.Select.Top = node.ConstantArgumentAt<int>(2); query.Select.TopType = TopValueType.Percent; }
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Skip(0)))
                     query.Select.Start = node.ConstantArgumentAt<int>(2) + 1;
                 else if (node.MatchesMethodSignature<IQueryable<T>>(x => x.Single()))
@@ -286,7 +286,7 @@ namespace Gribble.Expressions
             if (select.SetOperatons == null) select.SetOperatons = new List<SetOperation>();
             var setOperationSource = CreateModel(expression.ArgumentAt(2)).Select;
             setOperationSource.Top = 1;
-            setOperationSource.TopType = Select.TopValueType.Count;
+            setOperationSource.TopType = TopValueType.Count;
             var operatorExpressions = expression.ArgumentAt<NewArrayExpression>(3).
                 Expressions.
                 Select(x => x.NodeType == ExpressionType.Quote ? ((UnaryExpression)x).Operand : x).

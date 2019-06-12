@@ -13,7 +13,13 @@ namespace Gribble.TransactSql
             var writer = new SqlWriter();
             var parameters = new Dictionary<string, object>();
 
-            writer.Update.QuotedName(alias ?? update.Table.Name);
+            writer.Update.Flush();
+
+            if (update.HasTop) 
+                writer.Do(update.TopType == TopValueType.Count, 
+                    x => x.Top(update.Top), x => x.TopPercent(update.Top));
+                
+            writer.QuotedName(alias ?? update.Table.Name);
                 
             writer.Set.ParameterAssignmentList(x => x.Comma.Flush(), update.Assignment
                 .ToDictionary(x => x.Key, x => parameters.AddWithUniquelyNamedKey(x.Value)));

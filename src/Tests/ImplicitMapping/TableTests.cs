@@ -334,6 +334,24 @@ namespace Tests.ImplicitMapping
         }
 
         [Test]
+        public void Should_update_top_entities_by_query()
+        {
+            var count = _identityTable1.UpdateMany(new Dictionary<string, object>
+            {
+                { "name", "fark" }
+            }, _identityTable1
+                .Take(2)
+                .Where(x => x.Id > 5));
+
+            count.ShouldEqual(2);
+
+            var records = _identityTable1.ToList();
+
+            records.Count(x => x.Name == "oh hai").ShouldEqual(8);
+            records.Count(x => x.Name == "fark").ShouldEqual(2);
+        }
+
+        [Test]
         public void Insert_Identity_Entity_Test()
         {
             var entity = new IdentityEntity();

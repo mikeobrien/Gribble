@@ -63,7 +63,7 @@ namespace Tests.Expressions
 
             select.ShouldNotBeNull();
             select.HasTop.ShouldEqual(true);
-            select.TopType.ShouldEqual(Select.TopValueType.Count);
+            select.TopType.ShouldEqual(TopValueType.Count);
             select.Top.ShouldEqual(5);
         }
 
@@ -76,7 +76,7 @@ namespace Tests.Expressions
 
             select.ShouldNotBeNull();
             select.HasTop.ShouldEqual(true);
-            select.TopType.ShouldEqual(Select.TopValueType.Percent);
+            select.TopType.ShouldEqual(TopValueType.Percent);
             select.Top.ShouldEqual(5);
         }
 
