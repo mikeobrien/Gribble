@@ -15,6 +15,7 @@ namespace Gribble
     public interface ITable<TEntity> : IOrderedQueryable<TEntity>, INamedQueryable
     {
         TEntity Get<T>(T id);
+        TEntity Refresh(TEntity entity);
         void Insert(TEntity entity);
         void Update(TEntity entity);
         int UpdateMany(IDictionary<string, object> values, Expression<Func<TEntity, bool>> filter);
@@ -161,6 +162,19 @@ namespace Gribble
                 From = { Type = Data.DataType.Table, Table = new Table { Name = Name } },
                 Where = CreateKeyFilter(id) };
             return _operations.ExecuteQuery<TEntity, IEnumerable<TEntity>>(select).FirstOrDefault();
+        }
+
+        public TEntity Refresh(TEntity entity)
+        {
+            var adapter = new EntityAdapter<TEntity>(entity, _mapping);
+            var select = new Select
+            {
+                Top = 1,
+                From = { Type = Data.DataType.Table, Table = new Table { Name = Name } },
+                Where = CreateKeyFilter(adapter.Key)
+            };
+            _operations.ExecuteHydrate<TEntity>(select, entity);
+            return entity;
         }
 
         public void Update(TEntity entity)

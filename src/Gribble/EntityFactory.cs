@@ -25,12 +25,16 @@ namespace Gribble
             CtorParameters = Ctor.GetParameters();
         }
 
-        public TEntity Create(IDictionary<string, object> values, IEntityMapping map)
+        public TEntity Create(IDictionary<string, object> values, 
+            IEntityMapping map, object existingEntity = null)
         {
             var dynamicProperty = GetDynamicProperty(map);
 
+            if (existingEntity != null && !DefaultCtor)
+                throw new Exception("Cannot refresh anonymous types.");
+
             var entity = DefaultCtor
-                ? CreateObjectWithDefaultCtor(values, dynamicProperty, map)
+                ? CreateObjectWithDefaultCtor(values, dynamicProperty, map, existingEntity)
                 : CreateAnonymousObject(values, dynamicProperty, map);
 
             if (dynamicProperty.HasProperty)
@@ -62,9 +66,12 @@ namespace Gribble
         }
 
         private TEntity CreateObjectWithDefaultCtor(IDictionary<string, object> values, 
-            DynamicProperty dynamicProperty, IEntityMapping map)
+            DynamicProperty dynamicProperty, IEntityMapping map, object existingEntity)
         {
-            var entity = Activator.CreateInstance<TEntity>();
+            var entity = existingEntity != null
+                ? (TEntity)existingEntity
+                : Activator.CreateInstance<TEntity>();
+
             foreach (var property in Properties.Where(x => x.CanWrite))
             {
                 MapValues(property.PropertyType, property.Name, x => property.SetValue(entity, x),

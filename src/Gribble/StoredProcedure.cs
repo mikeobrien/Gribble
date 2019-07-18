@@ -183,7 +183,7 @@ namespace Gribble
         private TResult Load<TEntity, TResult>(Command command) where TEntity : class 
         {
             return (TResult)new Loader<TEntity>(command, _map.GetEntityMapping<TEntity>())
-                .Execute(_connectionManager);
+                .Load(_connectionManager);
         }
     }
 

@@ -21,7 +21,7 @@ namespace Gribble
             _map = map;
         }
 
-        public object Execute(IConnectionManager connectionManager)
+        public object Load(IConnectionManager connectionManager)
         {
             switch (_command.Statement.Result)
             {
@@ -29,7 +29,21 @@ namespace Gribble
                 case Statement.ResultType.Single: return LoadSingleResult(connectionManager, _command, _map, true);
                 case Statement.ResultType.SingleOrNone: return LoadSingleResult(connectionManager, _command, _map, false);
                 case Statement.ResultType.Scalar: return _command.ExecuteScalar(connectionManager);
-                default: { _command.ExecuteNonQuery(connectionManager); return null; }
+                default:
+                {
+                    _command.ExecuteNonQuery(connectionManager);
+                    return null;
+                }
+            }
+        }
+
+        public object Hydrate(IConnectionManager connectionManager, object existingEntity)
+        {
+            using (var reader = _command.ExecuteReader(connectionManager))
+            {
+                if (!reader.Read())
+                    throw new Exception("No result returned for query.");
+                return LoadEntity(reader, _map, existingEntity);
             }
         }
 
@@ -52,7 +66,8 @@ namespace Gribble
             return results.FirstOrDefault();
         }
 
-        private static TEntity LoadEntity(IDataRecord record, IEntityMapping map)
+        private static TEntity LoadEntity(IDataRecord record, 
+            IEntityMapping map, object existingEntity = null)
         {
             if (typeof(TEntity).IsSimpleType())
                 return record[0].FromDb<TEntity>();
@@ -62,7 +77,7 @@ namespace Gribble
                 record.GetValues(values);
                 return (TEntity)(object)values;
             }
-            return _entityFactory.Create(record.ToDictionary(), map);
+            return _entityFactory.Create(record.ToDictionary(), map, existingEntity);
         }
     }
 }

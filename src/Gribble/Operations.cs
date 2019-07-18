@@ -25,6 +25,18 @@ namespace Gribble
 
         public TResult ExecuteQuery<TEntity, TResult>(Select select)
         {
+            return (TResult)CreateLoader<TEntity>(select)
+                .Load(_connectionManager);
+        }
+
+        public TEntity ExecuteHydrate<TEntity>(Select select, object existingEntity)
+        {
+            return (TEntity)CreateLoader<TEntity>(select)
+                .Hydrate(_connectionManager, existingEntity);
+        }
+
+        private Loader<TEntity> CreateLoader<TEntity>(Select select)
+        {
             IEnumerable<string> columns = null;
             if (select.From.HasQueries)
             {
@@ -34,8 +46,8 @@ namespace Gribble
             }
             var selectStatement = SelectWriter<TEntity>.CreateStatement(
                 select, _mapping, columns, _noLock);
-            return (TResult)(new Loader<TEntity>(Command.Create(selectStatement, 
-                _profiler), _mapping).Execute(_connectionManager));
+            return new Loader<TEntity>(Command.Create(selectStatement, 
+                _profiler), _mapping);
         }
 
         public IQueryable<TEntity> CopyInto<TEntity>(Insert insert)

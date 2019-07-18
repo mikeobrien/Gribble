@@ -63,11 +63,36 @@ namespace Tests
 
         private static object GetResult(MockQueryable<Entity> query)
         {
+            var (loader, connectionManager) = CreateLoader(query);
+            return loader.Load(connectionManager);
+        }
+
+        [Test]
+        public void Should_hydrate_entity()
+        {
+            var query = MockQueryable<Entity>.Create(Database.FirstTable.Name).Where(x => x.Id == 1);
+            var (loader, connectionManager) = CreateLoader(query);
+            var entity = new Entity();
+
+            var result = loader.Hydrate(connectionManager, entity) as Entity;
+
+            result.ShouldNotBeNull();
+            result.ShouldEqual(entity);
+            result.Name.Length.ShouldBeGreaterThan(3);
+            result.Id.ShouldBeGreaterThan(0);
+            result.Values.Count.ShouldBeGreaterThan(2);
+            ((string)result.Values["type"]).Trim().ShouldEqual("U");
+            ((DateTime)result.Values["create_date"]).ShouldBeGreaterThan(DateTime.MinValue);
+        }
+
+        private static (Loader<Entity>, ConnectionManager) CreateLoader(IQueryable<Entity> query)
+        {
             var statement = SelectWriter<Entity>.CreateStatement(QueryVisitor<Entity>.CreateModel(
                 query.Expression, x => ((MockQueryable<Entity>)x).Name, Map).Select, Map);
             var command = Command.Create(statement, Profiler);
             var loader = new Loader<Entity>(command, Map);
-            return loader.Execute(new ConnectionManager(Database.Connection, TimeSpan.FromMinutes(5)));
+            var connectionManager = new ConnectionManager(Database.Connection, TimeSpan.FromMinutes(5));
+            return (loader, connectionManager);
         }
 
         [Test]

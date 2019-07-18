@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Gribble;
 using Gribble.Mapping;
 using NUnit.Framework;
@@ -35,6 +36,27 @@ namespace Tests
 
             entity.ShouldNotBeNull();
             entity.Static.ShouldEqual("static value");
+        }
+
+        [Test]
+        public void Should_hydrate_entity_with_default_ctor()
+        {
+            var map = new EntityMapping(new EntityWithDefaultCtorMap());
+            var values = new Dictionary<string, object>
+            {
+                { "static_field", "static value" }
+            };
+            var entity = new EntityWithDefaultCtor
+            {
+                Static = "fark"
+            };
+                
+            var hydratedEntity = new EntityFactory<EntityWithDefaultCtor>()
+                .Create(values, map, entity);
+
+            hydratedEntity.ShouldNotBeNull();
+            hydratedEntity.ShouldEqual(entity);
+            hydratedEntity.Static.ShouldEqual("static value");
         }
 
         public class EntityWithDefaultCtorAndDynamicProperty
@@ -127,6 +149,20 @@ namespace Tests
 
             entity.ShouldNotBeNull();
             entity.Implicit.ShouldEqual("implicit value");
+        }
+
+        [Test]
+        public void Should_fail_to_hydrate_anon_object()
+        {
+            var map = new EntityMapping(new AutoClassMap<AnonObject>());
+            var values = new Dictionary<string, object>
+            {
+                { "Implicit", "implicit value" }
+            };
+            var entity = new AnonObject("fark");
+                
+            Assert.Throws<Exception>(() => new EntityFactory<AnonObject>()
+                .Create(values, map, entity));
         }
 
         public class AnonObjectWithDynamicProperty

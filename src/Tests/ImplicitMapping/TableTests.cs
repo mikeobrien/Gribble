@@ -87,6 +87,28 @@ namespace Tests.ImplicitMapping
         }
 
         [Test]
+        public void Should_refresh_entity()
+        {
+            var entity = new IdentityEntity
+            {
+                Id = 7
+            };
+
+            var result = _identityTable1.Refresh(entity);
+
+            result.ShouldNotBeNull();
+            result.Name.Length.ShouldBeGreaterThan(3);
+            result.Id.ShouldEqual(7);
+            result.NameEnum.ShouldEqual(EnumValue.Second);
+            result.ValueEnum.ShouldEqual(EnumValue.Third);
+            result.NullableNameEnum.ShouldEqual(EnumValue.Second);
+            result.NullableValueEnum.ShouldEqual(EnumValue.Third);
+            result.Values.Count.ShouldBeGreaterThan(2);
+            ((bool)result.Values["hide"]).ShouldEqual(false);
+            ((DateTime)result.Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
+        }
+
+        [Test]
         public void Select_Test()
         {
             var results = _identityTable1.ToList();
