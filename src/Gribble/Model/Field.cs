@@ -15,9 +15,11 @@ namespace Gribble.Model
 
         public string Map(IEntityMapping mapping)
         {
-            return HasKey 
-                ? mapping.DynamicProperty.GetColumnName(Key) 
-                : mapping.StaticProperty.GetColumnName(Name);
+            return mapping != null
+                ? (HasKey
+                    ? mapping.DynamicProperty.GetColumnName(Key)
+                    : mapping.StaticProperty.GetColumnName(Name))
+                : Name;
         }
     }
 }

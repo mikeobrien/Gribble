@@ -87,6 +87,36 @@ namespace Tests.ExplicitMapping
             result.Values["Name"].ShouldEqual("oh hai");
             ((DateTime)result.Values["timestamp"]).ShouldBeGreaterThan(DateTime.MinValue);
         }
+        
+        [Test]
+        public void should_get_multiple_object_array_results()
+        {
+            var results = StoredProcedure.ExecuteMany<object[]>("GetAll").ToList();
+            results.Count.ShouldEqual(10);
+            var firstResult = results[0];
+            firstResult[0].ShouldEqual(1);
+            firstResult[1].ShouldEqual("oh hai");
+        }
+        
+        [Test]
+        public void should_get_multiple_dictionary_results()
+        {
+            var results = StoredProcedure.ExecuteMany<Dictionary<string, object>>("GetAll").ToList();
+            results.Count.ShouldEqual(10);
+            var firstResult = results[0];
+            firstResult["id"].ShouldEqual(1);
+            firstResult["name"].ShouldEqual("oh hai");
+        }
+        
+        [Test]
+        public void should_get_multiple_dictionary_interface_results()
+        {
+            var results = StoredProcedure.ExecuteMany<IDictionary<string, object>>("GetAll").ToList();
+            results.Count.ShouldEqual(10);
+            var firstResult = results[0];
+            firstResult["id"].ShouldEqual(1);
+            firstResult["name"].ShouldEqual("oh hai");
+        }
 
         [Test]
         public void should_get_data_table()
