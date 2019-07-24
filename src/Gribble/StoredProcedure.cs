@@ -228,6 +228,18 @@ namespace Gribble
             return storedProcedure.ExecuteMany<TEntity>(name, parameters.AsDictionary());
         }
 
+        public static IEnumerable<IDictionary<string, object>> ExecuteDictionary(
+            this IStoredProcedure storedProcedure, string name, IDictionary<string, object> parameters)
+        {
+            return storedProcedure.ExecuteMany<IDictionary<string, object>>(name, parameters);
+        }
+
+        public static IEnumerable<IDictionary<string, object>> ExecuteDictionary(
+            this IStoredProcedure storedProcedure, string name, object parameters)
+        {
+            return storedProcedure.ExecuteDictionary(name, parameters.AsDictionary());
+        }
+
         public static DataSet ExecuteDataSet(this IStoredProcedure storedProcedure,
             string name, object parameters)
         {
