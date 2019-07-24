@@ -10,7 +10,8 @@ namespace Gribble.TransactSql
 {
     public static class SelectWriter<TEntity>
     {
-        public static Statement CreateStatement(Select select, IEntityMapping mapping, IEnumerable<string> projectionOverride = null, bool noLock = false)
+        public static Statement CreateStatement(Select select, IEntityMapping mapping, 
+            IEnumerable<string> projectionOverride = null, bool noLock = false)
         {
             var sql = new SqlWriter();
             var parameters = new Dictionary<string, object>();

@@ -227,6 +227,18 @@ namespace Gribble
             return sqlStatement.ExecuteMany<TEntity>(commandText, parameters.AsDictionary());
         }
 
+        public static IEnumerable<IDictionary<string, object>> ExecuteDictionary(this ISqlStatement sqlStatement,
+            string commandText, IDictionary<string, object> parameters = null)
+        {
+            return sqlStatement.ExecuteMany<IDictionary<string, object>>(commandText, parameters);
+        }
+        
+        public static IEnumerable<IDictionary<string, object>> ExecuteDictionary(this ISqlStatement sqlStatement,
+            string commandText, object parameters)
+        {
+            return sqlStatement.ExecuteDictionary(commandText, parameters.AsDictionary());
+        }
+
         public static DataSet ExecuteDataSet(this ISqlStatement sqlStatement,
             string commandText, object parameters)
         {

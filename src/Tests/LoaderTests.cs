@@ -61,10 +61,58 @@ namespace Tests
         [SetUp]
         public void TestSetup() { Database.CreateTables(); }
 
-        private static object GetResult(MockQueryable<Entity> query)
+        private static object GetResult<TEntity>(MockQueryable<TEntity> query)
         {
             var (loader, connectionManager) = CreateLoader(query);
             return loader.Load(connectionManager);
+        }
+
+        private static object GetResult<TEntity>(string tableName)
+        {
+            SelectProjection CreateProjection(string fieldName) =>
+                new SelectProjection
+                {
+                    Projection = new Projection
+                    {
+                        Type = Projection.ProjectionType.Field,
+                        Field = new Field { Name = fieldName }
+                    }
+                };
+            var (loader, connectionManager) = CreateLoader<TEntity>(new Select
+            {
+                Projection = new List<SelectProjection>
+                {
+                    CreateProjection("id"),
+                    CreateProjection("name"),
+                    CreateProjection("age"),
+                    CreateProjection("type")
+                },
+                From = new Data
+                {
+                    Table = new Table
+                    {
+                        Name = tableName
+                    }
+                }
+            });
+            return loader.Load(connectionManager);
+        }
+
+        private static (Loader<TEntity>, ConnectionManager) CreateLoader<TEntity>(IQueryable<TEntity> query)
+        {
+            var select = QueryVisitor<TEntity>.CreateModel(query.Expression,
+                x => ((MockQueryable<TEntity>) x).Name, Map).Select;
+            return CreateLoader<TEntity>(select, Map);
+        }
+
+        private static (Loader<TEntity>, ConnectionManager) CreateLoader<TEntity>(
+            Select select, IEntityMapping mapping = null)
+        {
+            var statement = SelectWriter<TEntity>.CreateStatement(select, mapping);
+            var command = Command.Create(statement, Profiler);
+            var loader = new Loader<TEntity>(command, Map);
+            var connectionManager = new ConnectionManager(Database.Connection, TimeSpan.FromMinutes(5));
+            return (loader, connectionManager);
         }
 
         [Test]
@@ -85,16 +133,6 @@ namespace Tests
             ((DateTime)result.Values["create_date"]).ShouldBeGreaterThan(DateTime.MinValue);
         }
 
-        private static (Loader<Entity>, ConnectionManager) CreateLoader(IQueryable<Entity> query)
-        {
-            var statement = SelectWriter<Entity>.CreateStatement(QueryVisitor<Entity>.CreateModel(
-                query.Expression, x => ((MockQueryable<Entity>)x).Name, Map).Select, Map);
-            var command = Command.Create(statement, Profiler);
-            var loader = new Loader<Entity>(command, Map);
-            var connectionManager = new ConnectionManager(Database.Connection, TimeSpan.FromMinutes(5));
-            return (loader, connectionManager);
-        }
-
         [Test]
         public void should_not_return_null_comparison_values()
         {
@@ -110,7 +148,7 @@ namespace Tests
         }
 
         [Test]
-        public void Select_Test()
+        public void Should_select_entities()
         {
             var query = MockQueryable<Entity>.Create(Database.FirstTable.Name);
             var result = GetResult(query);
@@ -122,6 +160,48 @@ namespace Tests
             results.First().Values.Count.ShouldBeGreaterThan(2);
             ((string)results.First().Values["type"]).Trim().ShouldEqual("U");
             ((DateTime)results.First().Values["create_date"]).ShouldBeGreaterThan(DateTime.MinValue);
+        }
+
+        [Test]
+        public void Should_select_object_array()
+        {
+            var result = GetResult<object[]>(Database.FirstTable.Name);
+            result.ShouldImplement<IEnumerable<object[]>>();
+            var results = ((IEnumerable<object[]>)result).ToList();
+            results.Count().ShouldBeGreaterThan(2);
+            var firstResult = results[0];
+            firstResult[0].ShouldEqual(1);
+            firstResult[1].ShouldEqual("oh hai");
+            firstResult[2].ShouldEqual(0);
+            firstResult[3].ShouldEqual("U");
+        }
+
+        [Test]
+        public void Should_select_dictionary()
+        {
+            var result = GetResult<Dictionary<string, object>>(Database.FirstTable.Name);
+            result.ShouldImplement<IEnumerable<Dictionary<string, object>>>();
+            var results = ((IEnumerable<Dictionary<string, object>>)result).ToList();
+            results.Count().ShouldBeGreaterThan(2);
+            var firstResult = results[0];
+            firstResult["id"].ShouldEqual(1);
+            firstResult["name"].ShouldEqual("oh hai");
+            firstResult["age"].ShouldEqual(0);
+            firstResult["type"].ShouldEqual("U");
+        }
+
+        [Test]
+        public void Should_select_dictionary_interface()
+        {
+            var result = GetResult<IDictionary<string, object>>(Database.FirstTable.Name);
+            result.ShouldImplement<IEnumerable<IDictionary<string, object>>>();
+            var results = ((IEnumerable<IDictionary<string, object>>)result).ToList();
+            results.Count().ShouldBeGreaterThan(2);
+            var firstResult = results[0];
+            firstResult["id"].ShouldEqual(1);
+            firstResult["name"].ShouldEqual("oh hai");
+            firstResult["age"].ShouldEqual(0);
+            firstResult["type"].ShouldEqual("U");
         }
 
         [Test]

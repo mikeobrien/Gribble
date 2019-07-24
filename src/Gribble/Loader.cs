@@ -71,12 +71,20 @@ namespace Gribble
         {
             if (typeof(TEntity).IsSimpleType())
                 return record[0].FromDb<TEntity>();
+
             if (typeof(TEntity) == typeof(object[]))
             {
                 var values = new object[record.FieldCount];
                 record.GetValues(values);
                 return (TEntity)(object)values;
             }
+
+            if (typeof(TEntity) == typeof(Dictionary<string, object>) ||
+                typeof(TEntity) == typeof(IDictionary<string, object>))
+            {
+                return (TEntity)record.ToDictionary();
+            }
+
             return _entityFactory.Create(record.ToDictionary(), map, existingEntity);
         }
     }
