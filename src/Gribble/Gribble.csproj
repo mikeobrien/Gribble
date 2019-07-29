@@ -48,6 +48,8 @@
     <Compile Include="EntityDictionary.cs" />
     <Compile Include="EntityFactory.cs" />
     <Compile Include="Extensions\AdoExtensions.cs" />
+    <Compile Include="Collections\DictionaryBase.cs" />
+    <Compile Include="Collections\DefaultValueDictionary.cs" />
     <Compile Include="Extensions\EnumerableExtensions.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Extensions\GuidComb.cs" />

@@ -76,13 +76,17 @@ namespace Gribble
             {
                 var values = new object[record.FieldCount];
                 record.GetValues(values);
-                return (TEntity)(object)values;
+                return (TEntity)(object)values.Select(x => x.FromDb<object>()).ToArray();
             }
 
-            if (typeof(TEntity) == typeof(Dictionary<string, object>) ||
-                typeof(TEntity) == typeof(IDictionary<string, object>))
+            if (typeof(TEntity) == typeof(Dictionary<string, object>))
             {
-                return (TEntity)record.ToDictionary();
+                return (TEntity)(object)record.ToDictionary();
+            }
+
+            if (typeof(TEntity) == typeof(IDictionary<string, object>))
+            {
+                return (TEntity)record.ToDefaultValueDictionary();
             }
 
             return _entityFactory.Create(record.ToDictionary(), map, existingEntity);

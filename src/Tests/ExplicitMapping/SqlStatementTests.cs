@@ -119,6 +119,17 @@ namespace Tests.ExplicitMapping
             firstResult["id"].ShouldEqual(1);
             firstResult["name"].ShouldEqual("oh hai");
         }
+        
+        [Test]
+        public void should_get_multiple_dictionary_extension_method_results()
+        {
+            var results = SqlStatement.ExecuteDictionary(
+                $"SELECT id, name FROM {Database.FirstTable.Name}").ToList();
+            results.Count.ShouldEqual(10);
+            var firstResult = results[0];
+            firstResult["id"].ShouldEqual(1);
+            firstResult["name"].ShouldEqual("oh hai");
+        }
 
         [Test]
         public void should_get_data_table(
