@@ -43,5 +43,17 @@ namespace Gribble.Extensions
                 throw new NullReferenceException($"Key '{key}' mapping not found.");
             return source[realKey];
         }
+
+        public static Dictionary<TKey, TValue> ToDistinctDictionary<T, TKey, TValue>(
+            this IEnumerable<T> source, Func<T, TKey> keySelector, 
+            Func<T, TValue> valueSelector, 
+            IEqualityComparer<TKey> equalityComparer = null)
+        {
+            var dictionary = equalityComparer != null
+                ? new Dictionary<TKey, TValue>(equalityComparer)
+                : new Dictionary<TKey, TValue>();
+            source.ForEach(x => dictionary[keySelector(x)] = valueSelector(x));
+            return dictionary;
+        }
     }
 }

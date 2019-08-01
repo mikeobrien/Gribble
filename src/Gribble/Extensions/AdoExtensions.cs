@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using Gribble.Collections;
 
 namespace Gribble.Extensions
@@ -9,14 +9,8 @@ namespace Gribble.Extensions
     {
         public static Dictionary<string, object> ToDictionary(this IDataRecord dataRecord)
         {
-            return Enumerable
-                .Range(0, dataRecord.FieldCount)
-                .Select(x => new
-                {
-                    ColumnName = dataRecord.GetName(x),
-                    Value = dataRecord[x].FromDb<object>()
-                })
-                .ToDictionary(value => value.ColumnName, value => value.Value);
+            return dataRecord.FieldCount.ToRange().ToDistinctDictionary(dataRecord.GetName, 
+                x => dataRecord[x].FromDb<object>(), StringComparer.OrdinalIgnoreCase);
         }
 
         public static IDictionary<string, object> ToDefaultValueDictionary(this IDataRecord dataRecord)
